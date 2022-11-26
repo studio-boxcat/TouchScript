@@ -230,7 +230,7 @@ namespace TouchScript.Layers.UI
             {
                 if (!m_PointerData.TryGetValue(id, out data) && create)
                 {
-                    data = new PointerEventData(input.eventSystem)
+                    data = new PointerEventData()
                     {
                         pointerId = id,
                     };
@@ -408,7 +408,6 @@ namespace TouchScript.Layers.UI
 
                             data.eligibleForClick = false;
                             data.pointerPress = null;
-                            data.rawPointerPress = null;
                         }
                         ExecuteEvents.Execute(data.pointerDrag, data, ExecuteEvents.dragHandler);
                     }
@@ -476,27 +475,7 @@ namespace TouchScript.Layers.UI
 
                     // Debug.Log("Pressed: " + newPressed);
 
-                    float time = Time.unscaledTime;
-
-                    if (newPressed == data.lastPress) // ?
-                    {
-                        var diffTime = time - data.clickTime;
-                        if (diffTime < 0.3f)
-                            ++data.clickCount;
-                        else
-                            data.clickCount = 1;
-
-                        data.clickTime = time;
-                    }
-                    else
-                    {
-                        data.clickCount = 1;
-                    }
-
                     data.pointerPress = newPressed;
-                    data.rawPointerPress = currentOverGo;
-
-                    data.clickTime = time;
 
                     // Save the drag handler as well
                     data.pointerDrag = ExecuteEvents.GetEventHandler<IDragHandler>(currentOverGo);
@@ -545,7 +524,6 @@ namespace TouchScript.Layers.UI
 
                     data.eligibleForClick = false;
                     data.pointerPress = null;
-                    data.rawPointerPress = null;
 
                     if (data.pointerDrag != null && data.dragging)
                         ExecuteEvents.Execute(data.pointerDrag, data, ExecuteEvents.endDragHandler);
@@ -601,7 +579,6 @@ namespace TouchScript.Layers.UI
 
                     data.eligibleForClick = false;
                     data.pointerPress = null;
-                    data.rawPointerPress = null;
 
                     if (data.pointerDrag != null && data.dragging)
                         ExecuteEvents.Execute(data.pointerDrag, data, ExecuteEvents.endDragHandler);

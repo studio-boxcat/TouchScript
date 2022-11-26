@@ -507,7 +507,7 @@ namespace TouchScript.Layers
         private void performUISearchForCanvas(IPointer pointer, Canvas canvas, GraphicRaycaster raycaster, Camera eventCamera = null, float maxDistance = float.MaxValue, Ray ray = default(Ray))
         {
             var exclusiveSet = layerManager.HasExclusive;
-            var eventData = new PointerEventData(null) {position = pointer.Position};
+            var eventData = new PointerEventData() {position = pointer.Position};
             raycaster.Raycast(eventData, _raycastResultBuffer);
             foreach (var result in _raycastResultBuffer)
             {
