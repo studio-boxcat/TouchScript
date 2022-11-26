@@ -27,13 +27,6 @@ namespace TouchScript.Layers.UI
         /// </summary>
         public static TouchScriptInputModule Instance => SessionStateManager.TouchScriptInputModule;
 
-        public string HorizontalAxis = "Horizontal";
-        public string VerticalAxis = "Vertical";
-        public string SubmitButton = "Submit";
-        public string CancelButton = "Cancel";
-        public float InputActionsPerSecond = 10;
-        public float RepeatDelay = 0.5f;
-
         #endregion
 
         #region Private variables
@@ -223,10 +216,6 @@ namespace TouchScript.Layers.UI
 
             #region Unchanged from PointerInputModule
 
-            private int m_ConsecutiveMoveCount = 0;
-            private Vector2 m_LastMoveVector;
-            private float m_PrevActionTime;
-
             private Dictionary<int, PointerEventData> m_PointerData = new Dictionary<int, PointerEventData>(10);
 
             public bool IsPointerOverGameObject(int pointerId)
@@ -286,104 +275,11 @@ namespace TouchScript.Layers.UI
                 return data.used;
             }
 
-            private bool SendMoveEventToSelectedObject()
-            {
-                float time = Time.unscaledTime;
-
-                Vector2 movement = GetRawMoveVector();
-                if (Mathf.Approximately(movement.x, 0f) && Mathf.Approximately(movement.y, 0f))
-                {
-                    m_ConsecutiveMoveCount = 0;
-                    return false;
-                }
-
-                // If user pressed key again, always allow event
-                bool allow = Input.GetButtonDown(input.HorizontalAxis) || Input.GetButtonDown(input.VerticalAxis);
-                bool similarDir = (Vector2.Dot(movement, m_LastMoveVector) > 0);
-                if (!allow)
-                {
-                    // Otherwise, user held down key or axis.
-                    // If direction didn't change at least 90 degrees, wait for delay before allowing consequtive event.
-                    if (similarDir && m_ConsecutiveMoveCount == 1)
-                        allow = (time > m_PrevActionTime + input.RepeatDelay);
-                    // If direction changed at least 90 degree, or we already had the delay, repeat at repeat rate.
-                    else
-                        allow = (time > m_PrevActionTime + 1f / input.InputActionsPerSecond);
-                }
-                if (!allow)
-                    return false;
-
-                // Debug.Log(m_ProcessingEvent.rawType + " axis:" + m_AllowAxisEvents + " value:" + "(" + x + "," + y + ")");
-                var axisEventData = input.GetAxisEventData(movement.x, movement.y, 0.6f);
-
-                if (axisEventData.moveDir != MoveDirection.None)
-                {
-                    ExecuteEvents.Execute(input.eventSystem.currentSelectedGameObject, axisEventData, ExecuteEvents.moveHandler);
-                    if (!similarDir)
-                        m_ConsecutiveMoveCount = 0;
-                    m_ConsecutiveMoveCount++;
-                    m_PrevActionTime = time;
-                    m_LastMoveVector = movement;
-                }
-                else
-                {
-                    m_ConsecutiveMoveCount = 0;
-                }
-
-                return axisEventData.used;
-            }
-
-            private bool SendSubmitEventToSelectedObject()
-            {
-                if (input.eventSystem.currentSelectedGameObject == null)
-                    return false;
-
-                var data = input.GetBaseEventData();
-                if (Input.GetButtonDown(input.SubmitButton))
-                    ExecuteEvents.Execute(input.eventSystem.currentSelectedGameObject, data, ExecuteEvents.submitHandler);
-
-                if (Input.GetButtonDown(input.CancelButton))
-                    ExecuteEvents.Execute(input.eventSystem.currentSelectedGameObject, data, ExecuteEvents.cancelHandler);
-                return data.used;
-            }
-
-            private Vector2 GetRawMoveVector()
-            {
-                Vector2 move = Vector2.zero;
-                move.x = Input.GetAxisRaw(input.HorizontalAxis);
-                move.y = Input.GetAxisRaw(input.VerticalAxis);
-
-                if (Input.GetButtonDown(input.HorizontalAxis))
-                {
-                    if (move.x < 0)
-                        move.x = -1f;
-                    if (move.x > 0)
-                        move.x = 1f;
-                }
-                if (Input.GetButtonDown(input.VerticalAxis))
-                {
-                    if (move.y < 0)
-                        move.y = -1f;
-                    if (move.y > 0)
-                        move.y = 1f;
-                }
-                return move;
-            }
-
             #endregion
 
             public void Process()
             {
                 bool usedEvent = SendUpdateEventToSelectedObject();
-
-                if (input.eventSystem.sendNavigationEvents)
-                {
-                    if (!usedEvent)
-                        usedEvent |= SendMoveEventToSelectedObject();
-
-                    if (!usedEvent)
-                        SendSubmitEventToSelectedObject();
-                }
 
                 // touch needs to take precedence because of the mouse emulation layer
                 //                if (!ProcessTouchEvents() && Input.mousePresent)
