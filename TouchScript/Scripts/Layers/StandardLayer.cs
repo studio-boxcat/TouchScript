@@ -326,7 +326,6 @@ namespace TouchScript.Layers
             var ray = _camera.ScreenPointToRay(position);
 
             int count;
-            bool exclusiveSet = layerManager.HasExclusive;
 
             if (hit2DObjects)
             {
@@ -334,7 +333,6 @@ namespace TouchScript.Layers
                 for (var i = 0; i < count; i++)
                 {
                     var raycast = raycastHits2D[i];
-                    if (exclusiveSet && !layerManager.IsExclusive(raycast.transform)) continue;
                     hitList.Add(new HitData(raycast, this));
                 }
             }
@@ -429,13 +427,11 @@ namespace TouchScript.Layers
 
         private void performUISearchForCanvas(IPointer pointer, Canvas canvas, GraphicRaycaster raycaster, Camera eventCamera = null, float maxDistance = float.MaxValue, Ray ray = default(Ray))
         {
-            var exclusiveSet = layerManager.HasExclusive;
             var eventData = new PointerEventData() {position = pointer.Position};
             raycaster.Raycast(eventData, _raycastResultBuffer);
             foreach (var result in _raycastResultBuffer)
             {
                 var trans = result.gameObject.transform;
-                if (exclusiveSet && !layerManager.IsExclusive(trans)) continue;
 
                 var graphic = result.gameObject.GetComponent<Graphic>();
                 raycastHitUIList.Add(

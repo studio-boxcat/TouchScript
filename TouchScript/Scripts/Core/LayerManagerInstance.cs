@@ -35,12 +35,6 @@ namespace TouchScript.Core
             get { return layerCount; }
         }
 
-        /// <inheritdoc />
-        public bool HasExclusive
-        {
-            get { return exclusiveCount > 0; }
-        }
-
         #endregion
 
         #region Private variables
@@ -50,17 +44,6 @@ namespace TouchScript.Core
         private ITouchManager touchManager => SessionStateManager.TouchManagerInstance;
         private List<TouchLayer> layers = new List<TouchLayer>(10);
         private int layerCount = 0;
-
-        private HashSet<int> exclusive = new HashSet<int>();
-        private int exclusiveCount = 0;
-        private int clearExclusiveDelay = -1;
-
-        #endregion
-
-        #region Temporary variables
-
-        // Used in SetExclusive().
-        private List<Transform> tmpList = new List<Transform>(20);
 
         #endregion
 
@@ -152,51 +135,6 @@ namespace TouchScript.Core
             return false;
         }
 
-        /// <inheritdoc />
-        public void SetExclusive(Transform target, bool includeChildren = false)
-        {
-            if (target == null) return;
-            exclusive.Clear();
-            clearExclusiveDelay = -1;
-
-            exclusive.Add(target.GetHashCode());
-            exclusiveCount = 1;
-            if (includeChildren)
-            {
-                target.GetComponentsInChildren(tmpList);
-                foreach (var t in tmpList) exclusive.Add(t.GetHashCode());
-                exclusiveCount += tmpList.Count;
-            }
-        }
-
-        /// <inheritdoc />
-        public void SetExclusive(IEnumerable<Transform> targets)
-        {
-            if (targets == null) return;
-            exclusive.Clear();
-            clearExclusiveDelay = -1;
-
-            foreach (var t in targets)
-            {
-                exclusive.Add(t.GetHashCode());
-                exclusiveCount++;
-            }
-        }
-
-        /// <inheritdoc />
-        public bool IsExclusive(Transform target)
-        {
-            return exclusive.Contains(target.GetHashCode());
-        }
-
-        /// <inheritdoc />
-        public void ClearExclusive()
-        {
-            // It is incorrect to just set exclusiveCount to zero since the exclusive list is actually needed the next frame. Only after the next frame's FrameEnded event the list can be cleared.
-            // If we are inside the Pointer Frame, we need to wait for the second FrameEnded (this frame's event included). Otherwise, we need to wait for the next FrameEnded event.
-            clearExclusiveDelay = (touchManager != null && touchManager.IsInsidePointerFrame) ? 2 : 1;
-        }
-
         #endregion
 
         #region Unity
@@ -214,33 +152,9 @@ namespace TouchScript.Core
             }
         }
 
-        private void OnEnable()
-        {
-            if (touchManager != null) touchManager.FrameFinished += frameFinishedHandler;
-        }
-
-        private void OnDisable()
-        {
-            if (touchManager != null) touchManager.FrameFinished -= frameFinishedHandler;
-        }
-
         #endregion
 
         #region Private functions
-
-        #endregion
-
-        #region Event handlers
-
-        private void frameFinishedHandler(object sender, EventArgs eventArgs)
-        {
-            clearExclusiveDelay--;
-            if (clearExclusiveDelay == 0)
-            {
-                exclusive.Clear();
-                exclusiveCount = 0;
-            }
-        }
 
         #endregion
     }
