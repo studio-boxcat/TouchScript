@@ -32,8 +32,7 @@ namespace TouchScript.Layers.UI
         #region Private variables
 
         private static TouchScriptInputModule instance;
-        private static FieldInfo raycastersProp;
-        private static PropertyInfo canvasProp;
+        private static List<BaseRaycaster> raycasters;
         private static Dictionary<int, Canvas> raycasterCanvasCache = new Dictionary<int, Canvas>(10);
 
         private int refCount = 0;
@@ -45,12 +44,8 @@ namespace TouchScript.Layers.UI
 
         private TouchScriptInputModule()
         {
-            if (raycastersProp == null)
-            {
-                raycastersProp = Type.GetType("UnityEngine.EventSystems.RaycasterManager, UnityEngine.UI").
-                                     GetField("s_Raycasters", BindingFlags.NonPublic | BindingFlags.Static);
-                canvasProp = typeof(GraphicRaycaster).GetProperty("canvas", BindingFlags.NonPublic | BindingFlags.Instance);
-            }
+            if (raycasters == null)
+                raycasters = RaycasterManager.GetRaycasters();
         }
 
         #endregion
@@ -86,7 +81,7 @@ namespace TouchScript.Layers.UI
         /// <returns> Array of raycasters. </returns>
         public List<BaseRaycaster> GetRaycasters()
         {
-            return raycastersProp.GetValue(null) as List<BaseRaycaster>;
+            return raycasters;
         }
 
         /// <summary>
@@ -100,7 +95,7 @@ namespace TouchScript.Layers.UI
             Canvas canvas;
             if (!raycasterCanvasCache.TryGetValue(id, out canvas))
             {
-                canvas = canvasProp.GetValue(raycaster, null) as Canvas;
+                canvas = ((GraphicRaycaster) raycaster).canvas;
                 raycasterCanvasCache.Add(id, canvas);
             }
             return canvas;
