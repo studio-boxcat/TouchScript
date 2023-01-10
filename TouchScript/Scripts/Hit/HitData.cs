@@ -34,7 +34,7 @@ namespace TouchScript.Hit
             /// <summary>
             /// 3D hit.
             /// </summary>
-            World3D,
+            Unused_World3D,
 
             /// <summary>
             /// 2D hit.
@@ -79,15 +79,6 @@ namespace TouchScript.Hit
         }
 
         /// <summary>
-        /// Gets raycast hit object for a 3D hit.
-        /// </summary>
-        /// <value> Raycast hit object. </value>
-        public RaycastHit RaycastHit
-        {
-            get { return raycastHit; }
-        }
-
-        /// <summary>
         /// Gets 2D raycast hit object for a 2D hit.
         /// </summary>
         /// <value> 2D raycast hit object. </value>
@@ -123,8 +114,6 @@ namespace TouchScript.Hit
             {
                 switch (type)
                 {
-                    case HitType.World3D:
-                        return raycastHit.point;
                     case HitType.World2D:
                         return raycastHit2D.point;
                     case HitType.UI:
@@ -144,8 +133,6 @@ namespace TouchScript.Hit
             {
                 switch (type)
                 {
-                    case HitType.World3D:
-                        return raycastHit.normal;
                     case HitType.World2D:
                         return raycastHit2D.normal;
                     case HitType.UI:
@@ -164,8 +151,6 @@ namespace TouchScript.Hit
             {
                 switch (type)
                 {
-                    case HitType.World3D:
-                        return raycastHit.distance;
                     case HitType.World2D:
                         return raycastHit2D.distance;
                     case HitType.UI:
@@ -184,8 +169,6 @@ namespace TouchScript.Hit
             {
                 switch (type)
                 {
-                    case HitType.World3D:
-                        return 0;
                     case HitType.World2D:
                         if (sortingLayer == -1) updateSortingValues();
                         return sortingLayer;
@@ -205,8 +188,6 @@ namespace TouchScript.Hit
             {
                 switch (type)
                 {
-                    case HitType.World3D:
-                        return 0;
                     case HitType.World2D:
                         if (sortingLayer == -1) updateSortingValues();
                         return sortingOrder;
@@ -225,7 +206,6 @@ namespace TouchScript.Hit
         private Transform target;
         private bool screenSpace;
         private TouchLayer layer;
-        private RaycastHit raycastHit;
         private RaycastHit2D raycastHit2D;
         private RaycastHitUI raycastHitUI;
 
@@ -250,22 +230,9 @@ namespace TouchScript.Hit
 
             sortingLayer = -1;
             sortingOrder = -1;
-            raycastHit = default(RaycastHit);
             raycastHit2D = default(RaycastHit2D);
             raycastHitUI = default(RaycastHitUI);
             type = HitType.Screen;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HitData"/> struct from a 3D raycast.
-        /// </summary>
-        /// <param name="value"> 3D raycast value. </param>
-        /// <param name="layer"> Touch layer this hit came from. </param>
-        /// <param name="screenSpace"> If the hit is screenspace UI. </param>
-        public HitData(RaycastHit value, TouchLayer layer, bool screenSpace = false) : this(value.collider.transform, layer, screenSpace)
-        {
-            raycastHit = value;
-            type = HitType.World3D;
         }
 
         /// <summary>

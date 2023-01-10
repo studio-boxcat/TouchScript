@@ -26,19 +26,6 @@ namespace TouchScript.Layers
         #region Public properties
 
         /// <summary>
-        /// Indicates that the layer should look for 3D objects in the scene. Set this to <c>false</c> to optimize hit processing.
-        /// </summary>
-        public bool Hit3DObjects
-        {
-            get { return hit3DObjects; }
-            set
-            {
-                hit3DObjects = value;
-                updateVariants();
-            }
-        }
-
-        /// <summary>
         /// Indicates that the layer should look for 2D objects in the scene. Set this to <c>false</c> to optimize hit processing.
         /// </summary>
         public bool Hit2DObjects
@@ -126,18 +113,13 @@ namespace TouchScript.Layers
         #region Private variables
 
         private static Comparison<RaycastHitUI> _raycastHitUIComparerFunc = raycastHitUIComparerFunc;
-        private static Comparison<RaycastHit> _raycastHitComparerFunc = raycastHitComparerFunc;
         private static Comparison<HitData> _hitDataComparerFunc = hitDataComparerFunc;
 
         private static Dictionary<int, ProjectionParams> projectionParamsCache = new Dictionary<int, ProjectionParams>();
         private static List<BaseRaycaster> raycasters;
 
         private static List<RaycastHitUI> raycastHitUIList = new List<RaycastHitUI>(20);
-        private static List<RaycastHit> raycastHitList = new List<RaycastHit>(20);
         private static List<HitData> hitList = new List<HitData>(20);
-#if UNITY_5_3_OR_NEWER
-        private static RaycastHit[] raycastHits = new RaycastHit[20];
-#endif
         private static RaycastHit2D[] raycastHits2D = new RaycastHit2D[20];
 
 #pragma warning disable 0414
@@ -155,10 +137,6 @@ namespace TouchScript.Layers
 		[SerializeField]
         [HideInInspector]
         private bool hitProps;
-
-        [SerializeField]
-        [ToggleLeft]
-        private bool hit3DObjects = true;
 
         [SerializeField]
         [ToggleLeft]
@@ -231,8 +209,7 @@ namespace TouchScript.Layers
         public override ProjectionParams GetProjectionParams(Pointer pointer)
         {
             var press = pointer.GetPressData();
-            if ((press.Type == HitData.HitType.World2D) ||
-                (press.Type == HitData.HitType.World3D))
+            if (press.Type == HitData.HitType.World2D)
                 return layerProjectionParams;
 
             var graphic = press.RaycastHitUI.Graphic;
@@ -350,60 +327,6 @@ namespace TouchScript.Layers
 
             int count;
             bool exclusiveSet = layerManager.HasExclusive;
-
-            if (hit3DObjects)
-            {
-#if UNITY_5_3_OR_NEWER
-                count = Physics.RaycastNonAlloc(ray, raycastHits, float.PositiveInfinity, layerMask);
-#else
-                var raycastHits = Physics.RaycastAll(ray, float.PositiveInfinity, layerMask);
-                var count = raycastHits.Length;
-#endif
-
-                // Try to do some optimizations if 2D and WS UI are not required
-                if (!hit2DObjects && !hitWorldSpaceUI)
-                {
-                    RaycastHit raycast;
-
-                    if (count == 0) return HitResult.Miss;
-                    if (count > 1)
-                    {
-                        raycastHitList.Clear();
-                        for (var i = 0; i < count; i++)
-                        {
-                            raycast = raycastHits[i];
-                            if (exclusiveSet && !layerManager.IsExclusive(raycast.transform)) continue;
-                            raycastHitList.Add(raycast);
-                        }
-                        if (raycastHitList.Count == 0) return HitResult.Miss;
-
-                        raycastHitList.Sort(_raycastHitComparerFunc);
-                        if (useHitFilters)
-                        {
-                            for (var i = 0; i < count; i++)
-                            {
-                                var result = doHit(pointer, raycastHitList[i], out hit);
-                                if (result != HitResult.Miss) return result;
-                            }
-                            return HitResult.Miss;
-                        }
-                        hit = new HitData(raycastHitList[0], this);
-                        return HitResult.Hit;
-                    }
-
-                    raycast = raycastHits[0];
-                    if (exclusiveSet && !layerManager.IsExclusive(raycast.transform)) return HitResult.Miss;
-                    if (useHitFilters) return doHit(pointer, raycast, out hit);
-                    hit = new HitData(raycast, this);
-                    return HitResult.Hit;
-                }
-                for (var i = 0; i < count; i++)
-                {
-                    var raycast = raycastHits[i];
-                    if (exclusiveSet && !layerManager.IsExclusive(raycast.transform)) continue;
-                    hitList.Add(new HitData(raycastHits[i], this));
-                }
-            }
 
             if (hit2DObjects)
             {
@@ -537,15 +460,9 @@ namespace TouchScript.Layers
             return checkHitFilters(pointer, hit);
         }
 
-        private HitResult doHit(IPointer pointer, RaycastHit raycastHit, out HitData hit)
-        {
-            hit = new HitData(raycastHit, this);
-            return checkHitFilters(pointer, hit);
-        }
-
         private void updateVariants()
         {
-            lookForCameraObjects = _camera != null && (hit3DObjects || hit2DObjects || hitWorldSpaceUI);
+            lookForCameraObjects = _camera != null && (hit2DObjects || hitWorldSpaceUI);
         }
 
         #endregion
@@ -572,11 +489,6 @@ namespace TouchScript.Layers
                 return lhs.Distance.CompareTo(rhs.Distance);
 
             return lhs.GraphicIndex.CompareTo(rhs.GraphicIndex);
-        }
-
-        private static int raycastHitComparerFunc(RaycastHit lhs, RaycastHit rhs)
-        {
-            return lhs.distance < rhs.distance ? -1 : 1;
         }
 
         private static int hitDataComparerFunc(HitData lhs, HitData rhs)
