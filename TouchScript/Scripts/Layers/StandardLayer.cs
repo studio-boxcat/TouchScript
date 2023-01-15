@@ -76,18 +76,7 @@ namespace TouchScript.Layers
         }
 
         /// <inheritdoc />
-        public override string Name
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(layerName))
-                {
-                    if (_camera == null) return base.Name;
-                    return _camera.name;
-                }
-                return layerName;
-            }
-        }
+        public override string Name => _camera == null ? base.Name : _camera.name;
 
         /// <inheritdoc />
         public override Vector3 WorldProjectionNormal

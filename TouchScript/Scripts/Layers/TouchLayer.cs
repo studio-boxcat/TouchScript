@@ -47,18 +47,7 @@ namespace TouchScript.Layers
         /// <summary>
         /// Pointer layer's name.
         /// </summary>
-        public virtual string Name
-        {
-            get 
-            {
-                if (string.IsNullOrEmpty(layerName)) return "Layer";
-                return layerName;
-            }
-            set
-            {
-                layerName = value;
-            }
-        }
+        public virtual string Name => "Layer";
 
         /// <summary>
         /// Layers screen to world projection normal.
@@ -81,9 +70,6 @@ namespace TouchScript.Layers
         /// Layer manager.
         /// </summary>
         protected ILayerManager layerManager;
-
-        [SerializeField]
-        protected string layerName;
 
         #endregion
 
