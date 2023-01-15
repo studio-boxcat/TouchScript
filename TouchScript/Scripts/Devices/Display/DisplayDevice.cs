@@ -76,7 +76,7 @@ namespace TouchScript.Devices.Display
         /// Native device resolution.
         /// </summary>
         [SerializeField]
-        protected Vector2 nativeResolution = new Vector2(1920, 1080);
+        protected Vector2 nativeResolution = new Vector2(1080, 1920);
 
         /// <inheritdoc />
         public virtual void UpdateDPI() {}
