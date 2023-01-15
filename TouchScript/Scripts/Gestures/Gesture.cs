@@ -136,11 +136,6 @@ namespace TouchScript.Gestures
         private EventHandler<GestureStateChangeEventArgs> stateChangedInvoker;
         private EventHandler<EventArgs> cancelledInvoker;
 
-		/// <summary>
-		/// Occurs when gesture changes state.
-		/// </summary>
-		public GestureEvent OnStateChange = new GestureEvent();
-
         #endregion
 
         #region Public properties
