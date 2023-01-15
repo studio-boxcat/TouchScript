@@ -45,37 +45,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0dd4c394fe06f4ea49e03aaa5e7a8190, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  OnFrameStart:
-    m_PersistentCalls:
-      m_Calls: []
-  OnFrameFinish:
-    m_PersistentCalls:
-      m_Calls: []
-  OnPointersAdd:
-    m_PersistentCalls:
-      m_Calls: []
-  OnPointersUpdate:
-    m_PersistentCalls:
-      m_Calls: []
-  OnPointersPress:
-    m_PersistentCalls:
-      m_Calls: []
-  OnPointersRelease:
-    m_PersistentCalls:
-      m_Calls: []
-  OnPointersRemove:
-    m_PersistentCalls:
-      m_Calls: []
-  OnPointersCancel:
-    m_PersistentCalls:
-      m_Calls: []
   basicEditor: 1
   displayDevice: {fileID: 0}
   shouldCreateCameraLayer: 1
   shouldCreateStandardInput: 1
-  useSendMessage: 0
-  sendMessageEvents: 252
-  sendMessageTarget: {fileID: 0}
   layers: []
 --- !u!114 &11478012
 MonoBehaviour:
