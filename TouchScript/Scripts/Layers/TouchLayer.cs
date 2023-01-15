@@ -68,12 +68,6 @@ namespace TouchScript.Layers
             get { return transform.forward; }
         }
 
-        /// <summary>
-        /// Gets or sets an object implementing <see cref="ILayerDelegate"/> to be asked for layer specific actions.
-        /// </summary>
-        /// <value> The delegate. </value>
-        public ILayerDelegate Delegate { get; set; }
-
         #endregion
 
         #region Private variables
@@ -115,11 +109,6 @@ namespace TouchScript.Layers
         {
             hit = default(HitData);
             if (enabled == false || gameObject.activeInHierarchy == false) return HitResult.Miss;
-            if (Delegate != null)
-            {
-                if (Delegate.ShouldReceivePointer(this, pointer)) return HitResult.Hit;
-                return HitResult.Miss;
-            }
             return HitResult.Hit;
         }
 
