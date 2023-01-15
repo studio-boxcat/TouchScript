@@ -20,7 +20,6 @@ namespace TouchScript.Editor.Gestures
         public static readonly GUIContent TEXT_HELP = new GUIContent("This component recognizes a gesture when this GameObject is tapped.");
 
         private SerializedProperty numberOfTapsRequired, distanceLimit, timeLimit, combinePointers, combinePointersInterval;
-        private SerializedProperty OnTap;
 
         protected override void OnEnable()
         {
@@ -29,8 +28,6 @@ namespace TouchScript.Editor.Gestures
             distanceLimit = serializedObject.FindProperty("distanceLimit");
             combinePointers = serializedObject.FindProperty("combinePointers");
             combinePointersInterval = serializedObject.FindProperty("combinePointersInterval");
-
-            OnTap = serializedObject.FindProperty("OnTap");
 
             base.OnEnable();
         }
@@ -70,13 +67,6 @@ namespace TouchScript.Editor.Gestures
             EditorGUILayout.PropertyField(distanceLimit, TEXT_DISTANCE_LIMIT);
 
             base.drawLimits();
-        }
-
-        protected override void drawUnityEvents()
-        {
-            EditorGUILayout.PropertyField(OnTap);
-
-            base.drawUnityEvents();
         }
     }
 }

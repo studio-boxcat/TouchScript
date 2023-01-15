@@ -76,7 +76,6 @@ MonoBehaviour:
   useSendMessage: 0
   sendMessageEvents: 252
   sendMessageTarget: {fileID: 0}
-  useUnityEvents: 0
   layers: []
 --- !u!114 &11478012
 MonoBehaviour:

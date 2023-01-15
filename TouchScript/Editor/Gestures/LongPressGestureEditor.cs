@@ -51,12 +51,5 @@ namespace TouchScript.Editor.Gestures
 
             base.drawLimits();
         }
-
-        protected override void drawUnityEvents()
-        {
-            EditorGUILayout.PropertyField(OnLongPress);
-
-            base.drawUnityEvents();
-        }
     }
 }

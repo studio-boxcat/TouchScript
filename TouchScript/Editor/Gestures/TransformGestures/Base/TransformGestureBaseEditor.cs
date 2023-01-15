@@ -28,7 +28,6 @@ namespace TouchScript.Editor.Gestures.TransformGestures.Base
 
 
         protected SerializedProperty type, minScreenPointsDistance, screenTransformThreshold;
-        protected SerializedProperty OnTransformStart, OnTransform, OnTransformComplete;
 
         public SerializedProperty projection, projectionPlaneNormal;
         public SerializedProperty projectionProps;
@@ -43,9 +42,6 @@ namespace TouchScript.Editor.Gestures.TransformGestures.Base
             type = serializedObject.FindProperty("type");
             minScreenPointsDistance = serializedObject.FindProperty("minScreenPointsDistance");
             screenTransformThreshold = serializedObject.FindProperty("screenTransformThreshold");
-            OnTransformStart = serializedObject.FindProperty("OnTransformStart");
-            OnTransform = serializedObject.FindProperty("OnTransform");
-            OnTransformComplete = serializedObject.FindProperty("OnTransformComplete");
 
             projection = serializedObject.FindProperty("projection");
             projectionPlaneNormal = serializedObject.FindProperty("projectionPlaneNormal");
@@ -58,15 +54,6 @@ namespace TouchScript.Editor.Gestures.TransformGestures.Base
             selector = EditorResources.Load<Texture2D>("Icons/selector.png");
 
             base.OnEnable();
-        }
-
-        protected override void drawUnityEvents()
-        {
-            EditorGUILayout.PropertyField(OnTransformStart);
-            EditorGUILayout.PropertyField(OnTransform);
-            EditorGUILayout.PropertyField(OnTransformComplete);
-
-            base.drawUnityEvents();
         }
 
         protected void initCustomProjection()

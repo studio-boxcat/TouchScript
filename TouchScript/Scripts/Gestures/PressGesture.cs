@@ -39,11 +39,6 @@ namespace TouchScript.Gestures
         // Needed to overcome iOS AOT limitations
         private EventHandler<EventArgs> pressedInvoker;
 
-        /// <summary>
-        /// Unity event, occurs when gesture is recognized.
-        /// </summary>
-        public GestureEvent OnPress = new GestureEvent();
-
         #endregion
 
         #region Public properties
@@ -154,7 +149,6 @@ namespace TouchScript.Gestures
         {
             base.onRecognized();
             if (pressedInvoker != null) pressedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
-            if (UseUnityEvents) OnPress.Invoke(this);
         }
 
         #endregion

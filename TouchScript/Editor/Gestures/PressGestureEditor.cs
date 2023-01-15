@@ -16,12 +16,10 @@ namespace TouchScript.Editor.Gestures
         public static readonly GUIContent TEXT_HELP = new GUIContent("This component recognizes a gesture when at least one pointer is pressed over this GameObject.");
 
         private SerializedProperty ignoreChildren;
-        private SerializedProperty OnPress;
 
         protected override void OnEnable()
         {
             ignoreChildren = serializedObject.FindProperty("ignoreChildren");
-            OnPress = serializedObject.FindProperty("OnPress");
 
             base.OnEnable();
         }
@@ -36,13 +34,6 @@ namespace TouchScript.Editor.Gestures
             EditorGUILayout.PropertyField(ignoreChildren, TEXT_IGNORE_CHILDREN);
 
             base.drawGeneral();
-        }
-
-        protected override void drawUnityEvents()
-        {
-            EditorGUILayout.PropertyField(OnPress);
-
-            base.drawUnityEvents();
         }
     }
 }

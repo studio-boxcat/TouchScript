@@ -21,14 +21,9 @@ namespace TouchScript.Editor.Gestures
         public static readonly GUIContent TEXT_LIMITS_HEADER = new GUIContent("Limits", "Properties that limit the gesture.");
         public static readonly GUIContent TEXT_GESTURES_HEADER = new GUIContent("Interaction with other Gestures", "Settings which allow this gesture to interact with other gestures.");
         public static readonly GUIContent TEXT_ADVANCED_HEADER = new GUIContent("Advanced", "Advanced properties.");
-        public static readonly GUIContent TEXT_USE_SEND_MESSAGE_HEADER = new GUIContent("Use SendMessage", "Enables sending events through SendMessage. Warnning: this method is slow!");
-        public static readonly GUIContent TEXT_USE_UNITY_EVENTS_HEADER = new GUIContent("Use Unity Events", "Enables sending events through Unity Events.");
 
         public static readonly GUIContent TEXT_FRIENDLY = new GUIContent("Friendly Gestures", "List of gestures which can work together with this gesture.");
         public static readonly GUIContent TEXT_DEBUG_MODE = new GUIContent("Debug", "Turns on gesture debug mode.");
-        public static readonly GUIContent TEXT_SEND_STATE_CHANGE_MESSAGES = new GUIContent("Send State Change Messages", "If checked, the gesture will send a message for every state change. Gestures usually have their own more specific messages, so you should keep this toggle unchecked unless you really want state change messages.");
-        public static readonly GUIContent TEXT_SEND_MESSAGE_TARGET = new GUIContent("Target", "The GameObject target of Unity Messages. If null, host GameObject is used.");
-        public static readonly GUIContent TEXT_SEND_STATE_CHANGE_EVENTS = new GUIContent("Send State Change Events", "If checked, the gesture will send a events for every state change. Gestures usually have their own more specific messages, so you should keep this toggle unchecked unless you really want state change events.");
         public static readonly GUIContent TEXT_REQUIRE_GESTURE_TO_FAIL = new GUIContent("Require Other Gesture to Fail", "Another gesture must fail for this gesture to start.");
         public static readonly GUIContent TEXT_LIMIT_POINTERS = new GUIContent(" Limit Pointers", "");
 
@@ -40,13 +35,9 @@ namespace TouchScript.Editor.Gestures
         private SerializedProperty basicEditor;
 
         private SerializedProperty debugMode, friendlyGestures, requireGestureToFail,
-                                   minPointers, maxPointers,
-                                   useSendMessage, sendMessageTarget, sendStateChangeMessages,
-                                   useUnityEvents, sendStateChangeEvents;
+                                   minPointers, maxPointers;
 
-        private SerializedProperty OnStateChange;
         private SerializedProperty advancedProps, limitsProps, generalProps;
-        private PropertyInfo useUnityEvents_prop, useSendMessage_prop;
 
         private ReorderableList friendlyGesturesList;
         private int indexToRemove = -1;
@@ -64,19 +55,8 @@ namespace TouchScript.Editor.Gestures
             debugMode = serializedObject.FindProperty("debugMode");
             friendlyGestures = serializedObject.FindProperty("friendlyGestures");
             requireGestureToFail = serializedObject.FindProperty("requireGestureToFail");
-            useSendMessage = serializedObject.FindProperty("useSendMessage");
-            sendMessageTarget = serializedObject.FindProperty("sendMessageTarget");
-            sendStateChangeMessages = serializedObject.FindProperty("sendStateChangeMessages");
-            useUnityEvents = serializedObject.FindProperty("useUnityEvents");
-            sendStateChangeEvents = serializedObject.FindProperty("sendStateChangeEvents");
             minPointers = serializedObject.FindProperty("minPointers");
             maxPointers = serializedObject.FindProperty("maxPointers");
-
-            OnStateChange = serializedObject.FindProperty("OnStateChange");
-
-            var type = instance.GetType();
-            useUnityEvents_prop = type.GetProperty("UseUnityEvents", BindingFlags.Instance | BindingFlags.Public);
-            useSendMessage_prop = type.GetProperty("UseSendMessage", BindingFlags.Instance | BindingFlags.Public);
 
             minPointersFloat = minPointers.intValue;
             maxPointersFloat = maxPointers.intValue;
@@ -152,28 +132,6 @@ namespace TouchScript.Editor.Gestures
                     EditorGUI.indentLevel--;
                 }
 
-                display = GUIElements.Header(TEXT_USE_UNITY_EVENTS_HEADER, useUnityEvents, useUnityEvents, useUnityEvents_prop);
-                if (display)
-                {
-                    EditorGUI.indentLevel++;
-                    using (new EditorGUI.DisabledGroupScope(!useUnityEvents.boolValue))
-                    {
-                        drawUnityEvents();
-                    }
-                    EditorGUI.indentLevel--;
-                }
-
-                display = GUIElements.Header(TEXT_USE_SEND_MESSAGE_HEADER, useSendMessage, useSendMessage, useSendMessage_prop);
-                if (display)
-                {
-                    EditorGUI.indentLevel++;
-                    using (new EditorGUI.DisabledGroupScope(!useSendMessage.boolValue))
-                    {
-                        drawSendMessage();
-                    }
-                    EditorGUI.indentLevel--;
-                }
-
                 if (shouldDrawAdvanced)
                 {
                     display = GUIElements.Header(TEXT_ADVANCED_HEADER, advancedProps);
@@ -243,18 +201,6 @@ namespace TouchScript.Editor.Gestures
             GUILayout.Space(5);
             drawGestureList(friendlyGestures, addFriendlyGesture);
             GUILayout.Space(5);
-        }
-
-        protected virtual void drawUnityEvents()
-        {
-            EditorGUILayout.PropertyField(OnStateChange);
-            EditorGUILayout.PropertyField(sendStateChangeEvents, TEXT_SEND_STATE_CHANGE_EVENTS);
-        }
-
-        protected virtual void drawSendMessage()
-        {
-            EditorGUILayout.PropertyField(sendMessageTarget, TEXT_SEND_MESSAGE_TARGET);
-            EditorGUILayout.PropertyField(sendStateChangeMessages, TEXT_SEND_STATE_CHANGE_MESSAGES);
         }
 
         protected virtual void drawAdvanced() {}

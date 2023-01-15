@@ -23,12 +23,6 @@ namespace TouchScript.Gestures
         #region Constants
 
         /// <summary>
-        /// Unity event for gesture state changes.
-        /// </summary>
-        [Serializable]
-		public class GestureEvent : UnityEvent<Gesture> {}
-
-        /// <summary>
         /// Possible states of a gesture.
         /// </summary>
         public enum GestureState
@@ -188,16 +182,6 @@ namespace TouchScript.Gestures
                     requireGestureToFail.StateChanged += requiredToFailGestureStateChangedHandler;
             }
         }
-
-		/// <summary>
-		/// Gets or sets whether gesture should use Unity Events in addition to C# events.
-		/// </summary>
-		/// <value> <c>true</c> if gesture uses Unity Events; otherwise, <c>false</c>. </value>
-		public bool UseUnityEvents
-		{
-			get { return useUnityEvents; }
-			set { useUnityEvents = value; }
-		}
 
         /// <summary>
         /// Gets current gesture state.
@@ -400,9 +384,6 @@ namespace TouchScript.Gestures
 
         [SerializeField]
         private int maxPointers = 0;
-
-		[SerializeField]
-		private bool useUnityEvents = false;
 
         [SerializeField]
 		[NullToggle]

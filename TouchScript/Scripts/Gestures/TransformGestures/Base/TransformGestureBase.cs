@@ -48,21 +48,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
         // Needed to overcome iOS AOT limitations
         private EventHandler<EventArgs> transformStartedInvoker, transformedInvoker, transformCompletedInvoker;
 
-        /// <summary>
-        /// Unity event, occurs when the gesture starts.
-        /// </summary>
-		public GestureEvent OnTransformStart = new GestureEvent();
-
-        /// <summary>
-        /// Unity event, occurs when the gesture is updated.
-        /// </summary>
-		public GestureEvent OnTransform = new GestureEvent();
-
-        /// <summary>
-        /// Unity event, occurs when the gesture ends.
-        /// </summary>
-		public GestureEvent OnTransformComplete = new GestureEvent();
-
         #endregion
 
         #region Public properties
@@ -277,7 +262,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
         {
             base.onBegan();
             if (transformStartedInvoker != null) transformStartedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
-			if (UseUnityEvents) OnTransformStart.Invoke(this);
         }
 
         /// <inheritdoc />
@@ -288,7 +272,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
             targetPositionOverridden = false;
 
             if (transformedInvoker != null) transformedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
-			if (UseUnityEvents) OnTransform.Invoke(this);
         }
 
         /// <inheritdoc />
@@ -298,7 +281,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
 
             if (transformCompletedInvoker != null)
                 transformCompletedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
-			if (UseUnityEvents) OnTransformComplete.Invoke(this);
         }
 
         /// <inheritdoc />
