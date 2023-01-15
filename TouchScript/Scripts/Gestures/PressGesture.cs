@@ -25,15 +25,6 @@ namespace TouchScript.Gestures
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_Gestures_PressGesture.htm")]
     public class PressGesture : Gesture
     {
-        #region Constants
-
-        /// <summary>
-        /// Message name when gesture is recognized
-        /// </summary>
-        public const string PRESS_MESSAGE = "OnPress";
-
-        #endregion
-
         #region Events
 
         /// <summary>
@@ -163,8 +154,6 @@ namespace TouchScript.Gestures
         {
             base.onRecognized();
             if (pressedInvoker != null) pressedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
-            if (UseSendMessage && SendMessageTarget != null)
-                SendMessageTarget.SendMessage(PRESS_MESSAGE, this, SendMessageOptions.DontRequireReceiver);
             if (UseUnityEvents) OnPress.Invoke(this);
         }
 

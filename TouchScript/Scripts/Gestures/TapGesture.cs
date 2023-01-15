@@ -20,15 +20,6 @@ namespace TouchScript.Gestures
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_Gestures_TapGesture.htm")]
     public class TapGesture : Gesture
     {
-        #region Constants
-
-        /// <summary>
-        /// Message name when gesture is recognized
-        /// </summary>
-        public const string TAP_MESSAGE = "OnTap";
-
-        #endregion
-
         #region Events
 
         /// <summary>
@@ -295,7 +286,6 @@ namespace TouchScript.Gestures
 
             StopCoroutine("wait");
             if (tappedInvoker != null) tappedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
-            if (UseSendMessage && SendMessageTarget != null) SendMessageTarget.SendMessage(TAP_MESSAGE, this, SendMessageOptions.DontRequireReceiver);
             if (UseUnityEvents) OnTap.Invoke(this);
         }
 

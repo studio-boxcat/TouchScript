@@ -21,11 +21,6 @@ namespace TouchScript.Gestures
         #region Constants
 
         /// <summary>
-        /// Message name when gesture is recognized
-        /// </summary>
-        public const string FLICK_MESSAGE = "OnFlick";
-
-        /// <summary>
         /// Direction of a flick.
         /// </summary>
         public enum GestureDirection
@@ -284,7 +279,6 @@ namespace TouchScript.Gestures
         {
             base.onRecognized();
             if (flickedInvoker != null) flickedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
-            if (UseSendMessage && SendMessageTarget != null) SendMessageTarget.SendMessage(FLICK_MESSAGE, this, SendMessageOptions.DontRequireReceiver);
         }
 
         /// <inheritdoc />

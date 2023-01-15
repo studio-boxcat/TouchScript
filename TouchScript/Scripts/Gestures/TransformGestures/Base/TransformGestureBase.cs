@@ -22,25 +22,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
     /// </remarks>
     public abstract class TransformGestureBase : Gesture, ITransformGesture
     {
-        #region Constants
-
-        /// <summary>
-        /// Message name when gesture starts
-        /// </summary>
-        public const string TRANSFORM_START_MESSAGE = "OnTransformStart";
-
-        /// <summary>
-        /// Message name when gesture updates
-        /// </summary>
-        public const string TRANSFORM_MESSAGE = "OnTransform";
-
-        /// <summary>
-        /// Message name when gesture ends
-        /// </summary>
-        public const string TRANSFORM_COMPLETE_MESSAGE = "OnTransformComplete";
-
-        #endregion
-
         #region Events
 
         /// <inheritdoc />
@@ -296,8 +277,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
         {
             base.onBegan();
             if (transformStartedInvoker != null) transformStartedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
-            if (UseSendMessage && SendMessageTarget != null)
-                SendMessageTarget.SendMessage(TRANSFORM_START_MESSAGE, this, SendMessageOptions.DontRequireReceiver);
 			if (UseUnityEvents) OnTransformStart.Invoke(this);
         }
 
@@ -309,8 +288,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
             targetPositionOverridden = false;
 
             if (transformedInvoker != null) transformedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
-            if (UseSendMessage && SendMessageTarget != null)
-                SendMessageTarget.SendMessage(TRANSFORM_MESSAGE, this, SendMessageOptions.DontRequireReceiver);
 			if (UseUnityEvents) OnTransform.Invoke(this);
         }
 
@@ -321,8 +298,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
 
             if (transformCompletedInvoker != null)
                 transformCompletedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
-            if (UseSendMessage && SendMessageTarget != null)
-                SendMessageTarget.SendMessage(TRANSFORM_COMPLETE_MESSAGE, this, SendMessageOptions.DontRequireReceiver);
 			if (UseUnityEvents) OnTransformComplete.Invoke(this);
         }
 

@@ -29,16 +29,6 @@ namespace TouchScript.Gestures
 		public class GestureEvent : UnityEvent<Gesture> {}
 
         /// <summary>
-        /// Message sent when gesture changes state if SendMessage is used.
-        /// </summary>
-        public const string STATE_CHANGE_MESSAGE = "OnGestureStateChange";
-
-        /// <summary>
-        /// Message sent when gesture is cancelled if SendMessage is used.
-        /// </summary>
-        public const string CANCEL_MESSAGE = "OnGestureCancel";
-
-        /// <summary>
         /// Possible states of a gesture.
         /// </summary>
         public enum GestureState
@@ -204,40 +194,6 @@ namespace TouchScript.Gestures
             }
         }
 
-        /// <summary>
-        /// Gets or sets whether gesture should use Unity's SendMessage in addition to C# events.
-        /// </summary>
-        /// <value> <c>true</c> if gesture uses SendMessage; otherwise, <c>false</c>. </value>
-        public bool UseSendMessage
-        {
-            get { return useSendMessage; }
-            set { useSendMessage = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets a value indicating whether state change events are broadcasted if <see cref="UseSendMessage"/> is true.
-        /// </summary>
-        /// <value> <c>true</c> if state change events should be broadcaster; otherwise, <c>false</c>. </value>
-        public bool SendStateChangeMessages
-        {
-            get { return sendStateChangeMessages; }
-            set { sendStateChangeMessages = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets the target of Unity messages sent from this gesture.
-        /// </summary>
-        /// <value> The target of Unity messages. </value>
-        public GameObject SendMessageTarget
-        {
-            get { return sendMessageTarget; }
-            set
-            {
-                sendMessageTarget = value;
-                if (value == null) sendMessageTarget = gameObject;
-            }
-        }
-
 		/// <summary>
 		/// Gets or sets whether gesture should use Unity Events in addition to C# events.
 		/// </summary>
@@ -246,16 +202,6 @@ namespace TouchScript.Gestures
 		{
 			get { return useUnityEvents; }
 			set { useUnityEvents = value; }
-		}
-
-		/// <summary>
-		/// Gets or sets a value indicating whether state change events are broadcasted if <see cref="UseUnityEvents"/> is true.
-		/// </summary>
-		/// <value> <c>true</c> if state change events should be broadcaster; otherwise, <c>false</c>. </value>
-		public bool SendStateChangeEvents
-		{
-			get { return sendStateChangeEvents; }
-			set { sendStateChangeEvents = value; }
 		}
 
         /// <summary>
@@ -303,9 +249,6 @@ namespace TouchScript.Gestures
 
                 if (stateChangedInvoker != null)
                     stateChangedInvoker.InvokeHandleExceptions(this, GestureStateChangeEventArgs.GetCachedEventArgs(state, PreviousState));
-                if (useSendMessage && sendStateChangeMessages && SendMessageTarget != null)
-                    sendMessageTarget.SendMessage(STATE_CHANGE_MESSAGE, this, SendMessageOptions.DontRequireReceiver);
-				if (useUnityEvents && sendStateChangeEvents) OnStateChange.Invoke(this);
             }
         }
 
@@ -463,23 +406,8 @@ namespace TouchScript.Gestures
         [SerializeField]
         private int maxPointers = 0;
 
-        [SerializeField]
-        [ToggleLeft]
-        private bool useSendMessage = false;
-
-        [SerializeField]
-        [ToggleLeft]
-        private bool sendStateChangeMessages = false;
-
-        [SerializeField]
-        private GameObject sendMessageTarget;
-
 		[SerializeField]
 		private bool useUnityEvents = false;
-
-		[SerializeField]
-		[ToggleLeft]
-		private bool sendStateChangeEvents = false;
 
         [SerializeField]
 		[NullToggle]
@@ -662,7 +590,6 @@ namespace TouchScript.Gestures
             if (gestureManagerInstance == null)
                 Debug.LogError("No GesturehManager found! Please add an instance of GesturehManager to the scene!");
 
-            if (sendMessageTarget == null) sendMessageTarget = gameObject;
             INTERNAL_Reset();
         }
 
@@ -1008,8 +935,6 @@ namespace TouchScript.Gestures
         protected virtual void onCancelled()
         {
             if (cancelledInvoker != null) cancelledInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
-            if (useSendMessage && SendMessageTarget != null)
-                sendMessageTarget.SendMessage(CANCEL_MESSAGE, this, SendMessageOptions.DontRequireReceiver);
         }
 
         #endregion

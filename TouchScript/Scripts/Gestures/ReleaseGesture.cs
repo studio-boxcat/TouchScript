@@ -20,15 +20,6 @@ namespace TouchScript.Gestures
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_Gestures_ReleaseGesture.htm")]
     public class ReleaseGesture : Gesture
     {
-        #region Constants
-
-        /// <summary>
-        /// Message name when gesture is recognized
-        /// </summary>
-        public const string RELEASE_MESSAGE = "OnRelease";
-
-        #endregion
-
         #region Events
 
         /// <summary>
@@ -174,7 +165,6 @@ namespace TouchScript.Gestures
         {
             base.onRecognized();
             if (releasedInvoker != null) releasedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
-            if (UseSendMessage && SendMessageTarget != null) SendMessageTarget.SendMessage(RELEASE_MESSAGE, this, SendMessageOptions.DontRequireReceiver);
 			if (UseUnityEvents) OnRelease.Invoke(this);
         }
 

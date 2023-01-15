@@ -20,15 +20,6 @@ namespace TouchScript.Gestures
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_Gestures_LongPressGesture.htm")]
     public class LongPressGesture : Gesture
     {
-        #region Constants
-
-        /// <summary>
-        /// Message name when gesture is recognized
-        /// </summary>
-        public const string LONG_PRESS_MESSAGE = "OnLongPress";
-
-        #endregion
-
         #region Events
 
         /// <summary>
@@ -196,7 +187,6 @@ namespace TouchScript.Gestures
         {
             base.onRecognized();
             if (longPressedInvoker != null) longPressedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
-            if (UseSendMessage && SendMessageTarget != null) SendMessageTarget.SendMessage(LONG_PRESS_MESSAGE, this, SendMessageOptions.DontRequireReceiver);
             if (UseUnityEvents) OnLongPress.Invoke(this);
         }
 

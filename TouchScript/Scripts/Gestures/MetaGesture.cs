@@ -18,30 +18,6 @@ namespace TouchScript.Gestures
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_Gestures_MetaGesture.htm")]
     public sealed class MetaGesture : Gesture
     {
-        #region Constants
-
-        /// <summary>
-        /// Message dispatched when a pointer begins.
-        /// </summary>
-        public const string POINTER_PRESSED_MESSAGE = "OnPointerPressed";
-
-        /// <summary>
-        /// Message dispatched when a pointer moves.
-        /// </summary>
-        public const string POINTER_MOVED_MESSAGE = "OnPointerMoved";
-
-        /// <summary>
-        /// Message dispatched when a pointer ends.
-        /// </summary>
-        public const string POINTER_RELEASED_MESSAGE = "OnPointerReleased";
-
-        /// <summary>
-        /// Message dispatched when a pointer is cancelled.
-        /// </summary>
-        public const string POINTER_CANCELLED_MESSAGE = "OnPointerCancelled";
-
-        #endregion
-
         #region Events
 
         /// <summary>
@@ -135,10 +111,6 @@ namespace TouchScript.Gestures
                 for (var i = 0; i < length; i++)
                     pointerPressedInvoker.InvokeHandleExceptions(this, new MetaGestureEventArgs(pointers[i]));
             }
-            if (UseSendMessage && SendMessageTarget != null)
-            {
-                for (var i = 0; i < length; i++) SendMessageTarget.SendMessage(POINTER_PRESSED_MESSAGE, pointers[i], SendMessageOptions.DontRequireReceiver);
-            }
 
 #if UNITY_5_6_OR_NEWER
 			gestureSampler.End();
@@ -161,10 +133,6 @@ namespace TouchScript.Gestures
             {
                 for (var i = 0; i < length; i++)
                     pointerUpdatedInvoker.InvokeHandleExceptions(this, new MetaGestureEventArgs(pointers[i]));
-            }
-            if (UseSendMessage && SendMessageTarget != null)
-            {
-                for (var i = 0; i < length; i++) SendMessageTarget.SendMessage(POINTER_MOVED_MESSAGE, pointers[i], SendMessageOptions.DontRequireReceiver);
             }
 
 #if UNITY_5_6_OR_NEWER
@@ -189,10 +157,6 @@ namespace TouchScript.Gestures
                 for (var i = 0; i < length; i++)
                     pointerReleasedInvoker.InvokeHandleExceptions(this, new MetaGestureEventArgs(pointers[i]));
             }
-            if (UseSendMessage && SendMessageTarget != null)
-            {
-                for (var i = 0; i < length; i++) SendMessageTarget.SendMessage(POINTER_RELEASED_MESSAGE, pointers[i], SendMessageOptions.DontRequireReceiver);
-            }
 
 #if UNITY_5_6_OR_NEWER
 			gestureSampler.End();
@@ -213,10 +177,6 @@ namespace TouchScript.Gestures
             {
                 for (var i = 0; i < length; i++)
                     pointerCancelledInvoker.InvokeHandleExceptions(this, new MetaGestureEventArgs(pointers[i]));
-            }
-            if (UseSendMessage && SendMessageTarget != null)
-            {
-                for (var i = 0; i < length; i++) SendMessageTarget.SendMessage(POINTER_CANCELLED_MESSAGE, pointers[i], SendMessageOptions.DontRequireReceiver);
             }
 
 #if UNITY_5_6_OR_NEWER
