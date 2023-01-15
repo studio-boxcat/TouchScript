@@ -66,15 +66,6 @@ namespace TouchScript.Layers
         }
 
         /// <summary>
-        /// Indicates that the layer should query for <see cref="HitTest"/> components on target objects. Set this to <c>false</c> to optimize hit processing.
-        /// </summary>
-        public bool UseHitFilters
-        {
-            get { return useHitFilters; }
-            set { useHitFilters = value; }
-        }
-
-        /// <summary>
         /// Gets or sets the layer mask which is used to select layers which should be touchable from this layer.
         /// </summary>
         /// <value>A mask to exclude objects from possibly touchable list.</value>
@@ -152,10 +143,6 @@ namespace TouchScript.Layers
 
         [SerializeField]
         private LayerMask layerMask = -1;
-
-        [SerializeField]
-        [ToggleLeft]
-        private bool useHitFilters = false;
 
         private bool lookForCameraObjects = false;
         private TouchScriptInputModule inputModule;
@@ -361,24 +348,12 @@ namespace TouchScript.Layers
             if (count > 1)
             {
                 hitList.Sort(_hitDataComparerFunc);
-                if (useHitFilters)
-                {
-                    for (var i = 0; i < count; ++i)
-                    {
-                        hit = hitList[i];
-                        var result = checkHitFilters(pointer, hit);
-                        if (result != HitResult.Miss) return result;
-                    }
-                    return HitResult.Miss;
-                }
-                else
                 {
                     hit = hitList[0];
                     return HitResult.Hit;
                 }
             }
             hit = hitList[0];
-            if (useHitFilters) return checkHitFilters(pointer, hit);
             return HitResult.Hit;
         }
 
@@ -404,21 +379,11 @@ namespace TouchScript.Layers
             if (count > 1)
             {
                 raycastHitUIList.Sort(_raycastHitUIComparerFunc);
-                if (useHitFilters)
-                {
-                    for (var i = 0; i < count; ++i)
-                    {
-                        var result = doHit(pointer, raycastHitUIList[i], out hit);
-                        if (result != HitResult.Miss) return result;
-                    }
-                    return HitResult.Miss;
-                }
 
                 hit = new HitData(raycastHitUIList[0], this, true);
                 return HitResult.Hit;
             }
 
-            if (useHitFilters) return doHit(pointer, raycastHitUIList[0], out hit);
             hit = new HitData(raycastHitUIList[0], this, true);
             return HitResult.Hit;
         }
@@ -453,7 +418,7 @@ namespace TouchScript.Layers
         private HitResult doHit(IPointer pointer, RaycastHitUI raycastHit, out HitData hit)
         {
             hit = new HitData(raycastHit, this, true);
-            return checkHitFilters(pointer, hit);
+            return HitResult.Hit;
         }
 
         private void updateVariants()

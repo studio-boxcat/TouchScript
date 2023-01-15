@@ -124,12 +124,6 @@ namespace TouchScript.Layers
             }
 
             hit = new HitData(transform, this);
-            var result = checkHitFilters(pointer, hit);
-            if (result != HitResult.Hit)
-            {
-                hit = default(HitData);
-                return result;
-            }
             return HitResult.Hit;
         }
 

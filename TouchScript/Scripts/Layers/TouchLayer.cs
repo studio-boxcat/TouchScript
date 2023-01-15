@@ -93,12 +93,6 @@ namespace TouchScript.Layers
 
         #endregion
 
-        #region Temporary variables
-
-        private List<HitTest> tmpHitTestList = new List<HitTest>(10);
-
-        #endregion
-
         #region Public methods
 
         /// <summary>
@@ -206,30 +200,6 @@ namespace TouchScript.Layers
         #endregion
 
         #region Protected functions
-
-        /// <summary>
-        /// Checks the hit filters.
-        /// </summary>
-        /// <param name="pointer">The pointer.</param>
-        /// <param name="hit">HitData for the pointer.</param>
-        /// <returns></returns>
-        protected HitResult checkHitFilters(IPointer pointer, HitData hit)
-        {
-            hit.Target.GetComponents(tmpHitTestList);
-            var count = tmpHitTestList.Count;
-            if (count == 0) return HitResult.Hit;
-
-            var hitResult = HitResult.Hit;
-            for (var i = 0; i < count; i++)
-            {
-                var test = tmpHitTestList[i];
-                if (!test.enabled) continue;
-                hitResult = test.IsHit(pointer, hit);
-                if (hitResult != HitResult.Hit) break;
-            }
-
-            return hitResult;
-        }
 
         /// <summary>
         /// Called when a pointer is added.
