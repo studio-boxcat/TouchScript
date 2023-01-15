@@ -222,7 +222,6 @@ namespace TouchScript.Core
             (l) => l.Clear());
 
         private int nextPointerId = 0;
-        private object pointerLock = new object();
 
 		// Cache delegates
 		private Func<TouchLayer, bool> _layerAddPointer, _layerUpdatePointer, _layerRemovePointer, _layerCancelPointer;
@@ -314,7 +313,6 @@ namespace TouchScript.Core
 
         internal void INTERNAL_AddPointer(Pointer pointer)
         {
-            lock (pointerLock)
             {
                 pointer.INTERNAL_Init(nextPointerId);
                 pointersAdded.Add(pointer);
@@ -329,7 +327,6 @@ namespace TouchScript.Core
 
         internal void INTERNAL_UpdatePointer(int id)
         {
-            lock (pointerLock)
             {
                 Pointer pointer;
                 if (!idToPointer.TryGetValue(id, out pointer))
@@ -351,7 +348,6 @@ namespace TouchScript.Core
 
         internal void INTERNAL_PressPointer(int id)
         {
-            lock (pointerLock)
             {
                 Pointer pointer;
                 if (!idToPointer.TryGetValue(id, out pointer))
@@ -383,7 +379,6 @@ namespace TouchScript.Core
         /// <inheritdoc />
         internal void INTERNAL_ReleasePointer(int id)
         {
-            lock (pointerLock)
             {
                 Pointer pointer;
                 if (!idToPointer.TryGetValue(id, out pointer))
@@ -415,7 +410,6 @@ namespace TouchScript.Core
         /// <inheritdoc />
         internal void INTERNAL_RemovePointer(int id)
         {
-            lock (pointerLock)
             {
                 Pointer pointer;
                 if (!idToPointer.TryGetValue(id, out pointer))
@@ -447,7 +441,6 @@ namespace TouchScript.Core
         /// <inheritdoc />
         internal void INTERNAL_CancelPointer(int id)
         {
-            lock (pointerLock)
             {
                 Pointer pointer;
                 if (!idToPointer.TryGetValue(id, out pointer))
@@ -958,7 +951,7 @@ namespace TouchScript.Core
             List<int> releasedList = null;
             List<int> removedList = null;
             List<int> cancelledList = null;
-            lock (pointerLock)
+
             {
                 if (pointersAdded.Count > 0)
                 {
