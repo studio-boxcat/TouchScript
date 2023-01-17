@@ -22,14 +22,7 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Occurs when gesture is recognized.
         /// </summary>
-        public event EventHandler<EventArgs> Tapped
-        {
-            add { tappedInvoker += value; }
-            remove { tappedInvoker -= value; }
-        }
-
-        // Needed to overcome iOS AOT limitations
-        private EventHandler<EventArgs> tappedInvoker;
+        public event EventHandler<EventArgs> Tapped;
 
         #endregion
 
@@ -126,7 +119,7 @@ namespace TouchScript.Gestures
 
             if (State is GestureState.Idle or GestureState.Possible)
                 setState(GestureState.Failed);
-            if (tappedInvoker != null) tappedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
+            Tapped?.InvokeHandleExceptions(this, EventArgs.Empty);
         }
 
         /// <inheritdoc />

@@ -4,13 +4,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Linq;
 using TouchScript.Hit;
 using TouchScript.Utils;
-using TouchScript.Utils.Attributes;
 using TouchScript.Pointers;
 using UnityEngine;
 using TouchScript.Core;
+using UnityEngine.Assertions;
 
 namespace TouchScript.Gestures
 {
@@ -122,23 +122,6 @@ namespace TouchScript.Gestures
         #region Public properties
 
         /// <summary>
-        /// Gets or sets another gesture which must fail before this gesture can be recognized.
-        /// </summary>
-        /// <value> The gesture which must fail before this gesture can be recognized. </value>
-        public Gesture RequireGestureToFail
-        {
-            get { return requireGestureToFail; }
-            set
-            {
-                if (requireGestureToFail != null)
-                    requireGestureToFail.StateChanged -= requiredToFailGestureStateChangedHandler;
-                requireGestureToFail = value;
-                if (requireGestureToFail != null)
-                    requireGestureToFail.StateChanged += requiredToFailGestureStateChangedHandler;
-            }
-        }
-
-        /// <summary>
         /// Gets current gesture state.
         /// </summary>
         /// <value> Current state of the gesture. </value>
@@ -229,30 +212,13 @@ namespace TouchScript.Gestures
         /// Gets list of gesture's active pointers.
         /// </summary>
         /// <value> The list of pointers owned by this gesture. </value>
-        public IList<Pointer> ActivePointers
-        {
-            get
-            {
-                if (readonlyActivePointers == null)
-                    readonlyActivePointers = new ReadOnlyCollection<Pointer>(activePointers);
-                return readonlyActivePointers;
-            }
-        }
+        public IReadOnlyList<Pointer> ActivePointers => activePointers;
 
         /// <summary>
         /// Gets the number of active pointerss.
         /// </summary>
         /// <value> The number of pointers owned by this gesture. </value>
-        public int NumPointers
-        {
-            get { return numPointers; }
-        }
-
-        /// <summary>
-        /// Gets or sets an object implementing <see cref="IGestureDelegate"/> to be asked for gesture specific actions.
-        /// </summary>
-        /// <value> The delegate. </value>
-        public IGestureDelegate Delegate { get; set; }
+        public int NumPointers => numPointers;
 
         #endregion
 
@@ -285,18 +251,11 @@ namespace TouchScript.Gestures
         private int maxPointers = 0;
 
         [SerializeField]
-        [NullToggle]
-        private Gesture requireGestureToFail;
-
-        [SerializeField]
         // Serialized list of gestures for Unity IDE.
         private List<Gesture> friendlyGestures = new List<Gesture>();
 
         private int numPointers;
-        private ReadOnlyCollection<Pointer> readonlyActivePointers;
         private GestureManager gestureManagerInstance;
-        private GestureState delayedStateChange = GestureState.Idle;
-        private bool requiredGestureFailed = false;
         private GestureState state = GestureState.Idle;
 
         /// <summary>
@@ -354,12 +313,8 @@ namespace TouchScript.Gestures
         /// <returns> <c>true</c> if this instance can prevent the specified gesture; <c>false</c> otherwise. </returns>
         public virtual bool CanPreventGesture(Gesture gesture)
         {
-            if (Delegate == null)
-            {
-                if (gesture.CanBePreventedByGesture(this)) return !IsFriendly(gesture);
-                return false;
-            }
-            return !Delegate.ShouldRecognizeSimultaneously(this, gesture);
+            if (gesture.CanBePreventedByGesture(this)) return !IsFriendly(gesture);
+            return false;
         }
 
         /// <summary>
@@ -367,32 +322,20 @@ namespace TouchScript.Gestures
         /// </summary>
         /// <param name="gesture"> The gesture. </param>
         /// <returns> <c>true</c> if this instance can be prevented by specified gesture; <c>false</c> otherwise. </returns>
-        public virtual bool CanBePreventedByGesture(Gesture gesture)
-        {
-            if (Delegate == null) return !IsFriendly(gesture);
-            return !Delegate.ShouldRecognizeSimultaneously(this, gesture);
-        }
+        public virtual bool CanBePreventedByGesture(Gesture gesture) => !IsFriendly(gesture);
 
         /// <summary>
         /// Specifies if gesture can receive this specific pointer point.
         /// </summary>
         /// <param name="pointer"> The pointer. </param>
         /// <returns> <c>true</c> if this pointer should be received by the gesture; <c>false</c> otherwise. </returns>
-        public virtual bool ShouldReceivePointer(Pointer pointer)
-        {
-            if (Delegate == null) return true;
-            return Delegate.ShouldReceivePointer(this, pointer);
-        }
+        public virtual bool ShouldReceivePointer(Pointer pointer) => true;
 
         /// <summary>
         /// Specifies if gesture can begin or recognize.
         /// </summary>
         /// <returns> <c>true</c> if gesture should begin; <c>false</c> otherwise. </returns>
-        public virtual bool ShouldBegin()
-        {
-            if (Delegate == null) return true;
-            return Delegate.ShouldBegin(this);
-        }
+        public virtual bool ShouldBegin() => true;
 
         /// <summary>
         /// Cancels this gesture.
@@ -437,7 +380,6 @@ namespace TouchScript.Gestures
             {
                 AddFriendlyGesture(friendlyGestures[i]);
             }
-            RequireGestureToFail = requireGestureToFail;
         }
 
         /// <summary>
@@ -471,7 +413,6 @@ namespace TouchScript.Gestures
             {
                 INTERNAL_RemoveFriendlyGesture(copy[i]);
             }
-            RequireGestureToFail = null;
         }
 
         #endregion
@@ -487,14 +428,14 @@ namespace TouchScript.Gestures
         {
             activePointers.Clear();
             numPointers = 0;
-            delayedStateChange = GestureState.Idle;
             pointersNumState = PointersNumState.TooFew;
-            requiredGestureFailed = false;
             reset();
         }
 
         internal void INTERNAL_PointersPressed(IList<Pointer> pointers)
         {
+            Assert.IsTrue(pointers.All(p => activePointers.Contains(p) == false));
+
             var count = pointers.Count;
             var total = numPointers + count;
             pointersNumState = PointersNumState.InRange;
@@ -550,6 +491,8 @@ namespace TouchScript.Gestures
 
         internal void INTERNAL_PointersReleased(IList<Pointer> pointers)
         {
+            Assert.IsTrue(pointers.All(p => activePointers.Contains(p)));
+
             var count = pointers.Count;
             var total = numPointers - count;
             pointersNumState = PointersNumState.InRange;
@@ -609,6 +552,8 @@ namespace TouchScript.Gestures
 
         internal void INTERNAL_PointersCancelled(IList<Pointer> pointers)
         {
+            Assert.IsTrue(pointers.All(p => activePointers.Contains(p)));
+
             var count = pointers.Count;
             var total = numPointers - count;
             pointersNumState = PointersNumState.InRange;
@@ -680,26 +625,6 @@ namespace TouchScript.Gestures
         protected bool setState(GestureState value)
         {
             if (gestureManagerInstance == null) return false;
-            if (requireGestureToFail != null)
-            {
-                switch (value)
-                {
-                    case GestureState.Recognized:
-                    case GestureState.Began:
-                        if (!requiredGestureFailed)
-                        {
-                            delayedStateChange = value;
-                            return false;
-                        }
-                        break;
-                    case GestureState.Idle:
-                    case GestureState.Possible:
-                    case GestureState.Failed:
-                    case GestureState.Cancelled:
-                        delayedStateChange = GestureState.Idle;
-                        break;
-                }
-            }
 
             var newState = gestureManagerInstance.INTERNAL_GestureChangeState(this, value);
             State = newState;
@@ -828,30 +753,6 @@ namespace TouchScript.Gestures
             if (gesture == null || gesture == this) return;
 
             friendlyGestures.Remove(gesture);
-        }
-
-        #endregion
-
-        #region Event handlers
-
-        private void requiredToFailGestureStateChangedHandler(object sender, GestureStateChangeEventArgs e)
-        {
-            if ((sender as Gesture) != requireGestureToFail) return;
-            switch (e.State)
-            {
-                case GestureState.Failed:
-                    requiredGestureFailed = true;
-                    if (delayedStateChange != GestureState.Idle)
-                    {
-                        setState(delayedStateChange);
-                    }
-                    break;
-                case GestureState.Began:
-                case GestureState.Recognized:
-                case GestureState.Cancelled:
-                    if (state != GestureState.Failed) setState(GestureState.Failed);
-                    break;
-            }
         }
 
         #endregion

@@ -8,7 +8,6 @@ using TouchScript.Utils;
 using TouchScript.Utils.Attributes;
 using TouchScript.Pointers;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 namespace TouchScript.Gestures
 {
@@ -25,14 +24,7 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Occurs when gesture is recognized.
         /// </summary>
-        public event EventHandler<EventArgs> Released
-        {
-            add { releasedInvoker += value; }
-            remove { releasedInvoker -= value; }
-        }
-
-        // Needed to overcome iOS AOT limitations
-        private EventHandler<EventArgs> releasedInvoker;
+        public event EventHandler<EventArgs> Released;
 
         #endregion
 
@@ -71,18 +63,10 @@ namespace TouchScript.Gestures
         }
 
         /// <inheritdoc />
-        public override bool CanPreventGesture(Gesture gesture)
-        {
-            if (Delegate == null) return false;
-            return !Delegate.ShouldRecognizeSimultaneously(this, gesture);
-        }
+        public override bool CanPreventGesture(Gesture gesture) => false;
 
         /// <inheritdoc />
-        public override bool CanBePreventedByGesture(Gesture gesture)
-        {
-            if (Delegate == null) return false;
-            return !Delegate.ShouldRecognizeSimultaneously(this, gesture);
-        }
+        public override bool CanBePreventedByGesture(Gesture gesture) => false;
 
         /// <inheritdoc />
         protected override void pointersPressed(IList<Pointer> pointers)
@@ -113,7 +97,7 @@ namespace TouchScript.Gestures
         protected override void onRecognized()
         {
             base.onRecognized();
-            if (releasedInvoker != null) releasedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
+            Released?.InvokeHandleExceptions(this, EventArgs.Empty);
         }
 
         #endregion

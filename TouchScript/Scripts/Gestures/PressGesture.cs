@@ -30,14 +30,7 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Occurs when gesture is recognized.
         /// </summary>
-        public event EventHandler<EventArgs> Pressed
-        {
-            add { pressedInvoker += value; }
-            remove { pressedInvoker -= value; }
-        }
-
-        // Needed to overcome iOS AOT limitations
-        private EventHandler<EventArgs> pressedInvoker;
+        public event EventHandler<EventArgs> Pressed;
 
         #endregion
 
@@ -76,18 +69,10 @@ namespace TouchScript.Gestures
         }
 
         /// <inheritdoc />
-        public override bool CanPreventGesture(Gesture gesture)
-        {
-            if (Delegate == null) return false;
-            return !Delegate.ShouldRecognizeSimultaneously(this, gesture);
-        }
+        public override bool CanPreventGesture(Gesture gesture) => false;
 
         /// <inheritdoc />
-        public override bool CanBePreventedByGesture(Gesture gesture)
-        {
-            if (Delegate == null) return false;
-            return !Delegate.ShouldRecognizeSimultaneously(this, gesture);
-        }
+        public override bool CanBePreventedByGesture(Gesture gesture) => false;
 
         /// <inheritdoc />
         protected override void pointersPressed(IList<Pointer> pointers)
@@ -110,7 +95,7 @@ namespace TouchScript.Gestures
         protected override void onRecognized()
         {
             base.onRecognized();
-            if (pressedInvoker != null) pressedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
+            Pressed?.InvokeHandleExceptions(this, EventArgs.Empty);
         }
 
         #endregion
