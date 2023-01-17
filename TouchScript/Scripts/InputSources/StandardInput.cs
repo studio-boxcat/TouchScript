@@ -18,34 +18,9 @@ namespace TouchScript.InputSources
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_InputSources_StandardInput.htm")]
     public sealed class StandardInput : InputSource
     {
-        #region Public properties
-
-        /// <summary>
-        /// Use emulated second mouse pointer with ALT or not.
-        /// </summary>
-        public bool EmulateSecondMousePointer
-        {
-            get { return emulateSecondMousePointer; }
-            set
-            {
-                emulateSecondMousePointer = value;
-                if (mouseHandler != null) mouseHandler.EmulateSecondMousePointer = value;
-            }
-        }
-
-        #endregion
-
         #region Private variables
 
         private static StandardInput instance;
-
-		[SerializeField]
-        [HideInInspector]
-        private bool generalProps; // Used in the custom inspector
-
-        [ToggleLeft]
-        [SerializeField]
-        private bool emulateSecondMousePointer = true;
 
         private MouseHandler mouseHandler;
         private TouchHandler touchHandler;
@@ -138,15 +113,8 @@ namespace TouchScript.InputSources
 
             Input.simulateMouseWithTouches = false;
 
-#if UNITY_EDITOR
-            enableTouch();
-            enableMouse();
-#elif UNITY_IOS || UNITY_ANDROID
             enableMouse();
             enableTouch();
-#else
-            enableTouch();
-#endif
         }
 
         #endregion
@@ -156,7 +124,6 @@ namespace TouchScript.InputSources
         private void enableMouse()
         {
             mouseHandler = new MouseHandler(this, TouchManagerInstance.Instance);
-            mouseHandler.EmulateSecondMousePointer = emulateSecondMousePointer;
             Debug.Log("[TouchScript] Initialized Unity mouse input.");
         }
 

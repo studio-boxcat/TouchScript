@@ -9,7 +9,6 @@ using JetBrains.Annotations;
 using TouchScript.Pointers;
 using TouchScript.Utils;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 namespace TouchScript.InputSources.InputHandlers
 {
@@ -26,10 +25,6 @@ namespace TouchScript.InputSources.InputHandlers
         private ObjectPool<Pointer> touchPool;
         // Unity fingerId -> TouchScript touch info
         private Dictionary<int, TouchState> systemToInternalId = new Dictionary<int, TouchState>(10);
-
-#if UNITY_5_6_OR_NEWER
-		private CustomSampler updateSampler;
-#endif
 
         #endregion
 
@@ -50,10 +45,6 @@ namespace TouchScript.InputSources.InputHandlers
 
             touchPool = new ObjectPool<Pointer>(10, newPointer, null, resetPointer, "TouchHandler/Touch");
             touchPool.Name = "Touch";
-
-#if UNITY_5_6_OR_NEWER
-			updateSampler = CustomSampler.Create("[TouchScript] Update Touch");
-#endif
         }
 
         #region Public methods
@@ -61,10 +52,6 @@ namespace TouchScript.InputSources.InputHandlers
         /// <inheritdoc />
         public bool UpdateInput()
         {
-#if UNITY_5_6_OR_NEWER
-			updateSampler.Begin();
-#endif
-
             for (var i = 0; i < Input.touchCount; ++i)
             {
                 var t = Input.GetTouch(i);
@@ -137,10 +124,6 @@ namespace TouchScript.InputSources.InputHandlers
                         break;
                 }
             }
-
-#if UNITY_5_6_OR_NEWER
-			updateSampler.End();
-#endif
 
             return Input.touchCount > 0;
         }

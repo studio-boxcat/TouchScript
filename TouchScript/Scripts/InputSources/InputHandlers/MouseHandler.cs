@@ -42,29 +42,7 @@ namespace TouchScript.InputSources.InputHandlers
 
         #endregion
 
-        #region Public properties
-
-        /// <summary>
-        /// Gets or sets a value indicating whether second pointer emulation using ALT+CLICK should be enabled.
-        /// </summary>
-        /// <value>
-        /// <c>true</c> if second pointer emulation is enabled; otherwise, <c>false</c>.
-        /// </value>
-        public bool EmulateSecondMousePointer
-        {
-            get { return emulateSecondMousePointer; }
-            set
-            {
-                emulateSecondMousePointer = value;
-                if (fakeMousePointer != null) CancelPointer(fakeMousePointer, false);
-            }
-        }
-
-        #endregion
-
         #region Private variables
-
-        private bool emulateSecondMousePointer = true;
 
         private IInputSource input;
         private IPointerEventListener pointerEventListener;
@@ -148,7 +126,7 @@ namespace TouchScript.InputSources.InputHandlers
                 mousePointer.ScrollDelta = Vector2.zero;
             }
 
-            if (emulateSecondMousePointer)
+            if (Application.isEditor)
             {
                 switch (state)
                 {
