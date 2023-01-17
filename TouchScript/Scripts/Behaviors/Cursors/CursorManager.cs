@@ -7,7 +7,6 @@ using TouchScript.Utils;
 using TouchScript.Pointers;
 using TouchScript.Utils.Attributes;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 namespace TouchScript.Behaviors.Cursors
 {
@@ -185,8 +184,7 @@ namespace TouchScript.Behaviors.Cursors
             for (var i = 0; i < count; i++)
             {
                 var pointer = e.Pointers[i];
-                PointerCursor cursor;
-                if (!cursors.TryGetValue(pointer.Id, out cursor)) continue;
+                if (!cursors.TryGetValue(pointer.Id, out var cursor)) continue;
                 cursors.Remove(pointer.Id);
 
                 mousePool.Release(cursor);
@@ -199,8 +197,7 @@ namespace TouchScript.Behaviors.Cursors
             for (var i = 0; i < count; i++)
             {
                 var pointer = e.Pointers[i];
-                PointerCursor cursor;
-                if (!cursors.TryGetValue(pointer.Id, out cursor)) continue;
+                if (!cursors.TryGetValue(pointer.Id, out var cursor)) continue;
                 cursor.SetState(pointer, PointerCursor.CursorState.Pressed);
             }
         }
@@ -211,8 +208,7 @@ namespace TouchScript.Behaviors.Cursors
             for (var i = 0; i < count; i++)
             {
                 var pointer = e.Pointers[i];
-                PointerCursor cursor;
-                if (!cursors.TryGetValue(pointer.Id, out cursor)) continue;
+                if (!cursors.TryGetValue(pointer.Id, out var cursor)) continue;
                 cursor.UpdatePointer(pointer);
             }
         }
@@ -223,8 +219,7 @@ namespace TouchScript.Behaviors.Cursors
             for (var i = 0; i < count; i++)
             {
                 var pointer = e.Pointers[i];
-                PointerCursor cursor;
-                if (!cursors.TryGetValue(pointer.Id, out cursor)) continue;
+                if (!cursors.TryGetValue(pointer.Id, out var cursor)) continue;
                 cursor.SetState(pointer, PointerCursor.CursorState.Released);
             }
         }
