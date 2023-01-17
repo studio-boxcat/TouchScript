@@ -4,10 +4,8 @@
 
 using System.Collections.Generic;
 using TouchScript.Core;
-using TouchScript.Devices.Display;
 using TouchScript.Utils;
 using TouchScript.Pointers;
-using TouchScript.Utils.Attributes;
 using UnityEngine;
 
 namespace TouchScript.Behaviors.Cursors
@@ -25,13 +23,6 @@ namespace TouchScript.Behaviors.Cursors
         private PointerCursor mouseCursor;
 
         [SerializeField]
-        [ToggleLeft]
-        private bool useDPI = true;
-
-        [SerializeField]
-        private float cursorSize = 1f;
-
-        [SerializeField]
         private uint cursorPixelSize = 64;
 
         private RectTransform rect;
@@ -45,8 +36,6 @@ namespace TouchScript.Behaviors.Cursors
         private void Awake()
         {
             mousePool = new ObjectPool<PointerCursor>(2, instantiateMouseProxy, null, clearProxy);
-
-            updateCursorSize();
 
             rect = transform as RectTransform;
             if (rect == null)
@@ -96,19 +85,12 @@ namespace TouchScript.Behaviors.Cursors
             cursor.Hide();
         }
 
-        private void updateCursorSize()
-        {
-            if (useDPI) cursorPixelSize = (uint) (cursorSize * DisplayDevice.DotsPerCentimeter);
-        }
-
         #endregion
 
         #region Event handlers
 
         private void pointersAddedHandler(object sender, PointerEventArgs e)
         {
-            updateCursorSize();
-
             var count = e.Pointers.Count;
             for (var i = 0; i < count; i++)
             {
