@@ -261,7 +261,8 @@ namespace TouchScript.Core
 
         private void Update()
         {
-            sendFrameStartedToPointers();
+            foreach (var pointer in pointers)
+                pointer.INTERNAL_FrameStarted();
             input.UpdateInput();
             updatePointers();
         }
@@ -425,12 +426,6 @@ namespace TouchScript.Core
                 pointer.InputSource.INTERNAL_DiscardPointer(pointer);
             }
             pointerListPool.Release(list);
-        }
-
-        private void sendFrameStartedToPointers()
-        {
-            foreach (var pointer in pointers)
-                pointer.INTERNAL_FrameStarted();
         }
 
         private void updatePointers()
