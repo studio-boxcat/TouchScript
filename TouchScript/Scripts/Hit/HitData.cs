@@ -23,7 +23,6 @@ namespace TouchScript.Hit
             RaycastHitUI = raycastHitUI;
         }
 
-        public bool IsUI() => RaycastHitUI.Target is not null;
         public bool IsNotUI() => RaycastHitUI.Target is null;
     }
 }
