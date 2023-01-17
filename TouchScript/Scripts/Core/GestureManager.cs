@@ -215,7 +215,7 @@ namespace TouchScript.Core
                 for (var j = 0; j < gesturesInHierarchyCount; j++)
                 {
                     var gesture = gesturesInHierarchy[j];
-                    if (gesture.State == Gesture.GestureState.Began || gesture.State == Gesture.GestureState.Changed) startedGestures.Add(gesture);
+                    if (gesture.State is Gesture.GestureState.Began or Gesture.GestureState.Changed) startedGestures.Add(gesture);
                 }
 
                 var startedCount = startedGestures.Count;
@@ -261,9 +261,9 @@ namespace TouchScript.Core
                     // If there are any pointers to send.
                     if (pointersSentToGesture.Count > 0)
                     {
-                        if (pointersToDispatchForGesture.ContainsKey(possibleGesture))
+                        if (pointersToDispatchForGesture.TryGetValue(possibleGesture, out var gesturePointers))
                         {
-                            pointersToDispatchForGesture[possibleGesture].AddRange(pointersSentToGesture);
+                            gesturePointers.AddRange(pointersSentToGesture);
                             pointerListPool.Release(pointersSentToGesture);
                         }
                         else
@@ -304,8 +304,7 @@ namespace TouchScript.Core
                 for (var j = 0; j < numPointers; j++)
                 {
                     var pointer = list[j];
-                    List<Gesture> gestureList;
-                    if (!pointerToGestures.TryGetValue(pointer.Id, out gestureList))
+                    if (!pointerToGestures.TryGetValue(pointer.Id, out var gestureList))
                     {
                         gestureList = gestureListPool.Get();
                         pointerToGestures.Add(pointer.Id, gestureList);
@@ -435,8 +434,7 @@ namespace TouchScript.Core
                 for (var j = 0; j < activeCount; j++)
                 {
                     var pointer = activePointers[j];
-                    List<Gesture> list;
-                    if (pointerToGestures.TryGetValue(pointer.Id, out list)) list.Remove(gesture);
+                    if (pointerToGestures.TryGetValue(pointer.Id, out var list)) list.Remove(gesture);
                 }
 
                 if (gesture == null) continue; // Unity "null" comparison
@@ -457,8 +455,7 @@ namespace TouchScript.Core
         // parent <- parent <- target
         private List<Gesture> getHierarchyEndingWith(Transform target)
         {
-            List<Gesture> list;
-            if (hierarchyEndingWithCache.TryGetValue(target, out list)) return list;
+            if (hierarchyEndingWithCache.TryGetValue(target, out var list)) return list;
 
             list = gestureListPool.Get();
             target.GetComponentsInParent(false, list);
@@ -470,8 +467,7 @@ namespace TouchScript.Core
         // target <- child*
         private List<Gesture> getHierarchyBeginningWith(Transform target)
         {
-            List<Gesture> list;
-            if (hierarchyBeginningWithCache.TryGetValue(target, out list)) return list;
+            if (hierarchyBeginningWithCache.TryGetValue(target, out var list)) return list;
 
             list = gestureListPool.Get();
             target.GetComponentsInChildren(list);
@@ -514,8 +510,7 @@ namespace TouchScript.Core
                 if (gesture == otherGesture) continue;
                 if (!gestureIsActive(otherGesture)) continue;
 
-                if (otherGesture.State == Gesture.GestureState.Began ||
-                    otherGesture.State == Gesture.GestureState.Changed)
+                if (otherGesture.State is Gesture.GestureState.Began or Gesture.GestureState.Changed)
                 {
                     if (otherGesture.CanPreventGesture(gesture))
                     {
@@ -534,22 +529,14 @@ namespace TouchScript.Core
 
             if (canRecognize)
             {
-                count = gesturesToFail.Count;
-                for (var i = 0; i < count; i++)
-                {
-                    failGesture(gesturesToFail[i]);
-                }
+                foreach (var gestureToFail in gesturesToFail)
+                    gestureToFail.INTERNAL_SetState(Gesture.GestureState.Failed);
             }
 
             gestureListPool.Release(gesturesToFail);
             gestureListPool.Release(gesturesInHierarchy);
 
             return canRecognize;
-        }
-
-        private void failGesture(Gesture gesture)
-        {
-            gesture.INTERNAL_SetState(Gesture.GestureState.Failed);
         }
 
         #endregion

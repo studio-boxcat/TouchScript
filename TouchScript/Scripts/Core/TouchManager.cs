@@ -44,7 +44,6 @@ namespace TouchScript.Core
 
         #region Private variables
 
-        [FormerlySerializedAs("inputs")]
         [SerializeField, Required, ChildGameObjectsOnly]
         private StandardInput input;
 
@@ -267,19 +266,15 @@ namespace TouchScript.Core
             updatePointers();
         }
 
-        public void ForceUpdate() => Update();
-
         #endregion
 
         #region Private functions
 
         private void updateAdded(List<Pointer> pointers)
         {
-            var addedCount = pointers.Count;
             var list = pointerListPool.Get();
-            for (var i = 0; i < addedCount; i++)
+            foreach (var pointer in pointers)
             {
-                var pointer = pointers[i];
                 list.Add(pointer);
                 this.pointers.Add(pointer);
                 idToPointer.Add(pointer.Id, pointer);
@@ -291,11 +286,9 @@ namespace TouchScript.Core
 
         private void updateUpdated(List<int> pointers)
         {
-            var updatedCount = pointers.Count;
             var list = pointerListPool.Get();
-            for (var i = 0; i < updatedCount; i++)
+            foreach (var id in pointers)
             {
-                var id = pointers[i];
                 if (!idToPointer.TryGetValue(id, out var pointer))
                 {
 #if DEBUG
@@ -313,11 +306,9 @@ namespace TouchScript.Core
 
         private void updatePressed(List<int> pointers)
         {
-            var pressedCount = pointers.Count;
             var list = pointerListPool.Get();
-            for (var i = 0; i < pressedCount; i++)
+            foreach (var id in pointers)
             {
-                var id = pointers[i];
                 if (!idToPointer.TryGetValue(id, out var pointer))
                 {
 #if DEBUG
@@ -339,11 +330,9 @@ namespace TouchScript.Core
 
         private void updateReleased(List<int> pointers)
         {
-            var releasedCount = pointers.Count;
             var list = pointerListPool.Get();
-            for (var i = 0; i < releasedCount; i++)
+            foreach (var id in pointers)
             {
-                var id = pointers[i];
                 if (!idToPointer.TryGetValue(id, out var pointer))
                 {
 #if DEBUG
@@ -357,22 +346,16 @@ namespace TouchScript.Core
 
             PointersReleased?.InvokeHandleExceptions(this, new PointerEventArgs(list));
 
-            releasedCount = list.Count;
-            for (var i = 0; i < releasedCount; i++)
-            {
-                var pointer = list[i];
+            foreach (var pointer in list)
                 pointer.INTERNAL_ClearPressData();
-            }
             pointerListPool.Release(list);
         }
 
         private void updateRemoved(List<int> pointers)
         {
-            var removedCount = pointers.Count;
             var list = pointerListPool.Get();
-            for (var i = 0; i < removedCount; i++)
+            foreach (var id in pointers)
             {
-                var id = pointers[i];
                 if (!idToPointer.TryGetValue(id, out var pointer))
                 {
 #if DEBUG
@@ -388,22 +371,16 @@ namespace TouchScript.Core
 
             PointersRemoved?.InvokeHandleExceptions(this, new PointerEventArgs(list));
 
-            removedCount = list.Count;
-            for (var i = 0; i < removedCount; i++)
-            {
-                var pointer = list[i];
+            foreach (var pointer in list)
                 pointer.InputSource.INTERNAL_DiscardPointer(pointer);
-            }
             pointerListPool.Release(list);
         }
 
         private void updateCancelled(List<int> pointers)
         {
-            var cancelledCount = pointers.Count;
             var list = pointerListPool.Get();
-            for (var i = 0; i < cancelledCount; i++)
+            foreach (var id in pointers)
             {
-                var id = pointers[i];
                 if (!idToPointer.TryGetValue(id, out var pointer))
                 {
 #if DEBUG
@@ -420,11 +397,8 @@ namespace TouchScript.Core
 
             PointersCancelled?.InvokeHandleExceptions(this, new PointerEventArgs(list));
 
-            for (var i = 0; i < cancelledCount; i++)
-            {
-                var pointer = list[i];
+            foreach (var pointer in list)
                 pointer.InputSource.INTERNAL_DiscardPointer(pointer);
-            }
             pointerListPool.Release(list);
         }
 
@@ -480,11 +454,8 @@ namespace TouchScript.Core
                 }
             }
 
-            var count = pointers.Count;
-            for (var i = 0; i < count; i++)
-            {
-                pointers[i].INTERNAL_UpdatePosition();
-            }
+            foreach (var pointer in pointers)
+                pointer.INTERNAL_UpdatePosition();
 
             if (addedList != null)
             {
