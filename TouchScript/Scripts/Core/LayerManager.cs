@@ -13,7 +13,6 @@ namespace TouchScript.Core
     public static class LayerManager
     {
         static readonly List<TouchLayer> _layers = new(10);
-        public static IReadOnlyList<TouchLayer> Layers => _layers;
 
         public static void AddLayer(TouchLayer layer, int index = -1)
         {
@@ -40,7 +39,7 @@ namespace TouchScript.Core
             foreach (var layer in _layers)
             {
                 var hitResult = layer.Hit(screenPosition, out hit);
-                return hitResult == HitResult.Hit;
+                if (hitResult == HitResult.Hit) return true;
             }
 
             hit = default;

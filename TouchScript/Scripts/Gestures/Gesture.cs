@@ -415,17 +415,9 @@ namespace TouchScript.Gestures
         }
 
         /// <summary>
-        /// Cancels this gesture.
-        /// </summary>
-        public void Cancel()
-        {
-            Cancel(false, false);
-        }
-
-        /// <summary>
         /// Returns <see cref="HitData"/> for gesture's <see cref="ScreenPosition"/>, i.e. what is right beneath it.
         /// </summary>
-        public virtual HitData GetScreenPositionHitData()
+        public HitData GetScreenPositionHitData()
         {
             LayerManager.GetHitTarget(ScreenPosition, out var hit);
             return hit;
