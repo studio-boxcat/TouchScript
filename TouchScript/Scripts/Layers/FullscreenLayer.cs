@@ -14,9 +14,12 @@ namespace TouchScript.Layers
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_Layers_FullscreenLayer.htm")]
     public class FullscreenLayer : TouchLayer
     {
+        Camera _camera;
+
         public override ProjectionParams GetProjectionParams()
         {
-            throw new System.NotImplementedException();
+            _camera ??= Camera.main;
+            return new ProjectionParams(_camera);
         }
 
         public override HitResult Hit(Vector2 screenPosition, out HitData hit)
