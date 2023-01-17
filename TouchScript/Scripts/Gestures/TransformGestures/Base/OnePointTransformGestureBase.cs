@@ -3,9 +3,9 @@
  */
 
 using System.Collections.Generic;
-using TouchScript.Hit;
 using TouchScript.Layers;
 using TouchScript.Pointers;
+using TouchScript.Utils;
 using TouchScript.Utils.Geom;
 using UnityEngine;
 
@@ -31,7 +31,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         {
             get
             {
-                if (NumPointers == 0) return TouchManager.INVALID_POSITION;
+                if (NumPointers == 0) return InvalidPosition.Value;
                 return activePointers[0].Position;
             }
         }
@@ -41,7 +41,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         {
             get
             {
-                if (NumPointers == 0) return TouchManager.INVALID_POSITION;
+                if (NumPointers == 0) return InvalidPosition.Value;
                 return activePointers[0].PreviousPosition;
             }
         }

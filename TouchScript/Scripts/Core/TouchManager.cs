@@ -4,17 +4,19 @@
 
 using System;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using TouchScript.InputSources;
 using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace TouchScript.Core
 {
     /// <summary>
     /// Default implementation of <see cref="ITouchManager"/>.
     /// </summary>
-    public sealed class TouchManagerInstance : MonoBehaviour, IPointerEventListener
+    public sealed class TouchManager : MonoBehaviour, IPointerEventListener
     {
         #region Events
 
@@ -34,7 +36,7 @@ namespace TouchScript.Core
         /// <summary>
         /// Gets the instance of TouchManager singleton.
         /// </summary>
-        public static TouchManagerInstance Instance;
+        public static TouchManager Instance;
 
         bool isInsidePointerFrame;
 
@@ -42,7 +44,9 @@ namespace TouchScript.Core
 
         #region Private variables
 
-        private List<IInputSource> inputs = new(3);
+        [FormerlySerializedAs("inputs")]
+        [SerializeField, Required, ChildGameObjectsOnly]
+        private StandardInput input;
 
         private List<Pointer> pointers = new(30);
         private HashSet<Pointer> pressedPointers = new();
@@ -69,23 +73,6 @@ namespace TouchScript.Core
         #region Public methods
 
         /// <inheritdoc />
-        public bool AddInput(IInputSource input)
-        {
-            if (input == null) return false;
-            if (inputs.Contains(input)) return true;
-            inputs.Add(input);
-            return true;
-        }
-
-        /// <inheritdoc />
-        public bool RemoveInput(IInputSource input)
-        {
-            if (input == null) return false;
-            var result = inputs.Remove(input);
-            return result;
-        }
-
-        /// <inheritdoc />
         public void CancelPointer(int id, bool shouldReturn)
         {
             if (idToPointer.TryGetValue(id, out var pointer))
@@ -101,9 +88,9 @@ namespace TouchScript.Core
         public void CancelAllPointers()
         {
             foreach (var pointer in pointers)
-                pointer.InputSource.CancelPointer(pointer, true);
+                pointer.InputSource.CancelPointer(pointer, false);
             foreach (var pointer in pointersAdded)
-                pointer.InputSource.CancelPointer(pointer, true);
+                pointer.InputSource.CancelPointer(pointer, false);
         }
 
         #endregion
@@ -275,7 +262,7 @@ namespace TouchScript.Core
         private void Update()
         {
             sendFrameStartedToPointers();
-            updateInputs();
+            input.UpdateInput();
             updatePointers();
         }
 
@@ -284,12 +271,6 @@ namespace TouchScript.Core
         #endregion
 
         #region Private functions
-
-        private void updateInputs()
-        {
-            foreach (var input in inputs)
-                input.UpdateInput();
-        }
 
         private void updateAdded(List<Pointer> pointers)
         {
@@ -303,7 +284,7 @@ namespace TouchScript.Core
                 idToPointer.Add(pointer.Id, pointer);
             }
 
-            PointersAdded?.InvokeHandleExceptions(this, PointerEventArgs.GetCachedEventArgs(list));
+            PointersAdded?.InvokeHandleExceptions(this, new PointerEventArgs(list));
             pointerListPool.Release(list);
         }
 
@@ -325,7 +306,7 @@ namespace TouchScript.Core
                 list.Add(pointer);
             }
 
-            PointersUpdated?.InvokeHandleExceptions(this, PointerEventArgs.GetCachedEventArgs(list));
+            PointersUpdated?.InvokeHandleExceptions(this, new PointerEventArgs(list));
             pointerListPool.Release(list);
         }
 
@@ -351,7 +332,7 @@ namespace TouchScript.Core
                 pointer.INTERNAL_SetPressData(hit);
             }
 
-            PointersPressed?.InvokeHandleExceptions(this, PointerEventArgs.GetCachedEventArgs(list));
+            PointersPressed?.InvokeHandleExceptions(this, new PointerEventArgs(list));
             pointerListPool.Release(list);
         }
 
@@ -373,7 +354,7 @@ namespace TouchScript.Core
                 pressedPointers.Remove(pointer);
             }
 
-            PointersReleased?.InvokeHandleExceptions(this, PointerEventArgs.GetCachedEventArgs(list));
+            PointersReleased?.InvokeHandleExceptions(this, new PointerEventArgs(list));
 
             releasedCount = list.Count;
             for (var i = 0; i < releasedCount; i++)
@@ -404,7 +385,7 @@ namespace TouchScript.Core
                 list.Add(pointer);
             }
 
-            PointersRemoved?.InvokeHandleExceptions(this, PointerEventArgs.GetCachedEventArgs(list));
+            PointersRemoved?.InvokeHandleExceptions(this, new PointerEventArgs(list));
 
             removedCount = list.Count;
             for (var i = 0; i < removedCount; i++)
@@ -436,7 +417,7 @@ namespace TouchScript.Core
                 list.Add(pointer);
             }
 
-            PointersCancelled?.InvokeHandleExceptions(this, PointerEventArgs.GetCachedEventArgs(list));
+            PointersCancelled?.InvokeHandleExceptions(this, new PointerEventArgs(list));
 
             for (var i = 0; i < cancelledCount; i++)
             {

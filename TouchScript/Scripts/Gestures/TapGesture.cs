@@ -105,7 +105,7 @@ namespace TouchScript.Gestures
 
                     // pointers outside of gesture target are ignored in shouldCachePointerPosition()
                     // if all pointers are outside ScreenPosition will be invalid
-                    if (TouchManager.IsInvalidPosition(ScreenPosition))
+                    if (ScreenPosition.IsInvalid())
                     {
                         setState(GestureState.Failed);
                     }

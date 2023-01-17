@@ -2,6 +2,7 @@
  * @author Valentin Simonov / http://va.lent.in/
  */
 
+using JetBrains.Annotations;
 using TouchScript.Core;
 using TouchScript.InputSources.InputHandlers;
 using TouchScript.Pointers;
@@ -19,10 +20,8 @@ namespace TouchScript.InputSources
     {
         #region Private variables
 
-        private static StandardInput instance;
-
-        private MouseHandler mouseHandler;
-        private TouchHandler touchHandler;
+        [NotNull] private MouseHandler mouseHandler;
+        [NotNull] private TouchHandler touchHandler;
 
         #endregion
 
@@ -31,18 +30,12 @@ namespace TouchScript.InputSources
         /// <inheritdoc />
         public override bool UpdateInput()
         {
-            if (base.UpdateInput()) return true;
-
             var handled = false;
-            if (touchHandler != null)
-            {
-                handled = touchHandler.UpdateInput();
-            }
-            if (mouseHandler != null)
-            {
-                if (handled) mouseHandler.CancelMousePointer();
-                else handled = mouseHandler.UpdateInput();
-            }
+
+            handled = touchHandler.UpdateInput();
+
+            if (handled) mouseHandler.CancelMousePointer();
+            else handled = mouseHandler.UpdateInput();
 
             return handled;
         }
@@ -50,12 +43,9 @@ namespace TouchScript.InputSources
         /// <inheritdoc />
         public override bool CancelPointer(Pointer pointer, bool shouldReturn)
         {
-            base.CancelPointer(pointer, shouldReturn);
-
             var handled = false;
-            if (touchHandler != null) handled = touchHandler.CancelPointer(pointer, shouldReturn);
-            if (mouseHandler != null && !handled) handled = mouseHandler.CancelPointer(pointer, shouldReturn);
-
+            handled = touchHandler.CancelPointer(pointer, shouldReturn);
+            if (!handled) handled = mouseHandler.CancelPointer(pointer, shouldReturn);
             return handled;
         }
 
@@ -66,73 +56,21 @@ namespace TouchScript.InputSources
         /// <inheritdoc />
         public override void INTERNAL_DiscardPointer(Pointer pointer)
         {
-            base.INTERNAL_DiscardPointer(pointer);
-
             var handled = false;
-            if (touchHandler != null) handled = touchHandler.DiscardPointer(pointer);
-            if (mouseHandler != null && !handled) handled = mouseHandler.DiscardPointer(pointer);
-        }
-
-        #endregion
-
-        #region Unity
-
-        /// <inheritdoc />
-        protected override void OnDisable()
-        {
-            disableMouse();
-            disableTouch();
-            base.OnDisable();
-        }
-
-        #endregion
-
-        #region Protected methods
-
-        /// <inheritdoc />
-        protected override void init()
-        {
-            if (instance != null) Destroy(instance);
-            instance = this;
-
-            Input.simulateMouseWithTouches = false;
-
-            enableMouse();
-            enableTouch();
+            handled = touchHandler.DiscardPointer(pointer);
+            if (!handled) mouseHandler.DiscardPointer(pointer);
         }
 
         #endregion
 
         #region Private functions
 
-        private void enableMouse()
+        void Awake()
         {
-            mouseHandler = new MouseHandler(this, TouchManagerInstance.Instance);
-            Debug.Log("[TouchScript] Initialized Unity mouse input.");
-        }
+            Input.simulateMouseWithTouches = false;
 
-        private void disableMouse()
-        {
-            if (mouseHandler != null)
-            {
-                mouseHandler.Dispose();
-                mouseHandler = null;
-            }
-        }
-
-        private void enableTouch()
-        {
-            touchHandler = new TouchHandler(this, TouchManagerInstance.Instance);
-            Debug.Log("[TouchScript] Initialized Unity touch input.");
-        }
-
-        private void disableTouch()
-        {
-            if (touchHandler != null)
-            {
-                touchHandler.Dispose();
-                touchHandler = null;
-            }
+            mouseHandler = new MouseHandler(this, TouchManager.Instance);
+            touchHandler = new TouchHandler(this, TouchManager.Instance);
         }
 
         #endregion

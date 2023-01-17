@@ -22,7 +22,6 @@ namespace TouchScript.Utils
         /// <param name="args"> EventArgs. </param>
         /// <returns> The exception caught or <c>null</c>. </returns>
         public static Exception InvokeHandleExceptions<T>(this EventHandler<T> handler, object sender, T args)
-            where T : EventArgs
         {
             try
             {

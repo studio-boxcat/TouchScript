@@ -3,6 +3,7 @@
  */
 
 using System.Collections.Generic;
+using TouchScript.Core;
 using TouchScript.Devices.Display;
 using TouchScript.Utils;
 using TouchScript.Pointers;

@@ -13,14 +13,7 @@ namespace TouchScript.InputSources
     /// <para>In TouchScript all pointer points (<see cref="Pointer"/>) come from input sources.</para>
     /// <para>If you want to feed pointers to the library the best way to do it is to create a custom input source.</para>
     /// </remarks>
-    public interface IInputSource : IInputHandler, INTERNAL_IInputSource
-    {
-    }
-
-    /// <summary>
-    /// Internal methods for <see cref="IInputSource"/>. DO NOT CALL THESE METHODS DIRECTLY FROM YOUR CODE!
-    /// </summary>
-    public interface INTERNAL_IInputSource
+    public interface IInputSource : IInputHandler
     {
         /// <summary>
         /// Used by <see cref="TouchManagerInstance"/> to return a pointer to input source.

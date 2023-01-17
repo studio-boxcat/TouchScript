@@ -78,8 +78,6 @@ namespace TouchScript.Layers
 
         static void performUISearchForCanvas(Vector2 screenPosition, Canvas canvas, GraphicRaycaster raycaster, List<RaycastHitUI> result)
         {
-            Assert.AreEqual(0, result.Count);
-
             raycaster.Raycast(screenPosition, _raycastResultBuffer);
             if (_raycastResultBuffer.Count == 0)
                 return;

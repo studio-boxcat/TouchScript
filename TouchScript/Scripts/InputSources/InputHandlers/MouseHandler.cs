@@ -126,7 +126,7 @@ namespace TouchScript.InputSources.InputHandlers
                 mousePointer.ScrollDelta = Vector2.zero;
             }
 
-            if (Application.isEditor)
+#if UNITY_EDITOR
             {
                 switch (state)
                 {
@@ -206,7 +206,7 @@ namespace TouchScript.InputSources.InputHandlers
                         break;
                 }
             }
-            else
+#else
             {
                 if (buttons != newButtons)
                 {
@@ -214,6 +214,7 @@ namespace TouchScript.InputSources.InputHandlers
                     updated = true;
                 }
             }
+#endif
 
             mousePointPos = pos;
             return updated;
@@ -225,17 +226,17 @@ namespace TouchScript.InputSources.InputHandlers
             if (pointer.Equals(mousePointer))
             {
                 pointerEventListener.CancelPointer(mousePointer);
-                if (shouldReturn) mousePointer = internalReturnPointer(mousePointer);
-                else mousePointer = internalAddPointer(mousePointer.Position); // can't totally cancel mouse pointer
+                mousePointer = null;
                 return true;
             }
+
             if (pointer.Equals(fakeMousePointer))
             {
                 pointerEventListener.CancelPointer(fakeMousePointer);
-                if (shouldReturn) fakeMousePointer = internalReturnPointer(fakeMousePointer);
-                else fakeMousePointer = null;
+                fakeMousePointer = null;
                 return true;
             }
+
             return false;
         }
 

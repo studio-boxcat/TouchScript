@@ -201,8 +201,8 @@ namespace TouchScript.Gestures
             {
                 if (NumPointers == 0)
                 {
-                    if (!TouchManager.IsInvalidPosition(cachedScreenPosition)) return cachedScreenPosition;
-                    return TouchManager.INVALID_POSITION;
+                    return cachedScreenPosition.IsValid()
+                        ? cachedScreenPosition : InvalidPosition.Value;
                 }
                 return activePointers[0].Position;
             }
@@ -218,39 +218,10 @@ namespace TouchScript.Gestures
             {
                 if (NumPointers == 0)
                 {
-                    if (!TouchManager.IsInvalidPosition(cachedPreviousScreenPosition))
-                        return cachedPreviousScreenPosition;
-                    return TouchManager.INVALID_POSITION;
+                    return cachedPreviousScreenPosition.IsValid()
+                        ? cachedPreviousScreenPosition : InvalidPosition.Value;
                 }
                 return activePointers[0].PreviousPosition;
-            }
-        }
-
-        /// <summary>
-        /// Gets normalized screen position.
-        /// </summary>
-        /// <value> Gesture's position in normalized screen coordinates. </value>
-        public Vector2 NormalizedScreenPosition
-        {
-            get
-            {
-                var position = ScreenPosition;
-                if (TouchManager.IsInvalidPosition(position)) return TouchManager.INVALID_POSITION;
-                return new Vector2(position.x / Screen.width, position.y / Screen.height);
-            }
-        }
-
-        /// <summary>
-        /// Gets previous screen position.
-        /// </summary>
-        /// <value> Gesture's previous position in normalized screen coordinates. </value>
-        public Vector2 PreviousNormalizedScreenPosition
-        {
-            get
-            {
-                var position = PreviousScreenPosition;
-                if (TouchManager.IsInvalidPosition(position)) return TouchManager.INVALID_POSITION;
-                return new Vector2(position.x / Screen.width, position.y / Screen.height);
             }
         }
 
@@ -290,7 +261,7 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Reference to global TouchManager.
         /// </summary>
-        protected TouchManagerInstance touchManager { get; private set; }
+        protected TouchManager touchManager { get; private set; }
 
         /// <summary>
         /// The state of min/max number of pointers.
@@ -307,14 +278,14 @@ namespace TouchScript.Gestures
         /// </summary>
         protected Transform cachedTransform;
 
-		[SerializeField]
+        [SerializeField]
         private int minPointers = 0;
 
         [SerializeField]
         private int maxPointers = 0;
 
         [SerializeField]
-		[NullToggle]
+        [NullToggle]
         private Gesture requireGestureToFail;
 
         [SerializeField]
@@ -626,20 +597,20 @@ namespace TouchScript.Gestures
             for (var i = 0; i < count; i++) activePointers.Remove(pointers[i]);
             numPointers = total;
 
-			if (NumPointers == 0)
-			{
-				var lastPoint = pointers[count - 1];
-				if (shouldCachePointerPosition(lastPoint))
-				{
-					cachedScreenPosition = lastPoint.Position;
-					cachedPreviousScreenPosition = lastPoint.PreviousPosition;
-				}
-				else
-				{
-					cachedScreenPosition = TouchManager.INVALID_POSITION;
-					cachedPreviousScreenPosition = TouchManager.INVALID_POSITION;
-				}
-			}
+            if (NumPointers == 0)
+            {
+                var lastPoint = pointers[count - 1];
+                if (shouldCachePointerPosition(lastPoint))
+                {
+                    cachedScreenPosition = lastPoint.Position;
+                    cachedPreviousScreenPosition = lastPoint.PreviousPosition;
+                }
+                else
+                {
+                    cachedScreenPosition = InvalidPosition.Value;
+                    cachedPreviousScreenPosition = InvalidPosition.Value;
+                }
+            }
 
             pointersReleased(pointers);
         }
@@ -791,8 +762,8 @@ namespace TouchScript.Gestures
         /// </summary>
         protected virtual void reset()
         {
-            cachedScreenPosition = TouchManager.INVALID_POSITION;
-            cachedPreviousScreenPosition = TouchManager.INVALID_POSITION;
+            cachedScreenPosition = InvalidPosition.Value;
+            cachedPreviousScreenPosition = InvalidPosition.Value;
         }
 
         /// <summary>

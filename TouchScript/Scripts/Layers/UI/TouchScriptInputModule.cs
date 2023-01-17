@@ -3,7 +3,6 @@
  */
 
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using TouchScript.Core;
 using TouchScript.Hit;
 using UnityEngine;
@@ -18,28 +17,15 @@ namespace TouchScript.Layers.UI
     /// </summary>
     internal sealed class TouchScriptInputModule : BaseInputModule
     {
-        #region Public properties
-
-        /// <summary>
-        /// TouchScriptInputModule singleton instance.
-        /// </summary>
-        public static TouchScriptInputModule Instance;
-
-        #endregion
-
         #region Private variables
 
         private UIStandardInputModule ui;
 
         #endregion
 
-        #region Constructor
-
-        #endregion
-
         #region Public methods
 
-        public void Connect(TouchManagerInstance touchManager)
+        public void Connect(TouchManager touchManager)
         {
             Assert.IsNull(ui);
             ui = new UIStandardInputModule(this);
@@ -51,7 +37,7 @@ namespace TouchScript.Layers.UI
             touchManager.PointersCancelled += ui.ProcessCancelled;
         }
 
-        public void Disconnect(TouchManagerInstance touchManager)
+        public void Disconnect(TouchManager touchManager)
         {
             touchManager.PointersAdded -= ui.ProcessAdded;
             touchManager.PointersUpdated -= ui.ProcessUpdated;

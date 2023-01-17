@@ -27,11 +27,9 @@ namespace TouchScript.Core
 
         #region Private variables
 
-        private static GestureManager instance;
-
         // Upcoming changes
-        private List<Gesture> gesturesToReset = new List<Gesture>(20);
-        private Dictionary<int, List<Gesture>> pointerToGestures = new Dictionary<int, List<Gesture>>(10);
+        private List<Gesture> gesturesToReset = new(20);
+        private Dictionary<int, List<Gesture>> pointerToGestures = new(10);
 
         #endregion
 
@@ -39,25 +37,25 @@ namespace TouchScript.Core
 
         // Temporary collections for update methods.
         // Dictionary<Transform, List<Pointer>> - pointers sorted by targets
-        private Dictionary<Transform, List<Pointer>> pointersOnTarget = new Dictionary<Transform, List<Pointer>>(10);
+        private Dictionary<Transform, List<Pointer>> pointersOnTarget = new(10);
         // Dictionary<Gesture, List<Pointer>> - pointers sorted by gesture
-        private Dictionary<Gesture, List<Pointer>> pointersToDispatchForGesture = new Dictionary<Gesture, List<Pointer>>(10);
-        private List<Gesture> activeGesturesThisUpdate = new List<Gesture>(20);
+        private Dictionary<Gesture, List<Pointer>> pointersToDispatchForGesture = new(10);
+        private List<Gesture> activeGesturesThisUpdate = new(20);
 
-        private Dictionary<Transform, List<Gesture>> hierarchyEndingWithCache = new Dictionary<Transform, List<Gesture>>(4);
-        private Dictionary<Transform, List<Gesture>> hierarchyBeginningWithCache = new Dictionary<Transform, List<Gesture>>(4);
+        private Dictionary<Transform, List<Gesture>> hierarchyEndingWithCache = new(4);
+        private Dictionary<Transform, List<Gesture>> hierarchyBeginningWithCache = new(4);
 
         #endregion
 
         #region Pools
 
-        private static ObjectPool<List<Gesture>> gestureListPool = new ObjectPool<List<Gesture>>(10,
+        private static ObjectPool<List<Gesture>> gestureListPool = new(10,
             () => new List<Gesture>(10), null, (l) => l.Clear());
 
-        private static ObjectPool<List<Pointer>> pointerListPool = new ObjectPool<List<Pointer>>(20,
+        private static ObjectPool<List<Pointer>> pointerListPool = new(20,
             () => new List<Pointer>(10), null, (l) => l.Clear());
 
-        private static ObjectPool<List<Transform>> transformListPool = new ObjectPool<List<Transform>>(10,
+        private static ObjectPool<List<Transform>> transformListPool = new(10,
             () => new List<Transform>(10), null, (l) => l.Clear());
 
         #endregion
@@ -66,16 +64,6 @@ namespace TouchScript.Core
 
         private void Awake()
         {
-            if (instance == null)
-            {
-                instance = this;
-            }
-            else if (instance != this)
-            {
-                Destroy(this);
-                return;
-            }
-
             // gameObject.hideFlags = HideFlags.HideInHierarchy;
             // DontDestroyOnLoad(gameObject);
 
@@ -87,8 +75,6 @@ namespace TouchScript.Core
         private void OnEnable()
         {
             var touchManager = TouchManager.Instance;
-            if (touchManager == null) return;
-
             touchManager.FrameStarted += frameStartedHandler;
             touchManager.FrameFinished += frameFinishedHandler;
             touchManager.PointersUpdated += pointersUpdatedHandler;
@@ -100,8 +86,6 @@ namespace TouchScript.Core
         private void OnDisable()
         {
             var touchManager = TouchManager.Instance;
-            if (touchManager == null) return;
-
             touchManager.FrameStarted -= frameStartedHandler;
             touchManager.FrameFinished -= frameFinishedHandler;
             touchManager.PointersUpdated -= pointersUpdatedHandler;
@@ -185,7 +169,7 @@ namespace TouchScript.Core
 
         #region Private functions
 
-        private void updatePressed(IList<Pointer> pointers)
+        private void updatePressed(IReadOnlyList<Pointer> pointers)
         {
             var activeTargets = transformListPool.Get();
             var gesturesInHierarchy = gestureListPool.Get();
@@ -338,7 +322,7 @@ namespace TouchScript.Core
             pointersToDispatchForGesture.Clear();
         }
 
-        private void updateUpdated(IList<Pointer> pointers)
+        private void updateUpdated(IReadOnlyList<Pointer> pointers)
         {
             sortPointersForActiveGestures(pointers);
 
@@ -358,7 +342,7 @@ namespace TouchScript.Core
             pointersToDispatchForGesture.Clear();
         }
 
-        private void updateReleased(IList<Pointer> pointers)
+        private void updateReleased(IReadOnlyList<Pointer> pointers)
         {
             sortPointersForActiveGestures(pointers);
 
@@ -379,7 +363,7 @@ namespace TouchScript.Core
             pointersToDispatchForGesture.Clear();
         }
 
-        private void updateCancelled(IList<Pointer> pointers)
+        private void updateCancelled(IReadOnlyList<Pointer> pointers)
         {
             sortPointersForActiveGestures(pointers);
 
@@ -400,21 +384,19 @@ namespace TouchScript.Core
             pointersToDispatchForGesture.Clear();
         }
 
-        private void sortPointersForActiveGestures(IList<Pointer> pointers)
+        private void sortPointersForActiveGestures(IReadOnlyList<Pointer> pointers)
         {
             var count = pointers.Count;
             for (var i = 0; i < count; i++)
             {
                 var pointer = pointers[i];
-                List<Gesture> gestures;
-                if (!pointerToGestures.TryGetValue(pointer.Id, out gestures)) continue;
+                if (!pointerToGestures.TryGetValue(pointer.Id, out var gestures)) continue;
 
                 var gestureCount = gestures.Count;
                 for (var j = 0; j < gestureCount; j++)
                 {
                     var gesture = gestures[j];
-                    List<Pointer> toDispatch;
-                    if (!pointersToDispatchForGesture.TryGetValue(gesture, out toDispatch))
+                    if (!pointersToDispatchForGesture.TryGetValue(gesture, out var toDispatch))
                     {
                         toDispatch = pointerListPool.Get();
                         pointersToDispatchForGesture.Add(gesture, toDispatch);
@@ -425,14 +407,13 @@ namespace TouchScript.Core
             }
         }
 
-        private void removePointers(IList<Pointer> pointers)
+        private void removePointers(IReadOnlyList<Pointer> pointers)
         {
             var count = pointers.Count;
             for (var i = 0; i < count; i++)
             {
                 var pointer = pointers[i];
-                List<Gesture> list;
-                if (!pointerToGestures.TryGetValue(pointer.Id, out list)) continue;
+                if (!pointerToGestures.TryGetValue(pointer.Id, out var list)) continue;
 
                 pointerToGestures.Remove(pointer.Id);
                 gestureListPool.Release(list);
@@ -467,8 +448,8 @@ namespace TouchScript.Core
 
         private void clearFrameCaches()
         {
-			foreach (var kv in hierarchyEndingWithCache) gestureListPool.Release(kv.Value);
-			foreach (var kv in hierarchyBeginningWithCache) gestureListPool.Release(kv.Value);
+            foreach (var kv in hierarchyEndingWithCache) gestureListPool.Release(kv.Value);
+            foreach (var kv in hierarchyBeginningWithCache) gestureListPool.Release(kv.Value);
             hierarchyEndingWithCache.Clear();
             hierarchyBeginningWithCache.Clear();
         }
