@@ -28,9 +28,9 @@ namespace TouchScript.Layers
         #region Public methods
 
         /// <inheritdoc />
-        public override HitResult Hit(IPointer pointer, out HitData hit)
+        public override HitResult Hit(Vector2 screenPosition, out HitData hit)
         {
-            if (base.Hit(pointer, out hit) != HitResult.Hit) return HitResult.Miss;
+            if (base.Hit(screenPosition, out hit) != HitResult.Hit) return HitResult.Miss;
 
             hit = new HitData(transform, this);
             return HitResult.Hit;

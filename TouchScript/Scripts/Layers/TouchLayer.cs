@@ -91,9 +91,9 @@ namespace TouchScript.Layers
         /// <param name="pointer">Pointer.</param>
         /// <param name="hit">Hit result.</param>
         /// <returns><c>true</c>, if an object is hit, <see cref="HitResult.Miss"/>; <c>false</c> otherwise.</returns>
-        public virtual HitResult Hit(IPointer pointer, out HitData hit)
+        public virtual HitResult Hit(Vector2 screenPosition, out HitData hit)
         {
-            hit = default(HitData);
+            hit = default;
             if (enabled == false || gameObject.activeInHierarchy == false) return HitResult.Miss;
             return HitResult.Hit;
         }

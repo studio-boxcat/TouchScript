@@ -30,33 +30,6 @@ namespace TouchScript.Behaviors.Cursors
         }
 
         /// <summary>
-        /// Prefab to use as touch cursors template.
-        /// </summary>
-        public PointerCursor TouchCursor
-        {
-            get { return touchCursor; }
-            set { touchCursor = value; }
-        }
-
-        /// <summary>
-        /// Prefab to use as pen cursors template.
-        /// </summary>
-        public PointerCursor PenCursor
-        {
-            get { return penCursor; }
-            set { penCursor = value; }
-        }
-
-        /// <summary>
-        /// Prefab to use as object cursors template.
-        /// </summary>
-        public PointerCursor ObjectCursor
-        {
-            get { return objectCursor; }
-            set { objectCursor = value; }
-        }
-
-        /// <summary>
         /// Gets or sets whether <see cref="CursorManager"/> is using DPI to scale pointer cursors.
         /// </summary>
         /// <value> <c>true</c> if DPI value is used; otherwise, <c>false</c>. </value>
@@ -108,15 +81,6 @@ namespace TouchScript.Behaviors.Cursors
         private PointerCursor mouseCursor;
 
         [SerializeField]
-        private PointerCursor touchCursor;
-
-        [SerializeField]
-        private PointerCursor penCursor;
-
-        [SerializeField]
-        private PointerCursor objectCursor;
-
-        [SerializeField]
         [ToggleLeft]
         private bool useDPI = true;
 
@@ -128,14 +92,7 @@ namespace TouchScript.Behaviors.Cursors
 
         private RectTransform rect;
         private ObjectPool<PointerCursor> mousePool;
-        private ObjectPool<PointerCursor> touchPool;
-        private ObjectPool<PointerCursor> penPool;
-        private ObjectPool<PointerCursor> objectPool;
         private Dictionary<int, PointerCursor> cursors = new Dictionary<int, PointerCursor>(10);
-
-#if UNITY_5_6_OR_NEWER
-		private CustomSampler cursorSampler;
-#endif
 
         #endregion
 
@@ -143,15 +100,7 @@ namespace TouchScript.Behaviors.Cursors
 
         private void Awake()
         {
-#if UNITY_5_6_OR_NEWER
-			cursorSampler = CustomSampler.Create("[TouchScript] Update Cursors");
-			cursorSampler.Begin();
-#endif
-
             mousePool = new ObjectPool<PointerCursor>(2, instantiateMouseProxy, null, clearProxy);
-            touchPool = new ObjectPool<PointerCursor>(10, instantiateTouchProxy, null, clearProxy);
-            penPool = new ObjectPool<PointerCursor>(2, instantiatePenProxy, null, clearProxy);
-            objectPool = new ObjectPool<PointerCursor>(2, instantiateObjectProxy, null, clearProxy);
 
             updateCursorSize();
 
@@ -161,10 +110,6 @@ namespace TouchScript.Behaviors.Cursors
                 Debug.LogError("CursorManager must be on an UI element!");
                 enabled = false;
             }
-
-#if UNITY_5_6_OR_NEWER
-			cursorSampler.End();
-#endif
         }
 
         private void OnEnable()
@@ -202,21 +147,6 @@ namespace TouchScript.Behaviors.Cursors
             return Instantiate(mouseCursor);
         }
 
-        private PointerCursor instantiateTouchProxy()
-        {
-            return Instantiate(touchCursor);
-        }
-
-        private PointerCursor instantiatePenProxy()
-        {
-            return Instantiate(penCursor);
-        }
-
-        private PointerCursor instantiateObjectProxy()
-        {
-            return Instantiate(objectCursor);
-        }
-
         private void clearProxy(PointerCursor cursor)
         {
             cursor.Hide();
@@ -233,10 +163,6 @@ namespace TouchScript.Behaviors.Cursors
 
         private void pointersAddedHandler(object sender, PointerEventArgs e)
         {
-#if UNITY_5_6_OR_NEWER
-			cursorSampler.Begin();
-#endif
-
             updateCursorSize();
 
             var count = e.Pointers.Count;
@@ -246,41 +172,15 @@ namespace TouchScript.Behaviors.Cursors
                 // Don't show internal pointers
                 if ((pointer.Flags & Pointer.FLAG_INTERNAL) > 0) continue;
 
-                PointerCursor cursor;
-                switch (pointer.Type)
-                {
-                    case Pointer.PointerType.Mouse:
-                        cursor = mousePool.Get();
-                        break;
-                    case Pointer.PointerType.Touch:
-                        cursor = touchPool.Get();
-                        break;
-                    case Pointer.PointerType.Pen:
-                        cursor = penPool.Get();
-                        break;
-                    case Pointer.PointerType.Object:
-                        cursor = objectPool.Get();
-                        break;
-                    default:
-                        continue;
-                }
-
+                var cursor = mousePool.Get();
                 cursor.Size = cursorPixelSize;
                 cursor.Init(rect, pointer);
                 cursors.Add(pointer.Id, cursor);
             }
-
-#if UNITY_5_6_OR_NEWER
-			cursorSampler.End();
-#endif
         }
 
         private void pointersRemovedHandler(object sender, PointerEventArgs e)
         {
-#if UNITY_5_6_OR_NEWER
-			cursorSampler.Begin();
-#endif
-
             var count = e.Pointers.Count;
             for (var i = 0; i < count; i++)
             {
@@ -289,34 +189,12 @@ namespace TouchScript.Behaviors.Cursors
                 if (!cursors.TryGetValue(pointer.Id, out cursor)) continue;
                 cursors.Remove(pointer.Id);
 
-                switch (pointer.Type)
-                {
-                    case Pointer.PointerType.Mouse:
-                        mousePool.Release(cursor);
-                        break;
-                    case Pointer.PointerType.Touch:
-                        touchPool.Release(cursor);
-                        break;
-                    case Pointer.PointerType.Pen:
-                        penPool.Release(cursor);
-                        break;
-                    case Pointer.PointerType.Object:
-                        objectPool.Release(cursor);
-                        break;
-                }
+                mousePool.Release(cursor);
             }
-
-#if UNITY_5_6_OR_NEWER
-			cursorSampler.End();
-#endif
         }
 
         private void pointersPressedHandler(object sender, PointerEventArgs e)
         {
-#if UNITY_5_6_OR_NEWER
-			cursorSampler.Begin();
-#endif
-
             var count = e.Pointers.Count;
             for (var i = 0; i < count; i++)
             {
@@ -325,18 +203,10 @@ namespace TouchScript.Behaviors.Cursors
                 if (!cursors.TryGetValue(pointer.Id, out cursor)) continue;
                 cursor.SetState(pointer, PointerCursor.CursorState.Pressed);
             }
-
-#if UNITY_5_6_OR_NEWER
-			cursorSampler.End();
-#endif
         }
 
         private void PointersUpdatedHandler(object sender, PointerEventArgs e)
         {
-#if UNITY_5_6_OR_NEWER
-			cursorSampler.Begin();
-#endif
-
             var count = e.Pointers.Count;
             for (var i = 0; i < count; i++)
             {
@@ -345,18 +215,10 @@ namespace TouchScript.Behaviors.Cursors
                 if (!cursors.TryGetValue(pointer.Id, out cursor)) continue;
                 cursor.UpdatePointer(pointer);
             }
-
-#if UNITY_5_6_OR_NEWER
-			cursorSampler.End();
-#endif
         }
 
         private void pointersReleasedHandler(object sender, PointerEventArgs e)
         {
-#if UNITY_5_6_OR_NEWER
-			cursorSampler.Begin();
-#endif
-
             var count = e.Pointers.Count;
             for (var i = 0; i < count; i++)
             {
@@ -365,10 +227,6 @@ namespace TouchScript.Behaviors.Cursors
                 if (!cursors.TryGetValue(pointer.Id, out cursor)) continue;
                 cursor.SetState(pointer, PointerCursor.CursorState.Released);
             }
-
-#if UNITY_5_6_OR_NEWER
-			cursorSampler.End();
-#endif
         }
 
         private void pointersCancelledHandler(object sender, PointerEventArgs e)

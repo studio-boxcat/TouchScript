@@ -114,7 +114,7 @@ namespace TouchScript.Core
         }
 
         /// <inheritdoc />
-        public bool GetHitTarget(IPointer pointer, out HitData hit)
+        public bool GetHitTarget(Vector2 screenPosition, out HitData hit)
         {
             hit = default(HitData);
 
@@ -122,7 +122,7 @@ namespace TouchScript.Core
             {
                 var touchLayer = layers[i];
                 if (touchLayer == null) continue;
-                var result = touchLayer.Hit(pointer, out hit);
+                var result = touchLayer.Hit(screenPosition, out hit);
                 switch (result)
                 {
                     case HitResult.Hit:

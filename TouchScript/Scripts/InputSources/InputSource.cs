@@ -3,6 +3,7 @@
  */
 
 using System;
+using JetBrains.Annotations;
 using TouchScript.Core;
 using TouchScript.Pointers;
 using UnityEngine;
@@ -47,7 +48,7 @@ namespace TouchScript.InputSources
         #region Internal methods
 
         /// <inheritdoc />
-        public virtual void INTERNAL_DiscardPointer(Pointer pointer) {}
+        public virtual void INTERNAL_DiscardPointer([NotNull] Pointer pointer) {}
 
         /// <inheritdoc />
         public virtual void INTERNAL_UpdateResolution()

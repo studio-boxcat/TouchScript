@@ -18,28 +18,14 @@ namespace TouchScript.InputSources.InputHandlers
     /// </summary>
     public class TouchHandler : IInputHandler, IDisposable
     {
-        #region Public properties
-
-        /// <summary>
-        /// Gets a value indicating whether there any active pointers.
-        /// </summary>
-        /// <value> <c>true</c> if this instance has active pointers; otherwise, <c>false</c>. </value>
-        public bool HasPointers
-        {
-            get { return pointersNum > 0; }
-        }
-
-        #endregion
-
         #region Private variables
 
         private IInputSource input;
         private IPointerEventListener pointerEventListener;
 
-        private ObjectPool<TouchPointer> touchPool;
+        private ObjectPool<Pointer> touchPool;
         // Unity fingerId -> TouchScript touch info
         private Dictionary<int, TouchState> systemToInternalId = new Dictionary<int, TouchState>(10);
-        private int pointersNum;
 
 #if UNITY_5_6_OR_NEWER
 		private CustomSampler updateSampler;
@@ -62,7 +48,7 @@ namespace TouchScript.InputSources.InputHandlers
             this.input = input;
             this.pointerEventListener = pointerEventListener;
 
-            touchPool = new ObjectPool<TouchPointer>(10, newPointer, null, resetPointer, "TouchHandler/Touch");
+            touchPool = new ObjectPool<Pointer>(10, newPointer, null, resetPointer, "TouchHandler/Touch");
             touchPool.Name = "Touch";
 
 #if UNITY_5_6_OR_NEWER
@@ -165,13 +151,12 @@ namespace TouchScript.InputSources.InputHandlers
         /// <inheritdoc />
         public bool CancelPointer(Pointer pointer, bool shouldReturn)
         {
-            var touch = pointer as TouchPointer;
-            if (touch == null) return false;
+            if (pointer == null) return false;
 
             int fingerId = -1;
             foreach (var touchState in systemToInternalId)
             {
-                if (touchState.Value.Pointer == touch && touchState.Value.Phase != TouchPhase.Canceled)
+                if (touchState.Value.Pointer == pointer && touchState.Value.Phase != TouchPhase.Canceled)
                 {
                     fingerId = touchState.Key;
                     break;
@@ -179,21 +164,18 @@ namespace TouchScript.InputSources.InputHandlers
             }
             if (fingerId > -1)
             {
-                internalCancelPointer(touch);
-                if (shouldReturn) systemToInternalId[fingerId] = new TouchState(internalReturnPointer(touch));
-                else systemToInternalId[fingerId] = new TouchState(touch, TouchPhase.Canceled);
+                internalCancelPointer(pointer);
+                if (shouldReturn) systemToInternalId[fingerId] = new TouchState(internalReturnPointer(pointer));
+                else systemToInternalId[fingerId] = new TouchState(pointer, TouchPhase.Canceled);
                 return true;
             }
             return false;
         }
 
         /// <inheritdoc />
-        public bool DiscardPointer(Pointer pointer)
+        public bool DiscardPointer([NotNull] Pointer pointer)
         {
-            var p = pointer as TouchPointer;
-            if (p == null) return false;
-
-            touchPool.Release(p);
+            touchPool.Release(pointer);
             return true;
         }
 
@@ -216,7 +198,6 @@ namespace TouchScript.InputSources.InputHandlers
         [NotNull]
         private Pointer internalAddPointer(Vector2 position)
         {
-            pointersNum++;
             var pointer = touchPool.Get();
             pointer.Position = position;
             pointer.Buttons |= Pointer.PointerButtonState.FirstButtonDown | Pointer.PointerButtonState.FirstButtonPressed;
@@ -225,9 +206,8 @@ namespace TouchScript.InputSources.InputHandlers
             return pointer;
         }
 
-        private TouchPointer internalReturnPointer(TouchPointer pointer)
+        private Pointer internalReturnPointer(Pointer pointer)
         {
-            pointersNum++;
             var newPointer = touchPool.Get();
             newPointer.CopyFrom(pointer);
             pointer.Buttons |= Pointer.PointerButtonState.FirstButtonDown | Pointer.PointerButtonState.FirstButtonPressed;
@@ -239,7 +219,6 @@ namespace TouchScript.InputSources.InputHandlers
 
         private void internalRemovePointer(Pointer pointer)
         {
-            pointersNum--;
             pointer.Buttons &= ~Pointer.PointerButtonState.FirstButtonPressed;
             pointer.Buttons |= Pointer.PointerButtonState.FirstButtonUp;
             pointerEventListener.ReleasePointer(pointer);
@@ -248,7 +227,6 @@ namespace TouchScript.InputSources.InputHandlers
 
         private void internalCancelPointer(Pointer pointer)
         {
-            pointersNum--;
             pointerEventListener.CancelPointer(pointer);
         }
 
@@ -257,9 +235,9 @@ namespace TouchScript.InputSources.InputHandlers
             p.INTERNAL_Reset();
         }
 
-        private TouchPointer newPointer()
+        private Pointer newPointer()
         {
-            return new TouchPointer(input);
+            return new Pointer(input);
         }
 
         #endregion

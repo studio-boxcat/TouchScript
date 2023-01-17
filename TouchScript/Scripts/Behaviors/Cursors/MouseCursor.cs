@@ -14,7 +14,7 @@ namespace TouchScript.Behaviors.Cursors
     /// Cursor for mouse pointers.
     /// </summary>
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_Behaviors_Cursors_MouseCursor.htm")]
-    public class MouseCursor : TextPointerCursor<MousePointer>
+    public class MouseCursor : TextPointerCursor
     {
         #region Public properties
 
@@ -38,7 +38,7 @@ namespace TouchScript.Behaviors.Cursors
         #region Protected methods
 
         /// <inheritdoc />
-        protected override void updateOnce(IPointer pointer)
+        protected override void updateOnce(Pointer pointer)
         {
             switch (state)
             {
@@ -58,7 +58,7 @@ namespace TouchScript.Behaviors.Cursors
         }
 
         /// <inheritdoc />
-        protected override void generateText(MousePointer pointer, StringBuilder str)
+        protected override void generateText(Pointer pointer, StringBuilder str)
         {
             base.generateText(pointer, str);
 
@@ -77,7 +77,7 @@ namespace TouchScript.Behaviors.Cursors
         }
 
         /// <inheritdoc />
-        protected override uint gethash(MousePointer pointer)
+        protected override uint gethash(Pointer pointer)
         {
             var hash = base.gethash(pointer);
 

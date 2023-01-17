@@ -18,7 +18,7 @@ namespace TouchScript.Pointers
     /// <para>An instance of this class is created when user touches the screen. A unique id is assigned to it which doesn't change throughout its life.</para>
     /// <para><b>Attention!</b> Do not store references to these objects beyond pointer's lifetime (i.e. when target finger is lifted off). These objects may be reused internally. Store unique ids instead.</para>
     /// </summary>
-    public class Pointer : IPointer, IEquatable<Pointer>
+    public sealed class Pointer : IEquatable<Pointer>
     {
         #region Constants
 
@@ -41,37 +41,6 @@ namespace TouchScript.Pointers
         /// This pointer is internal and shouldn't be shown on screen.
         /// </summary>
         public const uint FLAG_INTERNAL = 1 << 2;
-
-        /// <summary>
-        /// Pointer type.
-        /// </summary>
-        public enum PointerType
-        {
-            /// <summary>
-            /// Unknown.
-            /// </summary>
-            Unknown,
-
-            /// <summary>
-            /// Touch.
-            /// </summary>
-            Touch,
-
-            /// <summary>
-            /// Mouse.
-            /// </summary>
-            Mouse,
-
-            /// <summary>
-            /// Pen.
-            /// </summary>
-            Pen,
-
-            /// <summary>
-            /// Object.
-            /// </summary>
-            Object
-        }
 
         /// <summary>
         /// The state of buttons for a pointer. Combines 3 types of button events: Pressed (holding a button), Down (just pressed this frame) and Up (released this frame).
@@ -126,13 +95,10 @@ namespace TouchScript.Pointers
         public int Id { get; private set; }
 
         /// <inheritdoc />
-        public PointerType Type { get; protected set; }
-
-        /// <inheritdoc />
         public PointerButtonState Buttons { get; set; }
 
         /// <inheritdoc />
-        public IInputSource InputSource { get; private set; }
+        public readonly IInputSource InputSource;
 
         /// <inheritdoc />
         public Vector2 Position
@@ -143,6 +109,8 @@ namespace TouchScript.Pointers
 
         /// <inheritdoc />
         public Vector2 PreviousPosition { get; private set; }
+
+        public Vector2 ScrollDelta { get; set; }
 
         /// <inheritdoc />
         public uint Flags { get; set; }
@@ -180,7 +148,7 @@ namespace TouchScript.Pointers
         {
             if (overDataIsDirty || forceRecalculate)
             {
-                layerManager.GetHitTarget(this, out overData);
+                layerManager.GetHitTarget(position, out overData);
                 overDataIsDirty = false;
             }
             return overData;
@@ -198,14 +166,14 @@ namespace TouchScript.Pointers
         /// Copies values from the target.
         /// </summary>
         /// <param name="target">The target pointer to copy values from.</param>
-        public virtual void CopyFrom(Pointer target)
+        public void CopyFrom(Pointer target)
         {
-            Type = target.Type;
             Flags = target.Flags;
             Buttons = target.Buttons;
             position = target.position;
             newPosition = target.newPosition;
             PreviousPosition = target.PreviousPosition;
+            ScrollDelta = target.ScrollDelta;
         }
 
         /// <inheritdoc />
@@ -234,9 +202,7 @@ namespace TouchScript.Pointers
         {
             if (builder == null) builder = new StringBuilder();
             builder.Length = 0;
-            builder.Append("(Pointer type: ");
-            builder.Append(Type);
-            builder.Append(", id: ");
+            builder.Append("(Pointer id: ");
             builder.Append(Id);
             builder.Append(", buttons: ");
             PointerUtils.PressedButtonsToString(Buttons, builder);
@@ -258,7 +224,6 @@ namespace TouchScript.Pointers
         public Pointer(IInputSource input)
         {
             layerManager = LayerManager.Instance as LayerManagerInstance;
-            Type = PointerType.Unknown;
             InputSource = input;
             INTERNAL_Reset();
         }
@@ -267,13 +232,13 @@ namespace TouchScript.Pointers
 
         #region Internal methods
 
-        internal virtual void INTERNAL_Init(int id)
+        internal void INTERNAL_Init(int id)
         {
             Id = id;
             PreviousPosition = position = newPosition;
         }
 
-        internal virtual void INTERNAL_Reset()
+        internal void INTERNAL_Reset()
         {
             Id = INVALID_POINTER;
             INTERNAL_ClearPressData();
@@ -283,13 +248,13 @@ namespace TouchScript.Pointers
             overDataIsDirty = true;
         }
 
-        internal virtual void INTERNAL_FrameStarted()
+        internal void INTERNAL_FrameStarted()
         {
             Buttons &= ~(PointerButtonState.AnyButtonDown | PointerButtonState.AnyButtonUp);
             overDataIsDirty = true;
         }
 
-        internal virtual void INTERNAL_UpdatePosition()
+        internal void INTERNAL_UpdatePosition()
         {
             PreviousPosition = position;
             position = newPosition;

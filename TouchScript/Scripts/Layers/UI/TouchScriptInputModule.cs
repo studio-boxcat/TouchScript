@@ -407,10 +407,9 @@ namespace TouchScript.Layers.UI
                         ExecuteEvents.Execute(data.pointerDrag, data, ExecuteEvents.dragHandler);
                     }
 
-                    var mousePointer = pointer as MousePointer;
-                    if (mousePointer != null && !Mathf.Approximately(mousePointer.ScrollDelta.sqrMagnitude, 0.0f))
+                    if (!Mathf.Approximately(pointer.ScrollDelta.sqrMagnitude, 0.0f))
                     {
-                        data.scrollDelta = mousePointer.ScrollDelta;
+                        data.scrollDelta = pointer.ScrollDelta;
                         var scrollHandler = ExecuteEvents.GetEventHandler<IScrollHandler>(currentOverGo);
                         ExecuteEvents.ExecuteHierarchy(scrollHandler, data, ExecuteEvents.scrollHandler);
                     }

@@ -70,8 +70,8 @@ namespace TouchScript.InputSources.InputHandlers
         private IPointerEventListener pointerEventListener;
 
         private State state;
-        private ObjectPool<MousePointer> mousePool;
-        private MousePointer mousePointer, fakeMousePointer;
+        private ObjectPool<Pointer> mousePool;
+        private Pointer mousePointer, fakeMousePointer;
         private Vector2 mousePointPos = Vector2.zero;
 
         #endregion
@@ -91,7 +91,7 @@ namespace TouchScript.InputSources.InputHandlers
             this.input = input;
             this.pointerEventListener = pointerEventListener;
 
-            mousePool = new ObjectPool<MousePointer>(4, newPointer, null, resetPointer);
+            mousePool = new ObjectPool<Pointer>(4, newPointer, null, resetPointer);
 
             mousePointPos = Input.mousePosition;
             mousePointer = internalAddPointer(mousePointPos);
@@ -265,12 +265,9 @@ namespace TouchScript.InputSources.InputHandlers
         }
 
         /// <inheritdoc />
-        public bool DiscardPointer(Pointer pointer)
+        public bool DiscardPointer([NotNull] Pointer pointer)
         {
-            var p = pointer as MousePointer;
-            if (p == null) return false;
-
-            mousePool.Release(p);
+            mousePool.Release(pointer);
             return true;
         }
 
@@ -359,7 +356,7 @@ namespace TouchScript.InputSources.InputHandlers
         }
 
         [JetBrains.Annotations.NotNull]
-        private MousePointer internalAddPointer(Vector2 position, Pointer.PointerButtonState buttons = Pointer.PointerButtonState.Nothing, uint flags = 0)
+        private Pointer internalAddPointer(Vector2 position, Pointer.PointerButtonState buttons = Pointer.PointerButtonState.Nothing, uint flags = 0)
         {
             var pointer = mousePool.Get();
             pointer.Position = position;
@@ -376,7 +373,7 @@ namespace TouchScript.InputSources.InputHandlers
             pointerEventListener.ReleasePointer(mousePointer);
         }
 
-        private MousePointer internalReturnPointer(MousePointer pointer)
+        private Pointer internalReturnPointer(Pointer pointer)
         {
             var newPointer = mousePool.Get();
             newPointer.CopyFrom(pointer);
@@ -396,9 +393,9 @@ namespace TouchScript.InputSources.InputHandlers
             p.INTERNAL_Reset();
         }
 
-        private MousePointer newPointer()
+        private Pointer newPointer()
         {
-            return new MousePointer(input);
+            return new Pointer(input);
         }
 
         #endregion

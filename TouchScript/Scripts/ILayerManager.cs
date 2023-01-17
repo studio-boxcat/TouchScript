@@ -65,6 +65,6 @@ namespace TouchScript
         /// <param name="pointer">The pointer.</param>
         /// <param name="hit">Hit structure to fill on success.</param>
         /// <returns>True if any object is hit.</returns>
-        bool GetHitTarget(IPointer pointer, out HitData hit);
+        bool GetHitTarget(Vector2 screenPosition, out HitData hit);
     }
 }

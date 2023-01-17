@@ -146,15 +146,15 @@ namespace TouchScript.Layers
         #region Public methods
 
         /// <inheritdoc />
-        public override HitResult Hit(IPointer pointer, out HitData hit)
+        public override HitResult Hit(Vector2 screenPosition, out HitData hit)
         {
-            if (base.Hit(pointer, out hit) != HitResult.Hit) return HitResult.Miss;
+            if (base.Hit(screenPosition, out hit) != HitResult.Hit) return HitResult.Miss;
 
             var result = HitResult.Miss;
 
             if (hitScreenSpaceUI)
             {
-                result = performSSUISearch(pointer, out hit);
+                result = performSSUISearch(screenPosition, out hit);
                 switch (result)
                 {
                     case HitResult.Hit:
@@ -167,7 +167,7 @@ namespace TouchScript.Layers
 
             if (lookForCameraObjects)
             {
-                result = performWorldSearch(pointer, out hit);
+                result = performWorldSearch(screenPosition, out hit);
                 switch (result)
                 {
                     case HitResult.Hit:
@@ -289,17 +289,16 @@ namespace TouchScript.Layers
             }
         }
 
-        private HitResult performWorldSearch(IPointer pointer, out HitData hit)
+        private HitResult performWorldSearch(Vector2 screenPosition, out HitData hit)
         {
             hit = default(HitData);
 
             if (_camera == null) return HitResult.Miss;
             if ((_camera.enabled == false) || (_camera.gameObject.activeInHierarchy == false)) return HitResult.Miss;
-            var position = pointer.Position;
-            if (!_camera.pixelRect.Contains(position)) return HitResult.Miss;
+            if (!_camera.pixelRect.Contains(screenPosition)) return HitResult.Miss;
 
             hitList.Clear();
-            var ray = _camera.ScreenPointToRay(position);
+            var ray = _camera.ScreenPointToRay(screenPosition);
 
             int count;
 
@@ -325,7 +324,7 @@ namespace TouchScript.Layers
                     if (raycaster == null) continue;
                     var canvas = TouchScriptInputModule.Instance.GetCanvasForRaycaster(raycaster);
                     if ((canvas == null) || (canvas.renderMode == RenderMode.ScreenSpaceOverlay) || (canvas.worldCamera != _camera)) continue;
-                    performUISearchForCanvas(pointer, canvas, raycaster, _camera, float.MaxValue, ray);
+                    performUISearchForCanvas(screenPosition, canvas, raycaster, _camera, float.MaxValue, ray);
                 }
 
                 count = raycastHitUIList.Count;
@@ -346,7 +345,7 @@ namespace TouchScript.Layers
             return HitResult.Hit;
         }
 
-        private HitResult performSSUISearch(IPointer pointer, out HitData hit)
+        private HitResult performSSUISearch(Vector2 screenPosition, out HitData hit)
         {
             hit = default(HitData);
             raycastHitUIList.Clear();
@@ -360,7 +359,7 @@ namespace TouchScript.Layers
                 if (raycaster == null) continue;
                 var canvas = TouchScriptInputModule.Instance.GetCanvasForRaycaster(raycaster);
                 if ((canvas == null) || (canvas.renderMode != RenderMode.ScreenSpaceOverlay)) continue;
-                performUISearchForCanvas(pointer, canvas, raycaster);
+                performUISearchForCanvas(screenPosition, canvas, raycaster);
             }
 
             count = raycastHitUIList.Count;
@@ -379,9 +378,9 @@ namespace TouchScript.Layers
 
         private static readonly List<RaycastResult> _raycastResultBuffer = new List<RaycastResult>(16);
 
-        private void performUISearchForCanvas(IPointer pointer, Canvas canvas, GraphicRaycaster raycaster, Camera eventCamera = null, float maxDistance = float.MaxValue, Ray ray = default(Ray))
+        private void performUISearchForCanvas(Vector2 screenPosition, Canvas canvas, GraphicRaycaster raycaster, Camera eventCamera = null, float maxDistance = float.MaxValue, Ray ray = default(Ray))
         {
-            var eventData = new PointerEventData() {position = pointer.Position};
+            var eventData = new PointerEventData() {position = screenPosition};
             raycaster.Raycast(eventData, _raycastResultBuffer);
             foreach (var result in _raycastResultBuffer)
             {
@@ -404,7 +403,7 @@ namespace TouchScript.Layers
             _raycastResultBuffer.Clear();
         }
 
-        private HitResult doHit(IPointer pointer, RaycastHitUI raycastHit, out HitData hit)
+        private HitResult doHit(Pointer pointer, RaycastHitUI raycastHit, out HitData hit)
         {
             hit = new HitData(raycastHit, this, true);
             return HitResult.Hit;

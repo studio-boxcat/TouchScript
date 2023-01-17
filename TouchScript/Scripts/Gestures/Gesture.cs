@@ -398,7 +398,6 @@ namespace TouchScript.Gestures
         private GestureManagerInstance gestureManagerInstance;
         private GestureState delayedStateChange = GestureState.Idle;
         private bool requiredGestureFailed = false;
-        private FakePointer fakePointer = new FakePointer();
         private GestureState state = GestureState.Idle;
 
         /// <summary>
@@ -530,8 +529,7 @@ namespace TouchScript.Gestures
         public virtual HitData GetScreenPositionHitData()
         {
             HitData hit;
-            fakePointer.Position = ScreenPosition;
-            LayerManager.Instance.GetHitTarget(fakePointer, out hit);
+            LayerManager.Instance.GetHitTarget(ScreenPosition, out hit);
             return hit;
         }
 

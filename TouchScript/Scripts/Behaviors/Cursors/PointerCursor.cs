@@ -15,7 +15,7 @@ namespace TouchScript.Behaviors.Cursors
     /// </summary>
     /// <typeparam name="T">Pointer type.</typeparam>
     /// <seealso cref="TouchScript.Behaviors.Cursors.PointerCursor" />
-    public abstract class TextPointerCursor<T> : PointerCursor where T : IPointer
+    public abstract class TextPointerCursor : PointerCursor
     {
         #region Public properties
 
@@ -45,7 +45,7 @@ namespace TouchScript.Behaviors.Cursors
         #region Protected methods
 
         /// <inheritdoc />
-        protected override void updateOnce(IPointer pointer)
+        protected override void updateOnce(Pointer pointer)
         {
             base.updateOnce(pointer);
 
@@ -58,7 +58,7 @@ namespace TouchScript.Behaviors.Cursors
 
             Text.enabled = true;
             stringBuilder.Length = 0;
-            generateText((T) pointer, stringBuilder);
+            generateText(pointer, stringBuilder);
 
             Text.text = stringBuilder.ToString();
         }
@@ -68,7 +68,7 @@ namespace TouchScript.Behaviors.Cursors
         /// </summary>
         /// <param name="pointer">The pointer.</param>
         /// <param name="str">The string builder to use.</param>
-        protected virtual void generateText(T pointer, StringBuilder str)
+        protected virtual void generateText(Pointer pointer, StringBuilder str)
         {
             if (ShowPointerId)
             {
@@ -97,7 +97,7 @@ namespace TouchScript.Behaviors.Cursors
         /// </summary>
         /// <param name="pointer">The pointer.</param>
         /// <returns>Integer hash.</returns>
-        protected virtual uint gethash(T pointer)
+        protected virtual uint gethash(Pointer pointer)
         {
             var hash = (uint) state;
             if (ShowFlags) hash += pointer.Flags << 3;
@@ -105,9 +105,9 @@ namespace TouchScript.Behaviors.Cursors
         }
 
         /// <inheritdoc />
-        protected sealed override uint getPointerHash(IPointer pointer)
+        protected sealed override uint getPointerHash(Pointer pointer)
         {
-            return gethash((T) pointer);
+            return gethash(pointer);
         }
 
         #endregion
@@ -217,7 +217,7 @@ namespace TouchScript.Behaviors.Cursors
         /// </summary>
         /// <param name="parent"> Parent container. </param>
         /// <param name="pointer"> Pointer this cursor represents. </param>
-        public void Init(RectTransform parent, IPointer pointer)
+        public void Init(RectTransform parent, Pointer pointer)
         {
             hash = uint.MaxValue;
             group = GetComponent<CanvasGroup>();
@@ -234,7 +234,7 @@ namespace TouchScript.Behaviors.Cursors
         /// Updates the pointer. This method is called when the pointer is moved.
         /// </summary>
         /// <param name="pointer"> Pointer this cursor represents. </param>
-        public void UpdatePointer(IPointer pointer)
+        public void UpdatePointer(Pointer pointer)
         {
             rect.anchoredPosition = pointer.Position;
             var newHash = getPointerHash(pointer);
@@ -250,7 +250,7 @@ namespace TouchScript.Behaviors.Cursors
         /// <param name="pointer">The pointer.</param>
         /// <param name="newState">The new state.</param>
         /// <param name="data">State data.</param>
-        public void SetState(IPointer pointer, CursorState newState, object data = null)
+        public void SetState(Pointer pointer, CursorState newState, object data = null)
         {
             state = newState;
             stateData = data;
@@ -315,20 +315,20 @@ namespace TouchScript.Behaviors.Cursors
         /// This method is called once when the cursor is initialized.
         /// </summary>
         /// <param name="pointer"> The pointer. </param>
-        protected virtual void updateOnce(IPointer pointer) {}
+        protected virtual void updateOnce(Pointer pointer) {}
 
         /// <summary>
         /// This method is called every time when the pointer changes.
         /// </summary>
         /// <param name="pointer"> The pointer. </param>
-        protected virtual void update(IPointer pointer) {}
+        protected virtual void update(Pointer pointer) {}
 
         /// <summary>
         /// Returns pointer hash.
         /// </summary>
         /// <param name="pointer">The pointer.</param>
         /// <returns>Integer hash value.</returns>
-        protected virtual uint getPointerHash(IPointer pointer)
+        protected virtual uint getPointerHash(Pointer pointer)
         {
             return (uint) state;
         }
