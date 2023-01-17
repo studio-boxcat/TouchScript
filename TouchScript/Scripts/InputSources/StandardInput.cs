@@ -5,6 +5,7 @@
 #if UNITY_STANDALONE_WIN && !UNITY_EDITOR
 using System;
 #endif
+using TouchScript.Core;
 using TouchScript.InputSources.InputHandlers;
 using TouchScript.Pointers;
 using TouchScript.Utils.Attributes;
@@ -385,19 +386,6 @@ namespace TouchScript.InputSources
             enableTouch();
 #endif
 #endif
-            if (CoordinatesRemapper != null) updateCoordinatesRemapper(CoordinatesRemapper);
-        }
-
-        /// <inheritdoc />
-        protected override void updateCoordinatesRemapper(ICoordinatesRemapper remapper)
-        {
-            base.updateCoordinatesRemapper(remapper);
-            if (mouseHandler != null) mouseHandler.CoordinatesRemapper = remapper;
-            if (touchHandler != null) touchHandler.CoordinatesRemapper = remapper;
-#if UNITY_STANDALONE_WIN && !UNITY_EDITOR
-            if (windows7PointerHandler != null) windows7PointerHandler.CoordinatesRemapper = remapper;
-            if (windows8PointerHandler != null) windows8PointerHandler.CoordinatesRemapper = remapper;
-#endif
         }
 
         #endregion
@@ -406,7 +394,7 @@ namespace TouchScript.InputSources
 
         private void enableMouse()
         {
-            mouseHandler = new MouseHandler(this, addPointer, updatePointer, pressPointer, releasePointer, removePointer, cancelPointer);
+            mouseHandler = new MouseHandler(this, TouchManagerInstance.Instance);
             mouseHandler.EmulateSecondMousePointer = emulateSecondMousePointer;
             Debug.Log("[TouchScript] Initialized Unity mouse input.");
         }
@@ -422,7 +410,7 @@ namespace TouchScript.InputSources
 
         private void enableTouch()
         {
-            touchHandler = new TouchHandler(this, addPointer, updatePointer, pressPointer, releasePointer, removePointer, cancelPointer);
+            touchHandler = new TouchHandler(this, TouchManagerInstance.Instance);
             Debug.Log("[TouchScript] Initialized Unity touch input.");
         }
 

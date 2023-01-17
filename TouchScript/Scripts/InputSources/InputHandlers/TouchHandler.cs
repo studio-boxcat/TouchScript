@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using TouchScript.Pointers;
 using TouchScript.Utils;
 using UnityEngine;
@@ -18,9 +19,6 @@ namespace TouchScript.InputSources.InputHandlers
     public class TouchHandler : IInputHandler, IDisposable
     {
         #region Public properties
-
-        /// <inheritdoc />
-        public ICoordinatesRemapper CoordinatesRemapper { get; set; }
 
         /// <summary>
         /// Gets a value indicating whether there any active pointers.
@@ -36,12 +34,7 @@ namespace TouchScript.InputSources.InputHandlers
         #region Private variables
 
         private IInputSource input;
-        private PointerDelegate addPointer;
-        private PointerDelegate updatePointer;
-        private PointerDelegate pressPointer;
-        private PointerDelegate releasePointer;
-        private PointerDelegate removePointer;
-        private PointerDelegate cancelPointer;
+        private IPointerEventListener pointerEventListener;
 
         private ObjectPool<TouchPointer> touchPool;
         // Unity fingerId -> TouchScript touch info
@@ -64,15 +57,10 @@ namespace TouchScript.InputSources.InputHandlers
         /// <param name="releasePointer">A function called when a pointer is lifted off.</param>
         /// <param name="removePointer">A function called when a pointer is removed.</param>
         /// <param name="cancelPointer">A function called when a pointer is cancelled.</param>
-        public TouchHandler(IInputSource input, PointerDelegate addPointer, PointerDelegate updatePointer, PointerDelegate pressPointer, PointerDelegate releasePointer, PointerDelegate removePointer, PointerDelegate cancelPointer)
+        public TouchHandler(IInputSource input, IPointerEventListener pointerEventListener)
         {
             this.input = input;
-            this.addPointer = addPointer;
-            this.updatePointer = updatePointer;
-            this.pressPointer = pressPointer;
-            this.releasePointer = releasePointer;
-            this.removePointer = removePointer;
-            this.cancelPointer = cancelPointer;
+            this.pointerEventListener = pointerEventListener;
 
             touchPool = new ObjectPool<TouchPointer>(10, newPointer, null, resetPointer, "TouchHandler/Touch");
             touchPool.Name = "Touch";
@@ -115,8 +103,8 @@ namespace TouchScript.InputSources.InputHandlers
                         {
                             if (touchState.Phase != TouchPhase.Canceled)
                             {
-                                touchState.Pointer.Position = remapCoordinates(t.position);
-                                updatePointer(touchState.Pointer);
+                                touchState.Pointer.Position = t.position;
+                                pointerEventListener.UpdatePointer(touchState.Pointer);
                             }
                         }
                         else
@@ -225,14 +213,15 @@ namespace TouchScript.InputSources.InputHandlers
 
         #region Private functions
 
+        [NotNull]
         private Pointer internalAddPointer(Vector2 position)
         {
             pointersNum++;
             var pointer = touchPool.Get();
-            pointer.Position = remapCoordinates(position);
+            pointer.Position = position;
             pointer.Buttons |= Pointer.PointerButtonState.FirstButtonDown | Pointer.PointerButtonState.FirstButtonPressed;
-            addPointer(pointer);
-            pressPointer(pointer);
+            pointerEventListener.AddPointer(pointer);
+            pointerEventListener.PressPointer(pointer);
             return pointer;
         }
 
@@ -243,8 +232,8 @@ namespace TouchScript.InputSources.InputHandlers
             newPointer.CopyFrom(pointer);
             pointer.Buttons |= Pointer.PointerButtonState.FirstButtonDown | Pointer.PointerButtonState.FirstButtonPressed;
             newPointer.Flags |= Pointer.FLAG_RETURNED;
-            addPointer(newPointer);
-            pressPointer(newPointer);
+            pointerEventListener.AddPointer(newPointer);
+            pointerEventListener.PressPointer(newPointer);
             return newPointer;
         }
 
@@ -253,20 +242,14 @@ namespace TouchScript.InputSources.InputHandlers
             pointersNum--;
             pointer.Buttons &= ~Pointer.PointerButtonState.FirstButtonPressed;
             pointer.Buttons |= Pointer.PointerButtonState.FirstButtonUp;
-            releasePointer(pointer);
-            removePointer(pointer);
+            pointerEventListener.ReleasePointer(pointer);
+            pointerEventListener.RemovePointer(pointer);
         }
 
         private void internalCancelPointer(Pointer pointer)
         {
             pointersNum--;
-            cancelPointer(pointer);
-        }
-
-        private Vector2 remapCoordinates(Vector2 position)
-        {
-            if (CoordinatesRemapper != null) return CoordinatesRemapper.Remap(position);
-            return position;
+            pointerEventListener.CancelPointer(pointer);
         }
 
         private void resetPointer(Pointer p)
@@ -281,10 +264,10 @@ namespace TouchScript.InputSources.InputHandlers
 
         #endregion
 
-        private struct TouchState
+        private readonly struct TouchState
         {
-            public Pointer Pointer;
-            public TouchPhase Phase;
+            public readonly Pointer Pointer;
+            public readonly TouchPhase Phase;
 
             public TouchState(Pointer pointer, TouchPhase phase = TouchPhase.Began)
             {

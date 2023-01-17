@@ -27,7 +27,7 @@ namespace TouchScript.Core
     /// <summary>
     /// Default implementation of <see cref="ITouchManager"/>.
     /// </summary>
-    public sealed class TouchManagerInstance : DebuggableMonoBehaviour, ITouchManager
+    public sealed class TouchManagerInstance : DebuggableMonoBehaviour, ITouchManager, IPointerEventListener
     {
         #region Events
 
@@ -311,7 +311,7 @@ namespace TouchScript.Core
 
         #region Internal methods
 
-        internal void INTERNAL_AddPointer(Pointer pointer)
+        void IPointerEventListener.AddPointer(Pointer pointer)
         {
             {
                 pointer.INTERNAL_Init(nextPointerId);
@@ -325,14 +325,15 @@ namespace TouchScript.Core
             }
         }
 
-        internal void INTERNAL_UpdatePointer(int id)
+        void IPointerEventListener.UpdatePointer(Pointer pointer)
         {
+            var id = pointer.Id;
+
             {
-                Pointer pointer;
-                if (!idToPointer.TryGetValue(id, out pointer))
+                if (!idToPointer.ContainsKey(id))
                 {
                     // This pointer was added this frame
-					if (!wasPointerAddedThisFrame(id, out pointer))
+					if (!wasPointerAddedThisFrame(id))
                     {
 						// No pointer with such id
 #if TOUCHSCRIPT_DEBUG
@@ -346,14 +347,15 @@ namespace TouchScript.Core
             }
         }
 
-        internal void INTERNAL_PressPointer(int id)
+        void IPointerEventListener.PressPointer(Pointer pointer)
         {
+            var id = pointer.Id;
+
             {
-                Pointer pointer;
-                if (!idToPointer.TryGetValue(id, out pointer))
+                if (!idToPointer.ContainsKey(id))
                 {
                     // This pointer was added this frame
-					if (!wasPointerAddedThisFrame(id, out pointer))
+					if (!wasPointerAddedThisFrame(id))
 					{
 						// No pointer with such id
 #if TOUCHSCRIPT_DEBUG
@@ -377,14 +379,16 @@ namespace TouchScript.Core
         }
 
         /// <inheritdoc />
-        internal void INTERNAL_ReleasePointer(int id)
+        void IPointerEventListener.ReleasePointer(Pointer pointer)
         {
+            var id = pointer.Id;
+            pointer.Buttons &= ~Pointer.PointerButtonState.AnyButtonPressed;
+
             {
-                Pointer pointer;
-                if (!idToPointer.TryGetValue(id, out pointer))
+                if (!idToPointer.ContainsKey(id))
                 {
 					// This pointer was added this frame
-					if (!wasPointerAddedThisFrame(id, out pointer))
+					if (!wasPointerAddedThisFrame(id))
 					{
 						// No pointer with such id
 #if TOUCHSCRIPT_DEBUG
@@ -408,14 +412,15 @@ namespace TouchScript.Core
         }
 
         /// <inheritdoc />
-        internal void INTERNAL_RemovePointer(int id)
+        void IPointerEventListener.RemovePointer(Pointer pointer)
         {
+            var id = pointer.Id;
+
             {
-                Pointer pointer;
-                if (!idToPointer.TryGetValue(id, out pointer))
+                if (!idToPointer.ContainsKey(id))
                 {
 					// This pointer was added this frame
-					if (!wasPointerAddedThisFrame(id, out pointer))
+					if (!wasPointerAddedThisFrame(id))
 					{
 						// No pointer with such id
 #if TOUCHSCRIPT_DEBUG
@@ -439,14 +444,15 @@ namespace TouchScript.Core
         }
 
         /// <inheritdoc />
-        internal void INTERNAL_CancelPointer(int id)
+        void IPointerEventListener.CancelPointer(Pointer pointer)
         {
+            var id = pointer.Id;
+
             {
-                Pointer pointer;
-                if (!idToPointer.TryGetValue(id, out pointer))
+                if (!idToPointer.ContainsKey(id))
                 {
 					// This pointer was added this frame
-					if (!wasPointerAddedThisFrame(id, out pointer))
+					if (!wasPointerAddedThisFrame(id))
 					{
 						// No pointer with such id
 #if TOUCHSCRIPT_DEBUG
@@ -1033,16 +1039,12 @@ namespace TouchScript.Core
             IsInsidePointerFrame = false;
         }
 
-		private bool wasPointerAddedThisFrame(int id, out Pointer pointer)
+		private bool wasPointerAddedThisFrame(int id)
 		{
-			pointer = null;
 			foreach (var p in pointersAdded)
 			{
 				if (p.Id == id)
-				{
-					pointer = p;
 					return true;
-				}
 			}
 			return false;
 		}

@@ -3,6 +3,7 @@
  */
 
 using System;
+using JetBrains.Annotations;
 using TouchScript.Pointers;
 using TouchScript.Utils;
 using UnityEngine;
@@ -43,9 +44,6 @@ namespace TouchScript.InputSources.InputHandlers
 
         #region Public properties
 
-        /// <inheritdoc />
-        public ICoordinatesRemapper CoordinatesRemapper { get; set; }
-
         /// <summary>
         /// Gets or sets a value indicating whether second pointer emulation using ALT+CLICK should be enabled.
         /// </summary>
@@ -69,17 +67,12 @@ namespace TouchScript.InputSources.InputHandlers
         private bool emulateSecondMousePointer = true;
 
         private IInputSource input;
-        private PointerDelegate addPointer;
-        private PointerDelegate updatePointer;
-        private PointerDelegate pressPointer;
-        private PointerDelegate releasePointer;
-        private PointerDelegate removePointer;
-        private PointerDelegate cancelPointer;
+        private IPointerEventListener pointerEventListener;
 
         private State state;
         private ObjectPool<MousePointer> mousePool;
         private MousePointer mousePointer, fakeMousePointer;
-        private Vector3 mousePointPos = Vector3.zero;
+        private Vector2 mousePointPos = Vector2.zero;
 
         #endregion
 
@@ -93,20 +86,15 @@ namespace TouchScript.InputSources.InputHandlers
         /// <param name="releasePointer">A function called when a pointer is lifted off.</param>
         /// <param name="removePointer">A function called when a pointer is removed.</param>
         /// <param name="cancelPointer">A function called when a pointer is cancelled.</param>
-        public MouseHandler(IInputSource input, PointerDelegate addPointer, PointerDelegate updatePointer, PointerDelegate pressPointer, PointerDelegate releasePointer, PointerDelegate removePointer, PointerDelegate cancelPointer)
+        public MouseHandler(IInputSource input, IPointerEventListener pointerEventListener)
         {
             this.input = input;
-            this.addPointer = addPointer;
-            this.updatePointer = updatePointer;
-            this.pressPointer = pressPointer;
-            this.releasePointer = releasePointer;
-            this.removePointer = removePointer;
-            this.cancelPointer = cancelPointer;
+            this.pointerEventListener = pointerEventListener;
 
             mousePool = new ObjectPool<MousePointer>(4, newPointer, null, resetPointer);
 
             mousePointPos = Input.mousePosition;
-            mousePointer = internalAddPointer(remapCoordinates(mousePointPos));
+            mousePointer = internalAddPointer(mousePointPos);
 
             stateMouse();
         }
@@ -120,7 +108,7 @@ namespace TouchScript.InputSources.InputHandlers
         {
             if (mousePointer != null)
             {
-                cancelPointer(mousePointer);
+                pointerEventListener.CancelPointer(mousePointer);
                 mousePointer = null;
             }
         }
@@ -128,22 +116,19 @@ namespace TouchScript.InputSources.InputHandlers
         /// <inheritdoc />
         public bool UpdateInput()
         {
-            var pos = Input.mousePosition;
-            Vector2 remappedPos = new Vector2(0, 0);
+            var pos = (Vector2) Input.mousePosition;
             bool updated = false;
 
             if (mousePointPos != pos)
             {
-                remappedPos = remapCoordinates(new Vector2(pos.x, pos.y));
-
                 if (mousePointer == null)
                 {
-                    mousePointer = internalAddPointer(remappedPos);
+                    mousePointer = internalAddPointer(pos);
                 }
                 else
                 {
-                    mousePointer.Position = remappedPos;
-                    updatePointer(mousePointer);
+                    mousePointer.Position = pos;
+                    pointerEventListener.UpdatePointer(mousePointer);
                 }
                 updated = true;
             }
@@ -156,7 +141,7 @@ namespace TouchScript.InputSources.InputHandlers
             if (!Mathf.Approximately(scroll.sqrMagnitude, 0.0f))
             {
                 mousePointer.ScrollDelta = scroll;
-                updatePointer(mousePointer);
+                pointerEventListener.UpdatePointer(mousePointer);
             }
             else
             {
@@ -185,7 +170,7 @@ namespace TouchScript.InputSources.InputHandlers
                             {
                                 // A button is down while holding Alt
                                 fakeMousePointer = internalAddPointer(pos, newButtons, mousePointer.Flags | Pointer.FLAG_ARTIFICIAL);
-                                pressPointer(fakeMousePointer);
+                                pointerEventListener.PressPointer(fakeMousePointer);
                                 stateMouseAndFake();
                             }
                         }
@@ -203,8 +188,8 @@ namespace TouchScript.InputSources.InputHandlers
                         {
                             if (mousePointPos != pos)
                             {
-                                fakeMousePointer.Position = remappedPos;
-                                updatePointer(fakeMousePointer);
+                                fakeMousePointer.Position = pos;
+                                pointerEventListener.UpdatePointer(fakeMousePointer);
                             }
                             if ((newButtons & Pointer.PointerButtonState.AnyButtonPressed) == 0)
                             {
@@ -214,7 +199,7 @@ namespace TouchScript.InputSources.InputHandlers
                             else if (buttons != newButtons)
                             {
                                 fakeMousePointer.Buttons = newButtons;
-                                updatePointer(fakeMousePointer);
+                                pointerEventListener.UpdatePointer(fakeMousePointer);
                             }
                         }
                         break;
@@ -226,13 +211,13 @@ namespace TouchScript.InputSources.InputHandlers
                             {
                                 if (Input.GetKey(KeyCode.LeftControl))
                                 {
-                                    fakeMousePointer.Position += (remappedPos - mousePointer.Position);
-                                    updatePointer(fakeMousePointer);
+                                    fakeMousePointer.Position += (pos - mousePointer.Position);
+                                    pointerEventListener.UpdatePointer(fakeMousePointer);
                                 }
                                 else if (Input.GetKey(KeyCode.LeftShift))
                                 {
-                                    fakeMousePointer.Position -= (remappedPos - mousePointer.Position);
-                                    updatePointer(fakeMousePointer);
+                                    fakeMousePointer.Position -= (pos - mousePointer.Position);
+                                    pointerEventListener.UpdatePointer(fakeMousePointer);
                                 }
                             }
                         }
@@ -260,18 +245,18 @@ namespace TouchScript.InputSources.InputHandlers
         public void UpdateResolution(int width, int height) {}
 
         /// <inheritdoc />
-        public bool CancelPointer(Pointer pointer, bool shouldReturn)
+        public bool CancelPointer([NotNull] Pointer pointer, bool shouldReturn)
         {
             if (pointer.Equals(mousePointer))
             {
-                cancelPointer(mousePointer);
+                pointerEventListener.CancelPointer(mousePointer);
                 if (shouldReturn) mousePointer = internalReturnPointer(mousePointer);
                 else mousePointer = internalAddPointer(mousePointer.Position); // can't totally cancel mouse pointer
                 return true;
             }
             if (pointer.Equals(fakeMousePointer))
             {
-                cancelPointer(fakeMousePointer);
+                pointerEventListener.CancelPointer(fakeMousePointer);
                 if (shouldReturn) fakeMousePointer = internalReturnPointer(fakeMousePointer);
                 else fakeMousePointer = null;
                 return true;
@@ -296,12 +281,12 @@ namespace TouchScript.InputSources.InputHandlers
         {
             if (mousePointer != null)
             {
-                cancelPointer(mousePointer);
+                pointerEventListener.CancelPointer(mousePointer);
                 mousePointer = null;
             }
             if (fakeMousePointer != null)
             {
-                cancelPointer(fakeMousePointer);
+                pointerEventListener.CancelPointer(fakeMousePointer);
                 fakeMousePointer = null;
             }
         }
@@ -318,14 +303,6 @@ namespace TouchScript.InputSources.InputHandlers
             if (Input.GetMouseButtonDown(0)) buttons |= Pointer.PointerButtonState.FirstButtonDown;
             if (Input.GetMouseButtonUp(0)) buttons |= Pointer.PointerButtonState.FirstButtonUp;
 
-            if (Input.GetMouseButton(1)) buttons |= Pointer.PointerButtonState.SecondButtonPressed;
-            if (Input.GetMouseButtonDown(1)) buttons |= Pointer.PointerButtonState.SecondButtonDown;
-            if (Input.GetMouseButtonUp(1)) buttons |= Pointer.PointerButtonState.SecondButtonUp;
-
-            if (Input.GetMouseButton(2)) buttons |= Pointer.PointerButtonState.ThirdButtonPressed;
-            if (Input.GetMouseButtonDown(2)) buttons |= Pointer.PointerButtonState.ThirdButtonDown;
-            if (Input.GetMouseButtonUp(2)) buttons |= Pointer.PointerButtonState.ThirdButtonUp;
-
             return buttons;
         }
 
@@ -339,14 +316,14 @@ namespace TouchScript.InputSources.InputHandlers
                 {
                     // Add pressed buttons for processing
                     mousePointer.Buttons = PointerUtils.PressDownButtons(newButtons);
-                    pressPointer(mousePointer);
+                    pointerEventListener.PressPointer(mousePointer);
                     internalReleaseMousePointer(newButtons);
                 }
                 // pressed this frame
                 else
                 {
                     mousePointer.Buttons = newButtons;
-                    pressPointer(mousePointer);
+                    pointerEventListener.PressPointer(mousePointer);
                 }
             }
             // released or button state changed
@@ -362,7 +339,7 @@ namespace TouchScript.InputSources.InputHandlers
                 else
                 {
                     mousePointer.Buttons = newButtons;
-                    updatePointer(mousePointer);
+                    pointerEventListener.UpdatePointer(mousePointer);
                 }
             }
         }
@@ -373,29 +350,30 @@ namespace TouchScript.InputSources.InputHandlers
             {
                 // Alt is released, need to kill the fake touch
                 fakeMousePointer.Buttons = PointerUtils.UpPressedButtons(fakeMousePointer.Buttons); // Convert current pressed buttons to UP
-                releasePointer(fakeMousePointer);
-                removePointer(fakeMousePointer);
+                pointerEventListener.ReleasePointer(fakeMousePointer);
+                pointerEventListener.RemovePointer(fakeMousePointer);
                 fakeMousePointer = null; // Will be returned to the pool by INTERNAL_DiscardPointer
                 return true;
             }
             return false;
         }
 
+        [JetBrains.Annotations.NotNull]
         private MousePointer internalAddPointer(Vector2 position, Pointer.PointerButtonState buttons = Pointer.PointerButtonState.Nothing, uint flags = 0)
         {
             var pointer = mousePool.Get();
             pointer.Position = position;
             pointer.Buttons |= buttons;
             pointer.Flags |= flags;
-            addPointer(pointer);
-            updatePointer(pointer);
+            pointerEventListener.AddPointer(pointer);
+            pointerEventListener.UpdatePointer(pointer);
             return pointer;
         }
 
         private void internalReleaseMousePointer(Pointer.PointerButtonState buttons)
         {
             mousePointer.Flags &= ~Pointer.FLAG_RETURNED;
-            releasePointer(mousePointer);
+            pointerEventListener.ReleasePointer(mousePointer);
         }
 
         private MousePointer internalReturnPointer(MousePointer pointer)
@@ -403,20 +381,14 @@ namespace TouchScript.InputSources.InputHandlers
             var newPointer = mousePool.Get();
             newPointer.CopyFrom(pointer);
             newPointer.Flags |= Pointer.FLAG_RETURNED;
-            addPointer(newPointer);
+            pointerEventListener.AddPointer(newPointer);
             if ((newPointer.Buttons & Pointer.PointerButtonState.AnyButtonPressed) != 0)
             {
                 // Adding down state this frame
                 newPointer.Buttons = PointerUtils.DownPressedButtons(newPointer.Buttons);
-                pressPointer(newPointer);
+                pointerEventListener.PressPointer(newPointer);
             }
             return newPointer;
-        }
-
-        private Vector2 remapCoordinates(Vector2 position)
-        {
-            if (CoordinatesRemapper != null) return CoordinatesRemapper.Remap(position);
-            return position;
         }
 
         private void resetPointer(Pointer p)

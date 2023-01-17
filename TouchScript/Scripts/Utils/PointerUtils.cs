@@ -77,14 +77,6 @@ namespace TouchScript.Utils
         {
             if ((buttons & Pointer.PointerButtonState.FirstButtonPressed) != 0) builder.Append("1");
             else builder.Append("_");
-            if ((buttons & Pointer.PointerButtonState.SecondButtonPressed) != 0) builder.Append("2");
-            else builder.Append("_");
-            if ((buttons & Pointer.PointerButtonState.ThirdButtonPressed) != 0) builder.Append("3");
-            else builder.Append("_");
-            if ((buttons & Pointer.PointerButtonState.FourthButtonPressed) != 0) builder.Append("4");
-            else builder.Append("_");
-            if ((buttons & Pointer.PointerButtonState.FifthButtonPressed) != 0) builder.Append("5");
-            else builder.Append("_");
         }
 
         /// <summary>
@@ -111,26 +103,6 @@ namespace TouchScript.Utils
             else if ((buttons & Pointer.PointerButtonState.FirstButtonUp) != 0) builder.Append("^");
             else if ((buttons & Pointer.PointerButtonState.FirstButtonPressed) != 0) builder.Append("1");
             else builder.Append("_");
-
-            if ((buttons & Pointer.PointerButtonState.SecondButtonDown) != 0) builder.Append("v");
-            else if ((buttons & Pointer.PointerButtonState.SecondButtonUp) != 0) builder.Append("^");
-            else if ((buttons & Pointer.PointerButtonState.SecondButtonPressed) != 0) builder.Append("2");
-            else builder.Append("_");
-
-            if ((buttons & Pointer.PointerButtonState.ThirdButtonDown) != 0) builder.Append("v");
-            else if ((buttons & Pointer.PointerButtonState.ThirdButtonUp) != 0) builder.Append("^");
-            else if ((buttons & Pointer.PointerButtonState.ThirdButtonPressed) != 0) builder.Append("3");
-            else builder.Append("_");
-
-            if ((buttons & Pointer.PointerButtonState.FourthButtonDown) != 0) builder.Append("v");
-            else if ((buttons & Pointer.PointerButtonState.FourthButtonUp) != 0) builder.Append("^");
-            else if ((buttons & Pointer.PointerButtonState.FourthButtonPressed) != 0) builder.Append("4");
-            else builder.Append("_");
-
-            if ((buttons & Pointer.PointerButtonState.FifthButtonDown) != 0) builder.Append("v");
-            else if ((buttons & Pointer.PointerButtonState.FifthButtonUp) != 0) builder.Append("^");
-            else if ((buttons & Pointer.PointerButtonState.FifthButtonPressed) != 0) builder.Append("5");
-            else builder.Append("_");
         }
 
         /// <summary>
@@ -142,14 +114,6 @@ namespace TouchScript.Utils
         {
             if ((buttons & Pointer.PointerButtonState.FirstButtonPressed) != 0)
                 buttons |= Pointer.PointerButtonState.FirstButtonDown;
-            if ((buttons & Pointer.PointerButtonState.SecondButtonPressed) != 0)
-                buttons |= Pointer.PointerButtonState.SecondButtonDown;
-            if ((buttons & Pointer.PointerButtonState.ThirdButtonPressed) != 0)
-                buttons |= Pointer.PointerButtonState.ThirdButtonDown;
-            if ((buttons & Pointer.PointerButtonState.FourthButtonPressed) != 0)
-                buttons |= Pointer.PointerButtonState.FourthButtonDown;
-            if ((buttons & Pointer.PointerButtonState.FifthButtonPressed) != 0)
-                buttons |= Pointer.PointerButtonState.FifthButtonDown;
             return buttons;
         }
 
@@ -162,14 +126,6 @@ namespace TouchScript.Utils
         {
             if ((buttons & Pointer.PointerButtonState.FirstButtonDown) != 0)
                 buttons |= Pointer.PointerButtonState.FirstButtonPressed;
-            if ((buttons & Pointer.PointerButtonState.SecondButtonDown) != 0)
-                buttons |= Pointer.PointerButtonState.SecondButtonPressed;
-            if ((buttons & Pointer.PointerButtonState.ThirdButtonDown) != 0)
-                buttons |= Pointer.PointerButtonState.ThirdButtonPressed;
-            if ((buttons & Pointer.PointerButtonState.FourthButtonDown) != 0)
-                buttons |= Pointer.PointerButtonState.FourthButtonPressed;
-            if ((buttons & Pointer.PointerButtonState.FifthButtonDown) != 0)
-                buttons |= Pointer.PointerButtonState.FifthButtonPressed;
             return buttons;
         }
 
@@ -183,14 +139,6 @@ namespace TouchScript.Utils
             var btns = Pointer.PointerButtonState.Nothing;
             if ((buttons & Pointer.PointerButtonState.FirstButtonPressed) != 0)
                 btns |= Pointer.PointerButtonState.FirstButtonUp;
-            if ((buttons & Pointer.PointerButtonState.SecondButtonPressed) != 0)
-                btns |= Pointer.PointerButtonState.SecondButtonUp;
-            if ((buttons & Pointer.PointerButtonState.ThirdButtonPressed) != 0)
-                btns |= Pointer.PointerButtonState.ThirdButtonUp;
-            if ((buttons & Pointer.PointerButtonState.FourthButtonPressed) != 0)
-                btns |= Pointer.PointerButtonState.FourthButtonUp;
-            if ((buttons & Pointer.PointerButtonState.FifthButtonPressed) != 0)
-                btns |= Pointer.PointerButtonState.FifthButtonUp;
             return btns;
         }
 
