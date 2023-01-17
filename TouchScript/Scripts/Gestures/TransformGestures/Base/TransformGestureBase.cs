@@ -8,10 +8,6 @@ using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
 
-#if TOUCHSCRIPT_DEBUG
-using TouchScript.Debugging.GL;
-#endif
-
 namespace TouchScript.Gestures.TransformGestures.Base
 {
     /// <summary>
@@ -193,17 +189,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
 
         #region Unity methods
 
-#if TOUCHSCRIPT_DEBUG
-        /// <inheritdoc />
-        protected override void Awake()
-        {
-            base.Awake();
-
-            debugID = DebugHelper.GetDebugId(this);
-            debugPointerSize = Vector2.one*TouchManager.Instance.DotsPerCentimeter*1.1f;
-        }
-#endif
-
         /// <inheritdoc />
         protected override void OnEnable()
         {
@@ -311,12 +296,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
 			deltaScale = 1f;
 			transformMask = 0;
 		}
-
-#if TOUCHSCRIPT_DEBUG
-        protected int debugID;
-        protected Coroutine debugCoroutine;
-        protected Vector2 debugPointerSize;
-#endif
 
         #endregion
 

@@ -84,12 +84,6 @@ namespace TouchScript.Gestures
 #endif
 		}
 
-		[ContextMenu("Basic Editor")]
-		private void switchToBasicEditor()
-		{
-			basicEditor = true;
-		}
-
 		#endregion
 
 		#region Gesture callbacks

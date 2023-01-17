@@ -74,9 +74,6 @@ namespace TouchScript.Behaviors.Cursors
         #region Private variables
 
         [SerializeField]
-        private bool cursorsProps; // Used in the custom inspector
-
-        [SerializeField]
         private PointerCursor mouseCursor;
 
         [SerializeField]

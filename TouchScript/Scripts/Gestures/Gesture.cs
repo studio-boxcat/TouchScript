@@ -10,7 +10,6 @@ using TouchScript.Utils;
 using TouchScript.Utils.Attributes;
 using TouchScript.Pointers;
 using UnityEngine;
-using UnityEngine.Events;
 using TouchScript.Core;
 
 namespace TouchScript.Gestures
@@ -18,7 +17,7 @@ namespace TouchScript.Gestures
     /// <summary>
     /// Base class for all gestures.
     /// </summary>
-    public abstract class Gesture : DebuggableMonoBehaviour
+    public abstract class Gesture : MonoBehaviour
     {
         #region Constants
 
@@ -361,23 +360,6 @@ namespace TouchScript.Gestures
         /// Cached transform of the parent object.
         /// </summary>
         protected Transform cachedTransform;
-
-        /// <exclude />
-        [SerializeField]
-		[HideInInspector]
-		protected bool basicEditor = true;
-
-		[SerializeField]
-        [HideInInspector]
-		private bool generalProps; // Used in the custom inspector
-
-		[SerializeField]
-        [HideInInspector]
-		private bool limitsProps; // Used in the custom inspector
-
-		[SerializeField]
-        [HideInInspector]
-		private bool advancedProps; // Used in the custom inspector
 
 		[SerializeField]
         private int minPointers = 0;

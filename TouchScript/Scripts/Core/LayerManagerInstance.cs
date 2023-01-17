@@ -6,7 +6,6 @@ using System;
 using System.Collections.Generic;
 using TouchScript.Hit;
 using TouchScript.Layers;
-using TouchScript.Pointers;
 using UnityEngine;
 
 namespace TouchScript.Core
@@ -14,14 +13,14 @@ namespace TouchScript.Core
     /// <summary>
     /// Internal implementation of <see cref="ILayerManager"/>.
     /// </summary>
-    internal sealed class LayerManagerInstance : MonoBehaviour, ILayerManager
+    public sealed class LayerManagerInstance : MonoBehaviour
     {
         #region Public properties
 
         /// <summary>
         /// Gets the instance of GestureManager singleton.
         /// </summary>
-        public static ILayerManager Instance => SessionStateManager.LayerManager;
+        public static LayerManagerInstance Instance => SessionStateManager.LayerManager;
 
         /// <inheritdoc />
         public IList<TouchLayer> Layers
@@ -41,7 +40,6 @@ namespace TouchScript.Core
 
         private static LayerManagerInstance instance;
 
-        private ITouchManager touchManager => SessionStateManager.TouchManagerInstance;
         private List<TouchLayer> layers = new List<TouchLayer>(10);
         private int layerCount = 0;
 

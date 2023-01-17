@@ -103,12 +103,6 @@ namespace TouchScript.Gestures
             distanceLimitInPixelsSquared = Mathf.Pow(distanceLimit * touchManager.DotsPerCentimeter, 2);
         }
 
-		[ContextMenu("Basic Editor")]
-		private void switchToBasicEditor()
-		{
-			basicEditor = true;
-		}
-
         #endregion
 
         #region Gesture callbacks

@@ -5,13 +5,7 @@
 using System.Collections.Generic;
 using TouchScript.Gestures.TransformGestures.Base;
 using TouchScript.Layers;
-using TouchScript.Utils.Geom;
 using TouchScript.Pointers;
-using UnityEngine.Profiling;
-
-#if TOUCHSCRIPT_DEBUG
-using TouchScript.Debugging.GL;
-#endif
 using UnityEngine;
 
 namespace TouchScript.Gestures.TransformGestures
@@ -23,62 +17,16 @@ namespace TouchScript.Gestures.TransformGestures
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_Gestures_TransformGestures_PinnedTransformGesture.htm")]
     public class PinnedTransformGesture : OnePointTrasformGestureBase
     {
-        #region Constants
-
-        #endregion
-
         #region Public properties
-
-        /// <summary>
-        /// Gets or sets transform's projection type.
-        /// </summary>
-        /// <value> Projection type. </value>
-        public TransformGesture.ProjectionType Projection
-        {
-            get { return projection; }
-            set
-            {
-                if (projection == value) return;
-                projection = value;
-                if (Application.isPlaying) updateProjectionPlane();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets transform's projection plane normal.
-        /// </summary>
-        /// <value> Projection plane normal. </value>
-        public Vector3 ProjectionPlaneNormal
-        {
-            get
-            {
-                if (projection == TransformGesture.ProjectionType.Layer) return projectionLayer.WorldProjectionNormal;
-                return projectionPlaneNormal;
-            }
-            set
-            {
-                if (projection == TransformGesture.ProjectionType.Layer) projection = TransformGesture.ProjectionType.Object;
-                value.Normalize();
-                if (projectionPlaneNormal == value) return;
-                projectionPlaneNormal = value;
-                if (Application.isPlaying) updateProjectionPlane();
-            }
-        }
 
         /// <summary>
         /// Plane where transformation occured.
         /// </summary>
-        public Plane TransformPlane
-        {
-            get { return transformPlane; }
-        }
+        public Plane TransformPlane => transformPlane;
 
         #endregion
 
         #region Private variables
-
-		[SerializeField]
-		private bool projectionProps; // Used in the custom inspector
 
         [SerializeField]
         private TransformGesture.ProjectionType projection = TransformGesture.ProjectionType.Layer;
@@ -88,10 +36,6 @@ namespace TouchScript.Gestures.TransformGestures
 
         private TouchLayer projectionLayer;
         private Plane transformPlane;
-
-#if UNITY_5_6_OR_NEWER
-		private CustomSampler gestureSampler;
-#endif
 
         #endregion
 
@@ -107,9 +51,6 @@ namespace TouchScript.Gestures.TransformGestures
             base.Awake();
 
             transformPlane = new Plane();
-#if UNITY_5_6_OR_NEWER
-			gestureSampler = CustomSampler.Create("[TouchScript] Pinned Transform Gesture");
-#endif
         }
 
         /// <inheritdoc />
@@ -120,12 +61,6 @@ namespace TouchScript.Gestures.TransformGestures
             updateProjectionPlane();
         }
 
-		[ContextMenu("Basic Editor")]
-		private void switchToBasicEditor()
-		{
-			basicEditor = true;
-		}
-
         #endregion
 
         #region Gesture callbacks
@@ -133,55 +68,13 @@ namespace TouchScript.Gestures.TransformGestures
         /// <inheritdoc />
         protected override void pointersPressed(IList<Pointer> pointers)
         {
-#if UNITY_5_6_OR_NEWER
-			gestureSampler.Begin();
-#endif
-
             base.pointersPressed(pointers);
 
             if (NumPointers == pointers.Count)
             {
                 projectionLayer = activePointers[0].GetPressData().Layer;
                 updateProjectionPlane();
-
-#if TOUCHSCRIPT_DEBUG
-                drawDebug(activePointers[0].ProjectionParams.ProjectFrom(cachedTransform.position), activePointers[0].Position);
-#endif
             }
-
-#if UNITY_5_6_OR_NEWER
-			gestureSampler.End();
-#endif
-        }
-
-#if UNITY_5_6_OR_NEWER
-		/// <inheritdoc />
-		protected override void pointersUpdated(IList<Pointer> pointers)
-		{
-			gestureSampler.Begin();
-
-			base.pointersUpdated(pointers);
-
-			gestureSampler.End();
-		}
-#endif
-
-        /// <inheritdoc />
-        protected override void pointersReleased(IList<Pointer> pointers)
-        {
-#if UNITY_5_6_OR_NEWER
-			gestureSampler.Begin();
-#endif
-
-            base.pointersReleased(pointers);
-
-#if TOUCHSCRIPT_DEBUG
-            if (NumPointers == 0) clearDebug();
-            else drawDebug(activePointers[0].ProjectionParams.ProjectFrom(cachedTransform.position), activePointers[0].Position);
-#endif
-#if UNITY_5_6_OR_NEWER
-			gestureSampler.End();
-#endif
         }
 
         #endregion
@@ -208,23 +101,6 @@ namespace TouchScript.Gestures.TransformGestures
             var oldVector = projectionParams.ProjectTo(oldScreenPos, TransformPlane) - center;
             return newVector.magnitude / oldVector.magnitude;
         }
-
-#if TOUCHSCRIPT_DEBUG
-        protected override void clearDebug()
-        {
-            base.clearDebug();
-
-            GLDebug.RemoveFigure(debugID + 3);
-        }
-
-        protected override void drawDebug(Vector2 point1, Vector2 point2)
-        {
-            base.drawDebug(point1, point2);
-
-            if (!DebugMode) return;
-            GLDebug.DrawPlaneWithNormal(debugID + 3, cachedTransform.position, RotationAxis, 1f, GLDebug.MULTIPLY, float.PositiveInfinity);
-        }
-#endif
 
         #endregion
 

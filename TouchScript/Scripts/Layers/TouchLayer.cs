@@ -4,10 +4,9 @@
 
 using System;
 using TouchScript.Hit;
-using TouchScript.Utils;
 using UnityEngine;
 using System.Collections;
-using System.Collections.Generic;
+using TouchScript.Core;
 using TouchScript.Pointers;
 
 namespace TouchScript.Layers
@@ -26,36 +25,12 @@ namespace TouchScript.Layers
     /// </remarks>
     public abstract class TouchLayer : MonoBehaviour
     {
-        #region Events
-
-        /// <summary>
-        /// Occurs when layer determines that a pointer has hit something.
-        /// </summary>
-        public event EventHandler<TouchLayerEventArgs> PointerBegan
-        {
-            add { pointerPressInvoker += value; }
-            remove { pointerPressInvoker -= value; }
-        }
-
-        // Needed to overcome iOS AOT limitations
-        private EventHandler<TouchLayerEventArgs> pointerPressInvoker;
-
-        #endregion
-
         #region Public properties
-
-        /// <summary>
-        /// Pointer layer's name.
-        /// </summary>
-        public virtual string Name => "Layer";
 
         /// <summary>
         /// Layers screen to world projection normal.
         /// </summary>
-        public virtual Vector3 WorldProjectionNormal
-        {
-            get { return transform.forward; }
-        }
+        public virtual Vector3 WorldProjectionNormal => transform.forward;
 
         #endregion
 
@@ -69,7 +44,7 @@ namespace TouchScript.Layers
         /// <summary>
         /// Layer manager.
         /// </summary>
-        protected ILayerManager layerManager;
+        protected LayerManagerInstance layerManager;
 
         #endregion
 
@@ -153,7 +128,6 @@ namespace TouchScript.Layers
         internal bool INTERNAL_PressPointer(Pointer pointer)
         {
             pressPointer(pointer);
-            if (pointerPressInvoker != null) pointerPressInvoker.InvokeHandleExceptions(this, new TouchLayerEventArgs(pointer));
             return true;
         }
 

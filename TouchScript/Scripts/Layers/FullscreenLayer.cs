@@ -18,9 +18,6 @@ namespace TouchScript.Layers
         #region Public properties
 
         /// <inheritdoc />
-        public override string Name => "Global Fullscreen";
-
-        /// <inheritdoc />
         public override Vector3 WorldProjectionNormal => transform.forward;
 
         #endregion

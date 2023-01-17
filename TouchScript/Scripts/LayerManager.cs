@@ -16,9 +16,6 @@ namespace TouchScript
         /// <summary>
         /// Gets the LayerManager instance.
         /// </summary>
-        public static ILayerManager Instance
-        {
-            get { return LayerManagerInstance.Instance; }
-        }
+        public static LayerManagerInstance Instance => LayerManagerInstance.Instance;
     }
 }

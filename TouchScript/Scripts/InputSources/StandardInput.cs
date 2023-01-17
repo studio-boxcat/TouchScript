@@ -5,7 +5,6 @@
 using TouchScript.Core;
 using TouchScript.InputSources.InputHandlers;
 using TouchScript.Pointers;
-using TouchScript.Utils.Attributes;
 using UnityEngine;
 
 namespace TouchScript.InputSources
@@ -94,12 +93,6 @@ namespace TouchScript.InputSources
             disableTouch();
             base.OnDisable();
         }
-
-		[ContextMenu("Basic Editor")]
-		private void switchToBasicEditor()
-		{
-			basicEditor = true;
-		}
 
         #endregion
 

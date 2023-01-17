@@ -17,11 +17,6 @@ namespace TouchScript.InputSources
     {
         #region Private variables
 
-        /// <exclude/>
-        [SerializeField]
-        [HideInInspector]
-		protected bool basicEditor = true;
-
         private TouchManagerInstance touchManager;
 
         protected int screenWidth;

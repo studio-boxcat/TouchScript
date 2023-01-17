@@ -61,30 +61,6 @@ namespace TouchScript.Gestures
         [ToggleLeft]
         private bool ignoreChildren = false;
 
-#if UNITY_5_6_OR_NEWER
-        private CustomSampler gestureSampler;
-#endif
-
-        #endregion
-
-        #region Unity
-
-        /// <inheritdoc />
-        protected override void Awake()
-        {
-            base.Awake();
-
-#if UNITY_5_6_OR_NEWER
-            gestureSampler = CustomSampler.Create("[TouchScript] Press Gesture");
-#endif
-        }
-
-        [ContextMenu("Basic Editor")]
-        private void switchToBasicEditor()
-        {
-            basicEditor = true;
-        }
-
         #endregion
 
         #region Gesture callbacks
@@ -116,32 +92,18 @@ namespace TouchScript.Gestures
         /// <inheritdoc />
         protected override void pointersPressed(IList<Pointer> pointers)
         {
-#if UNITY_5_6_OR_NEWER
-            gestureSampler.Begin();
-#endif
-
             base.pointersPressed(pointers);
 
             if (pointersNumState == PointersNumState.PassedMinThreshold)
             {
                 setState(GestureState.Recognized);
-#if UNITY_5_6_OR_NEWER
-                gestureSampler.End();
-#endif
                 return;
             }
             if (pointersNumState == PointersNumState.PassedMinMaxThreshold)
             {
                 setState(GestureState.Failed);
-#if UNITY_5_6_OR_NEWER
-                gestureSampler.End();
-#endif
                 return;
             }
-
-#if UNITY_5_6_OR_NEWER
-            gestureSampler.End();
-#endif
         }
 
         /// <inheritdoc />

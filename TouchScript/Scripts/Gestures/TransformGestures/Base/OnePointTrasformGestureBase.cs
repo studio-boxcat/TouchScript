@@ -8,9 +8,8 @@ using TouchScript.Pointers;
 using TouchScript.Utils.Geom;
 using UnityEngine;
 
-#if TOUCHSCRIPT_DEBUG
+#if DEBUG
 using System.Collections;
-using TouchScript.Debugging.GL;
 #endif
 
 namespace TouchScript.Gestures.TransformGestures.Base
@@ -55,11 +54,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
         #region Private variables
 
         /// <summary>
-        /// Translation buffer.
-        /// </summary>
-        protected Vector2 screenPixelTranslationBuffer;
-
-        /// <summary>
         /// Rotation buffer.
         /// </summary>
         protected float screenPixelRotationBuffer;
@@ -81,21 +75,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
 
         #endregion
 
-        #region Unity methods
-
-#if TOUCHSCRIPT_DEBUG
-    /// <inheritdoc />
-        protected override void Awake()
-        {
-            base.Awake();
-
-            debugID = DebugHelper.GetDebugId(this);
-            debugPointerSize = Vector2.one * TouchManager.Instance.DotsPerCentimeter * 1.1f;
-        }
-#endif
-
-        #endregion
-
         #region Gesture callbacks
 
         /// <inheritdoc />
@@ -107,13 +86,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
             var dR = deltaRotation = 0;
             var dS = deltaScale = 1f;
 
-#if TOUCHSCRIPT_DEBUG
-            var worldCenter = cachedTransform.position;
-            var screenCenter = projectionParams.ProjectFrom(worldCenter);
-            var newScreenPos = getPointScreenPosition();
-            drawDebug(screenCenter, newScreenPos);
-#endif
-
             if (pointersNumState != PointersNumState.InRange) return;
 
             var rotationEnabled = (Type & TransformGesture.TransformType.Rotation) == TransformGesture.TransformType.Rotation;
@@ -121,12 +93,10 @@ namespace TouchScript.Gestures.TransformGestures.Base
             if (!rotationEnabled && !scalingEnabled) return;
             if (!relevantPointers(pointers)) return;
 
-#if !TOUCHSCRIPT_DEBUG
             var thePointer = activePointers[0];
             var worldCenter = cachedTransform.position;
             var screenCenter = projectionParams.ProjectFrom(worldCenter);
             var newScreenPos = thePointer.Position;
-#endif
 
             // Here we can't reuse last frame screen positions because points 0 and 1 can change.
             // For example if the first of 3 fingers is lifted off.
@@ -198,15 +168,10 @@ namespace TouchScript.Gestures.TransformGestures.Base
         {
             base.reset();
 
-            screenPixelTranslationBuffer = Vector2.zero;
             screenPixelRotationBuffer = 0f;
             angleBuffer = 0;
             screenPixelScalingBuffer = 0f;
             scaleBuffer = 1f;
-
-#if TOUCHSCRIPT_DEBUG
-            clearDebug();
-#endif
         }
 
         #endregion
@@ -278,40 +243,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
         {
             type = type & ~TransformGesture.TransformType.Translation;
         }
-
-#if TOUCHSCRIPT_DEBUG
-        protected virtual void clearDebug()
-        {
-            GLDebug.RemoveFigure(debugID);
-            GLDebug.RemoveFigure(debugID + 1);
-            GLDebug.RemoveFigure(debugID + 2);
-
-            if (debugCoroutine != null) StopCoroutine(debugCoroutine);
-            debugCoroutine = null;
-        }
-
-        protected void drawDebugDelayed(Vector2 point1, Vector2 point2)
-        {
-            if (debugCoroutine != null) StopCoroutine(debugCoroutine);
-            debugCoroutine = StartCoroutine(doDrawDebug(point1, point2));
-        }
-
-        protected virtual void drawDebug(Vector2 point1, Vector2 point2)
-        {
-            if (!DebugMode) return;
-
-            var color = State == GestureState.Possible ? Color.red : Color.green;
-            GLDebug.DrawSquareScreenSpace(debugID + 1, point2, 0f, debugPointerSize, color, float.PositiveInfinity);
-            GLDebug.DrawLineScreenSpace(debugID + 2, point1, point2, color, float.PositiveInfinity);
-        }
-
-        private IEnumerator doDrawDebug(Vector2 point1, Vector2 point2)
-        {
-            yield return new WaitForEndOfFrame();
-
-            drawDebug(point1, point2);
-        }
-#endif
 
         #endregion
 

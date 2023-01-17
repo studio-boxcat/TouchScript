@@ -11,7 +11,7 @@ using TouchScript.Pointers;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using System.Collections;
-using TouchScript.Utils.Attributes;
+using Sirenix.OdinInspector;
 
 namespace TouchScript.Layers
 {
@@ -24,59 +24,6 @@ namespace TouchScript.Layers
     public class StandardLayer : TouchLayer
     {
         #region Public properties
-
-        /// <summary>
-        /// Indicates that the layer should look for 2D objects in the scene. Set this to <c>false</c> to optimize hit processing.
-        /// </summary>
-        public bool Hit2DObjects
-        {
-            get { return hit2DObjects; }
-            set
-            {
-                hit2DObjects = value;
-                updateVariants();
-            }
-        }
-
-        /// <summary>
-        /// Indicates that the layer should look for World UI objects in the scene. Set this to <c>false</c> to optimize hit processing.
-        /// </summary>
-        public bool HitWorldSpaceUI
-        {
-            get { return hitWorldSpaceUI; }
-            set
-            {
-                hitWorldSpaceUI = value;
-                setupInputModule();
-                updateVariants();
-            }
-        }
-
-        /// <summary>
-        /// Indicates that the layer should look for Screen Space UI objects in the scene. Set this to <c>false</c> to optimize hit processing.
-        /// </summary>
-        public bool HitScreenSpaceUI
-        {
-            get { return hitScreenSpaceUI; }
-            set
-            {
-                hitScreenSpaceUI = value;
-                setupInputModule();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the layer mask which is used to select layers which should be touchable from this layer.
-        /// </summary>
-        /// <value>A mask to exclude objects from possibly touchable list.</value>
-        public LayerMask LayerMask
-        {
-            get { return layerMask; }
-            set { layerMask = value; }
-        }
-
-        /// <inheritdoc />
-        public override string Name => _camera == null ? base.Name : _camera.name;
 
         /// <inheritdoc />
         public override Vector3 WorldProjectionNormal
@@ -92,8 +39,8 @@ namespace TouchScript.Layers
 
         #region Private variables
 
-        private static Comparison<RaycastHitUI> _raycastHitUIComparerFunc = raycastHitUIComparerFunc;
-        private static Comparison<HitData> _hitDataComparerFunc = hitDataComparerFunc;
+        private static readonly Comparison<RaycastHitUI> _raycastHitUIComparerFunc = raycastHitUIComparerFunc;
+        private static readonly Comparison<HitData> _hitDataComparerFunc = hitDataComparerFunc;
 
         private static Dictionary<int, ProjectionParams> projectionParamsCache = new Dictionary<int, ProjectionParams>();
         private static List<BaseRaycaster> raycasters;
@@ -102,21 +49,8 @@ namespace TouchScript.Layers
         private static List<HitData> hitList = new List<HitData>(20);
         private static RaycastHit2D[] raycastHits2D = new RaycastHit2D[20];
 
-#pragma warning disable 0414
-
-		[SerializeField]
-		[HideInInspector]
-		private bool basicEditor = true;
-
-		[SerializeField]
-        [HideInInspector]
-        private bool advancedProps; // is used to save if advanced properties are opened or closed
-
-#pragma warning restore 0414
-
-		[SerializeField]
-        [HideInInspector]
-        private bool hitProps;
+        [SerializeField, Required, ChildGameObjectsOnly]
+        Camera _camera;
 
         [SerializeField]
         [ToggleLeft]
@@ -135,11 +69,6 @@ namespace TouchScript.Layers
 
         private bool lookForCameraObjects = false;
         private TouchScriptInputModule inputModule;
-
-        /// <summary>
-        /// Camera.
-        /// </summary>
-        protected Camera _camera;
 
         #endregion
 
@@ -210,7 +139,6 @@ namespace TouchScript.Layers
         /// <inheritdoc />
         protected override void Awake()
         {
-            updateCamera();
             updateVariants();
             base.Awake();
         }
@@ -245,23 +173,9 @@ namespace TouchScript.Layers
             if (touchManager != null) touchManager.FrameStarted -= frameStartedHandler;
         }
 
-		[ContextMenu("Basic Editor")]
-		private void switchToBasicEditor()
-		{
-			basicEditor = true;
-		}
-
         #endregion
 
         #region Protected functions
-
-        /// <summary>
-        /// Finds a camera.
-        /// </summary>
-        protected virtual void updateCamera()
-        {
-            _camera = GetComponent<Camera>();
-        }
 
         /// <inheritdoc />
         protected override ProjectionParams createProjectionParams()
@@ -293,7 +207,6 @@ namespace TouchScript.Layers
         {
             hit = default(HitData);
 
-            if (_camera == null) return HitResult.Miss;
             if ((_camera.enabled == false) || (_camera.gameObject.activeInHierarchy == false)) return HitResult.Miss;
             if (!_camera.pixelRect.Contains(screenPosition)) return HitResult.Miss;
 
@@ -401,12 +314,6 @@ namespace TouchScript.Layers
                     });
             }
             _raycastResultBuffer.Clear();
-        }
-
-        private HitResult doHit(Pointer pointer, RaycastHitUI raycastHit, out HitData hit)
-        {
-            hit = new HitData(raycastHit, this, true);
-            return HitResult.Hit;
         }
 
         private void updateVariants()

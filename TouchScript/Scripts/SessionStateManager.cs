@@ -12,7 +12,7 @@ namespace TouchScript
     static class SessionStateManager
     {
         public static TouchManagerInstance TouchManagerInstance => _sessionState.TouchManager;
-        public static ILayerManager LayerManager => _sessionState.LayerManager;
+        public static LayerManagerInstance LayerManager => _sessionState.LayerManager;
         public static IGestureManager GestureManager => _sessionState.GestureManager;
         public static TouchScriptInputModule TouchScriptInputModule => _sessionState.TouchScriptInputModule;
 
