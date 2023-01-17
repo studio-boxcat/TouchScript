@@ -50,11 +50,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 75324aa372886435faa21a4145210f8e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cursorsProps: 0
   mouseCursor: {fileID: 11416202, guid: a71503570adc6194b9bbc69bf19cc2de, type: 3}
-  touchCursor: {fileID: 11435582, guid: 7fd82b375cf1cdc45b55e2751d814207, type: 3}
-  penCursor: {fileID: 11486812, guid: 7af150e8b98b05449aaf9462bd6c7109, type: 3}
-  objectCursor: {fileID: 11468960, guid: 4230502e1973f4c9e9ef6767dcc8c602, type: 3}
   useDPI: 1
   cursorSize: 2
   cursorPixelSize: 64
