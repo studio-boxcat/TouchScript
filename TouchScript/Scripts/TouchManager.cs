@@ -4,7 +4,6 @@
 
 using System.Collections.Generic;
 using TouchScript.Core;
-using TouchScript.Devices.Display;
 using TouchScript.Layers;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -24,11 +23,6 @@ namespace TouchScript
     public sealed class TouchManager : MonoBehaviour
     {
         #region Constants
-
-        /// <summary>
-        /// Centimeter to inch ratio to be used in DPI calculations.
-        /// </summary>
-        public const float CM_TO_INCH = 0.393700787f;
 
         /// <summary>
         /// The value used to represent an unknown state of a screen position. Use <see cref="TouchManager.IsInvalidPosition"/> to check if a point has unknown value.
@@ -77,8 +71,6 @@ namespace TouchScript
         {
             var touchManager = Instance;
             if (touchManager == null) return;
-
-            touchManager.DisplayDevice = displayDevice as IDisplayDevice;
 
             var layerManager = LayerManager.Instance;
             if (layerManager == null) return;

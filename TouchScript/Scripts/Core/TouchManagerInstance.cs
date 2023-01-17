@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using TouchScript.Devices.Display;
 using TouchScript.Hit;
 using TouchScript.InputSources;
-using TouchScript.Layers;
 using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
@@ -92,46 +91,9 @@ namespace TouchScript.Core
         public static TouchManagerInstance Instance => SessionStateManager.TouchManagerInstance;
 
         /// <inheritdoc />
-        public IDisplayDevice DisplayDevice
-        {
-            get
-            {
-                if (displayDevice == null)
-                {
-                    displayDevice = ScriptableObject.CreateInstance<GenericDisplayDevice>();
-                }
-                return displayDevice;
-            }
-            set
-            {
-                if (value == null)
-                {
-                    displayDevice = ScriptableObject.CreateInstance<GenericDisplayDevice>();
-                }
-                else
-                {
-                    displayDevice = value;
-                }
-                updateDPI();
-            }
-        }
-
-        /// <inheritdoc />
-        public float DPI
-        {
-            get { return dpi; }
-        }
-
-        /// <inheritdoc />
         public IList<IInputSource> Inputs
         {
             get { return new List<IInputSource>(inputs); }
-        }
-
-        /// <inheritdoc />
-        public float DotsPerCentimeter
-        {
-            get { return dotsPerCentimeter; }
         }
 
         /// <inheritdoc />
@@ -167,12 +129,6 @@ namespace TouchScript.Core
 
         private static TouchManagerInstance instance;
 
-        private IDisplayDevice displayDevice;
-        private float dpi = 96;
-        private float dotsPerCentimeter = TouchManager.CM_TO_INCH * 96;
-
-        private LayerManagerInstance layerManager;
-
         private List<IInputSource> inputs = new List<IInputSource>(3);
         private int inputCount = 0;
 
@@ -195,16 +151,6 @@ namespace TouchScript.Core
             (l) => l.Clear());
 
         private int nextPointerId = 0;
-
-		// Cache delegates
-		private Func<TouchLayer, bool> _layerAddPointer, _layerUpdatePointer, _layerRemovePointer, _layerCancelPointer;
-
-        #endregion
-
-        #region Temporary variables
-
-        // Used in layer dispatch fucntions
-        private Pointer tmpPointer;
 
         #endregion
 
@@ -243,20 +189,6 @@ namespace TouchScript.Core
         public void CancelPointer(int id)
         {
             CancelPointer(id, false);
-        }
-
-        private void updateDPI()
-        {
-            if (DisplayDevice != null)
-            {
-                DisplayDevice.UpdateDPI();
-                dpi = DisplayDevice.DPI;
-            }
-            else
-            {
-                dpi = 96;
-            }
-            dotsPerCentimeter = TouchManager.CM_TO_INCH * dpi;
         }
 
         /// <inheritdoc />
@@ -437,19 +369,8 @@ namespace TouchScript.Core
                 return;
             }
 
-            // gameObject.hideFlags = HideFlags.HideInHierarchy;
-            // DontDestroyOnLoad(gameObject);
-
-            layerManager = LayerManager.Instance;
-            updateDPI();
-
             pointerListPool.WarmUp(2);
             intListPool.WarmUp(3);
-
-			_layerAddPointer = layerAddPointer;
-			_layerUpdatePointer = layerUpdatePointer;
-			_layerRemovePointer = layerRemovePointer;
-			_layerCancelPointer = layerCancelPointer;
         }
 
         void OnDestroy()
@@ -484,21 +405,11 @@ namespace TouchScript.Core
                 list.Add(pointer);
                 this.pointers.Add(pointer);
                 idToPointer.Add(pointer.Id, pointer);
-
-                tmpPointer = pointer;
-                layerManager.ForEach(_layerAddPointer);
-                tmpPointer = null;
             }
 
             if (pointersAddedInvoker != null)
                 pointersAddedInvoker.InvokeHandleExceptions(this, PointerEventArgs.GetCachedEventArgs(list));
             pointerListPool.Release(list);
-        }
-
-        private bool layerAddPointer(TouchLayer layer)
-        {
-            layer.INTERNAL_AddPointer(tmpPointer);
-            return true;
         }
 
         private void updateUpdated(List<int> pointers)
@@ -518,26 +429,11 @@ namespace TouchScript.Core
                     continue;
                 }
                 list.Add(pointer);
-
-                var layer = pointer.GetPressData().Layer;
-                if (layer != null) layer.INTERNAL_UpdatePointer(pointer);
-                else
-                {
-                    tmpPointer = pointer;
-					layerManager.ForEach(_layerUpdatePointer);
-                    tmpPointer = null;
-                }
             }
 
             if (pointersUpdatedInvoker != null)
                 pointersUpdatedInvoker.InvokeHandleExceptions(this, PointerEventArgs.GetCachedEventArgs(list));
             pointerListPool.Release(list);
-        }
-
-        private bool layerUpdatePointer(TouchLayer layer)
-        {
-            layer.INTERNAL_UpdatePointer(tmpPointer);
-            return true;
         }
 
         private void updatePressed(List<int> pointers)
@@ -561,10 +457,7 @@ namespace TouchScript.Core
 
                 HitData hit = pointer.GetOverData();
                 if (hit.Layer != null)
-                {
                     pointer.INTERNAL_SetPressData(hit);
-                    hit.Layer.INTERNAL_PressPointer(pointer);
-                }
             }
 
             if (pointersPressedInvoker != null)
@@ -589,9 +482,6 @@ namespace TouchScript.Core
                 }
                 list.Add(pointer);
                 pressedPointers.Remove(pointer);
-
-                var layer = pointer.GetPressData().Layer;
-                if (layer != null) layer.INTERNAL_ReleasePointer(pointer);
             }
 
             if (pointersReleasedInvoker != null)
@@ -625,10 +515,6 @@ namespace TouchScript.Core
                 this.pointers.Remove(pointer);
                 pressedPointers.Remove(pointer);
                 list.Add(pointer);
-
-                tmpPointer = pointer;
-                layerManager.ForEach(_layerRemovePointer);
-                tmpPointer = null;
             }
 
             if (pointersRemovedInvoker != null)
@@ -641,12 +527,6 @@ namespace TouchScript.Core
                 if (pointer.InputSource != null) pointer.InputSource.INTERNAL_DiscardPointer(pointer);
             }
             pointerListPool.Release(list);
-        }
-
-        private bool layerRemovePointer(TouchLayer layer)
-        {
-            layer.INTERNAL_RemovePointer(tmpPointer);
-            return true;
         }
 
         private void updateCancelled(List<int> pointers)
@@ -669,10 +549,6 @@ namespace TouchScript.Core
                 this.pointers.Remove(pointer);
                 pressedPointers.Remove(pointer);
                 list.Add(pointer);
-
-                tmpPointer = pointer;
-                layerManager.ForEach(_layerCancelPointer);
-                tmpPointer = null;
             }
 
             if (pointersCancelledInvoker != null)
@@ -684,12 +560,6 @@ namespace TouchScript.Core
                 if (pointer.InputSource != null) pointer.InputSource.INTERNAL_DiscardPointer(pointer);
             }
             pointerListPool.Release(list);
-        }
-
-        private bool layerCancelPointer(TouchLayer layer)
-        {
-            layer.INTERNAL_CancelPointer(tmpPointer);
-            return true;
         }
 
         private void sendFrameStartedToPointers()

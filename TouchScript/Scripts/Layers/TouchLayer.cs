@@ -2,7 +2,6 @@
  * @author Valentin Simonov / http://va.lent.in/
  */
 
-using System;
 using TouchScript.Hit;
 using UnityEngine;
 using System.Collections;
@@ -113,84 +112,7 @@ namespace TouchScript.Layers
 
         #endregion
 
-        #region Internal methods
-
-        internal void INTERNAL_AddPointer(Pointer pointer)
-        {
-            addPointer(pointer);
-        }
-
-        internal void INTERNAL_UpdatePointer(Pointer pointer)
-        {
-            updatePointer(pointer);
-        }
-
-        internal bool INTERNAL_PressPointer(Pointer pointer)
-        {
-            pressPointer(pointer);
-            return true;
-        }
-
-        internal void INTERNAL_ReleasePointer(Pointer pointer)
-        {
-            releasePointer(pointer);
-        }
-
-        internal void INTERNAL_RemovePointer(Pointer pointer)
-        {
-            removePointer(pointer);
-        }
-
-        internal void INTERNAL_CancelPointer(Pointer pointer)
-        {
-            cancelPointer(pointer);
-        }
-
-        #endregion
-
         #region Protected functions
-
-        /// <summary>
-        /// Called when a pointer is added.
-        /// </summary>
-        /// <param name="pointer">Pointer.</param>
-        /// <remarks>This method may also be used to update some internal state or resend this event somewhere.</remarks>
-        protected virtual void addPointer(Pointer pointer) {}
-
-        /// <summary>
-        /// Called when a layer is pressed over an object detected by this layer.
-        /// </summary>
-        /// <param name="pointer">Pointer.</param>
-        /// <remarks>This method may also be used to update some internal state or resend this event somewhere.</remarks>
-        protected virtual void pressPointer(Pointer pointer) {}
-
-        /// <summary>
-        /// Called when a pointer is moved.
-        /// </summary>
-        /// <param name="pointer">Pointer.</param>
-        /// <remarks>This method may also be used to update some internal state or resend this event somewhere.</remarks>
-        protected virtual void updatePointer(Pointer pointer) {}
-
-        /// <summary>
-        /// Called when a pointer is released.
-        /// </summary>
-        /// <param name="pointer">Pointer.</param>
-        /// <remarks>This method may also be used to update some internal state or resend this event somewhere.</remarks>
-        protected virtual void releasePointer(Pointer pointer) {}
-
-        /// <summary>
-        /// Called when a pointer is removed.
-        /// </summary>
-        /// <param name="pointer">Pointer.</param>
-        /// <remarks>This method may also be used to update some internal state or resend this event somewhere.</remarks>
-        protected virtual void removePointer(Pointer pointer) {}
-
-        /// <summary>
-        /// Called when a pointer is cancelled.
-        /// </summary>
-        /// <param name="pointer">Pointer.</param>
-        /// <remarks>This method may also be used to update some internal state or resend this event somewhere.</remarks>
-        protected virtual void cancelPointer(Pointer pointer) {}
 
         /// <summary>
         /// Creates projection parameters.
@@ -202,26 +124,5 @@ namespace TouchScript.Layers
         }
 
         #endregion
-    }
-
-    /// <summary>
-    /// Arguments used with <see cref="TouchLayer"/> events.
-    /// </summary>
-    public class TouchLayerEventArgs : EventArgs
-    {
-        /// <summary>
-        /// Gets the pointer associated with the event.
-        /// </summary>
-        public Pointer Pointer { get; private set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="TouchLayerEventArgs"/> class.
-        /// </summary>
-        /// <param name="pointer">The pointer associated with the event.</param>
-        public TouchLayerEventArgs(Pointer pointer)
-            : base()
-        {
-            Pointer = pointer;
-        }
     }
 }

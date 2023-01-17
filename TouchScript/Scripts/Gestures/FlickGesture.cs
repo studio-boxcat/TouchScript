@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using TouchScript.Devices.Display;
 using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
@@ -175,7 +176,7 @@ namespace TouchScript.Gestures
             if (isActive || !moving)
             {
                 movementBuffer += ScreenPosition - PreviousScreenPosition;
-                var dpiMovementThreshold = MovementThreshold * touchManager.DotsPerCentimeter;
+                var dpiMovementThreshold = MovementThreshold * DisplayDevice.DotsPerCentimeter;
                 if (movementBuffer.sqrMagnitude >= dpiMovementThreshold * dpiMovementThreshold)
                 {
                     moving = true;
@@ -214,7 +215,7 @@ namespace TouchScript.Gestures
                         break;
                 }
 
-                if (totalMovement.magnitude < MinDistance * touchManager.DotsPerCentimeter)
+                if (totalMovement.magnitude < MinDistance * DisplayDevice.DotsPerCentimeter)
                 {
                     setState(GestureState.Failed);
                 }

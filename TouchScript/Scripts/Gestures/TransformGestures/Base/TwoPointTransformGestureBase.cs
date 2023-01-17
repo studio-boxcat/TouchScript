@@ -3,6 +3,7 @@
  */
 
 using System.Collections.Generic;
+using TouchScript.Devices.Display;
 using TouchScript.Layers;
 using TouchScript.Utils.Geom;
 using TouchScript.Pointers;
@@ -365,7 +366,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
 
         private void updateMinScreenPointsDistance()
         {
-            minScreenPointsPixelDistance = minScreenPointsDistance * touchManager.DotsPerCentimeter;
+            minScreenPointsPixelDistance = minScreenPointsDistance * DisplayDevice.DotsPerCentimeter;
             minScreenPointsPixelDistanceSquared = minScreenPointsPixelDistance * minScreenPointsPixelDistance;
         }
 

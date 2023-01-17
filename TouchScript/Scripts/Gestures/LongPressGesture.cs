@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TouchScript.Devices.Display;
 using TouchScript.Utils;
 using TouchScript.Utils.Attributes;
 using TouchScript.Pointers;
@@ -48,20 +49,6 @@ namespace TouchScript.Gestures
             set { timeToPress = value; }
         }
 
-        /// <summary>
-        /// Gets or sets maximum distance in cm pointers can move before gesture fails.
-        /// </summary>
-        /// <value> Distance in cm. </value>
-        public float DistanceLimit
-        {
-            get { return distanceLimit; }
-            set
-            {
-                distanceLimit = value;
-                distanceLimitInPixelsSquared = Mathf.Pow(distanceLimit * touchManager.DotsPerCentimeter, 2);
-            }
-        }
-
         #endregion
 
         #region Private variables
@@ -100,7 +87,7 @@ namespace TouchScript.Gestures
         {
             base.OnEnable();
 
-            distanceLimitInPixelsSquared = Mathf.Pow(distanceLimit * touchManager.DotsPerCentimeter, 2);
+            distanceLimitInPixelsSquared = Mathf.Pow(distanceLimit * DisplayDevice.DotsPerCentimeter, 2);
         }
 
         #endregion

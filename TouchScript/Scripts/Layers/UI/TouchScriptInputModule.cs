@@ -2,11 +2,8 @@
  * @author Valentin Simonov / http://va.lent.in/
  */
 
-using System;
 using System.Collections.Generic;
-using System.Reflection;
 using TouchScript.Hit;
-using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;

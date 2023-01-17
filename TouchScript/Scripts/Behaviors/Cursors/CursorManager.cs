@@ -3,6 +3,7 @@
  */
 
 using System.Collections.Generic;
+using TouchScript.Devices.Display;
 using TouchScript.Utils;
 using TouchScript.Pointers;
 using TouchScript.Utils.Attributes;
@@ -17,60 +18,6 @@ namespace TouchScript.Behaviors.Cursors
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_Behaviors_Cursors_CursorManager.htm")]
     public class CursorManager : MonoBehaviour
     {
-        #region Public properties
-
-        /// <summary>
-        /// Prefab to use as mouse cursors template.
-        /// </summary>
-        public PointerCursor MouseCursor
-        {
-            get { return mouseCursor; }
-            set { mouseCursor = value; }
-        }
-
-        /// <summary>
-        /// Gets or sets whether <see cref="CursorManager"/> is using DPI to scale pointer cursors.
-        /// </summary>
-        /// <value> <c>true</c> if DPI value is used; otherwise, <c>false</c>. </value>
-        public bool UseDPI
-        {
-            get { return useDPI; }
-            set
-            {
-                useDPI = value;
-                updateCursorSize();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the size of pointer cursors in cm. This value is only used when <see cref="UseDPI"/> is set to <c>true</c>.
-        /// </summary>
-        /// <value> The size of pointer cursors in cm. </value>
-        public float CursorSize
-        {
-            get { return cursorSize; }
-            set
-            {
-                cursorSize = value;
-                updateCursorSize();
-            }
-        }
-
-        /// <summary>
-        /// Cursor size in pixels.
-        /// </summary>
-        public uint CursorPixelSize
-        {
-            get { return cursorPixelSize; }
-            set
-            {
-                cursorPixelSize = value;
-                updateCursorSize();
-            }
-        }
-
-        #endregion
-
         #region Private variables
 
         [SerializeField]
@@ -150,7 +97,7 @@ namespace TouchScript.Behaviors.Cursors
 
         private void updateCursorSize()
         {
-            if (useDPI) cursorPixelSize = (uint) (cursorSize * TouchManager.Instance.DotsPerCentimeter);
+            if (useDPI) cursorPixelSize = (uint) (cursorSize * DisplayDevice.DotsPerCentimeter);
         }
 
         #endregion

@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using TouchScript.Devices.Display;
 using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
@@ -303,7 +304,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
 
         private void updateScreenTransformThreshold()
         {
-            screenTransformPixelThreshold = screenTransformThreshold * touchManager.DotsPerCentimeter;
+            screenTransformPixelThreshold = screenTransformThreshold * DisplayDevice.DotsPerCentimeter;
             screenTransformPixelThresholdSquared = screenTransformPixelThreshold * screenTransformPixelThreshold;
         }
 
