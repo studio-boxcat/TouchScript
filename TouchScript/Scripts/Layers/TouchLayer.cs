@@ -4,7 +4,6 @@
 
 using TouchScript.Hit;
 using UnityEngine;
-using System.Collections;
 using TouchScript.Core;
 using TouchScript.Pointers;
 
@@ -24,47 +23,14 @@ namespace TouchScript.Layers
     /// </remarks>
     public abstract class TouchLayer : MonoBehaviour
     {
-        #region Public properties
-
-        /// <summary>
-        /// Layers screen to world projection normal.
-        /// </summary>
-        public virtual Vector3 WorldProjectionNormal => transform.forward;
-
-        #endregion
-
-        #region Private variables
-
-        /// <summary>
-        /// The layer projection parameters.
-        /// </summary>
-        protected ProjectionParams layerProjectionParams;
-
-        /// <summary>
-        /// Layer manager.
-        /// </summary>
-        protected LayerManagerInstance layerManager;
-
-        #endregion
-
         #region Public methods
 
         /// <summary>
         /// Gets the projection parameters of this layer which might depend on a specific pointer data.
         /// </summary>
-        /// <param name="pointer"> Pointer to retrieve projection parameters for. </param>
         /// <returns></returns>
-        public virtual ProjectionParams GetProjectionParams(Pointer pointer)
-        {
-            return layerProjectionParams;
-        }
+        public abstract ProjectionParams GetProjectionParams();
 
-        /// <summary>
-        /// Checks if a point in screen coordinates hits something in this layer.
-        /// </summary>
-        /// <param name="pointer">Pointer.</param>
-        /// <param name="hit">Hit result.</param>
-        /// <returns><c>true</c>, if an object is hit, <see cref="HitResult.Miss"/>; <c>false</c> otherwise.</returns>
         public virtual HitResult Hit(Vector2 screenPosition, out HitData hit)
         {
             hit = default;
@@ -76,51 +42,14 @@ namespace TouchScript.Layers
 
         #region Unity methods
 
-        /// <summary>
-        /// Unity Awake callback.
-        /// </summary>
-        protected virtual void Awake()
+        void OnEnable()
         {
-            if (!Application.isPlaying) return;
-
-            layerManager = LayerManager.Instance;
-            layerProjectionParams = createProjectionParams();
-            StartCoroutine(lateAwake());
+            LayerManager.AddLayer(this);
         }
 
-        private IEnumerator lateAwake()
+        void OnDisable()
         {
-            yield return null;
-
-            // Add ourselves after TouchManager finished adding layers in order
-            if (layerManager != null) layerManager.AddLayer(this, -1, false);
-        }
-
-        // To be able to turn layers off
-        private void Start() {}
-
-        /// <summary>
-        /// Unity OnDestroy callback.
-        /// </summary>
-        protected virtual void OnDestroy()
-        {
-            if (!Application.isPlaying) return;
-
-            StopAllCoroutines();
-            if (layerManager != null) layerManager.RemoveLayer(this);
-        }
-
-        #endregion
-
-        #region Protected functions
-
-        /// <summary>
-        /// Creates projection parameters.
-        /// </summary>
-        /// <returns> Created <see cref="ProjectionParams"/> instance.</returns>
-        protected virtual ProjectionParams createProjectionParams()
-        {
-            return new ProjectionParams();
+            LayerManager.RemoveLayer(this);
         }
 
         #endregion

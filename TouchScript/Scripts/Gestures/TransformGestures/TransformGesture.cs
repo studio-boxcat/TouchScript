@@ -8,7 +8,6 @@ using TouchScript.Gestures.TransformGestures.Base;
 using TouchScript.Layers;
 using TouchScript.Utils;
 using TouchScript.Pointers;
-using UnityEngine.Profiling;
 using UnityEngine;
 
 namespace TouchScript.Gestures.TransformGestures
@@ -247,7 +246,7 @@ namespace TouchScript.Gestures.TransformGestures
                 case ProjectionType.Layer:
                     if (projectionLayer == null)
                         transformPlane = new Plane(cachedTransform.TransformDirection(Vector3.forward), cachedTransform.position);
-                    else transformPlane = new Plane(projectionLayer.WorldProjectionNormal, cachedTransform.position);
+                    else transformPlane = new Plane(projectionLayer.transform.forward, cachedTransform.position);
                     break;
                 case ProjectionType.Object:
                     transformPlane = new Plane(cachedTransform.TransformDirection(projectionPlaneNormal), cachedTransform.position);

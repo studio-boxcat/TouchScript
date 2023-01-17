@@ -9,10 +9,6 @@ using TouchScript.Utils.Geom;
 using TouchScript.Pointers;
 using UnityEngine;
 
-#if DEBUG
-using System.Collections;
-#endif
-
 namespace TouchScript.Gestures.TransformGestures.Base
 {
     /// <summary>
@@ -25,24 +21,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
         #endregion
 
         #region Events
-
-        #endregion
-
-        #region Public properties
-
-        /// <summary>
-        /// Gets or sets minimum distance between 2 points in cm for gesture to begin.
-        /// </summary>
-        /// <value> Minimum distance. </value>
-        public virtual float MinScreenPointsDistance
-        {
-            get { return minScreenPointsDistance; }
-            set
-            {
-                minScreenPointsDistance = value;
-                updateMinScreenPointsDistance();
-            }
-        }
 
         #endregion
 
@@ -106,7 +84,8 @@ namespace TouchScript.Gestures.TransformGestures.Base
         {
             base.pointersUpdated(pointers);
 
-            var projectionParams = activePointers[0].ProjectionParams;
+            var thePointer = activePointers[0];
+            var projectionParams = thePointer.GetPressData().Layer.GetProjectionParams();
             var dP = deltaPosition = Vector3.zero;
             var dR = deltaRotation = 0;
             var dS = deltaScale = 1f;
@@ -250,7 +229,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         /// <param name="projectionParams"> Layer projection parameters. </param>
         /// <returns> Angle in degrees. </returns>
         protected virtual float doRotation(Vector2 oldScreenPos1, Vector2 oldScreenPos2, Vector2 newScreenPos1,
-                                           Vector2 newScreenPos2, ProjectionParams projectionParams)
+            Vector2 newScreenPos2, ProjectionParams projectionParams)
         {
             return 0;
         }
@@ -265,7 +244,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         /// <param name="projectionParams"> Layer projection parameters. </param>
         /// <returns> Multiplicative delta scaling. </returns>
         protected virtual float doScaling(Vector2 oldScreenPos1, Vector2 oldScreenPos2, Vector2 newScreenPos1,
-                                          Vector2 newScreenPos2, ProjectionParams projectionParams)
+            Vector2 newScreenPos2, ProjectionParams projectionParams)
         {
             return 1;
         }
@@ -278,7 +257,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         /// <param name="projectionParams"> Layer projection parameters. </param>
         /// <returns> Delta translation vector. </returns>
         protected virtual Vector3 doOnePointTranslation(Vector2 oldScreenPos, Vector2 newScreenPos,
-                                                        ProjectionParams projectionParams)
+            ProjectionParams projectionParams)
         {
             return Vector3.zero;
         }
@@ -295,7 +274,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         /// <param name="projectionParams"> Layer projection parameters. </param>
         /// <returns> Delta translation vector. </returns>
         protected virtual Vector3 doTwoPointTranslation(Vector2 oldScreenPos1, Vector2 oldScreenPos2,
-                                                        Vector2 newScreenPos1, Vector2 newScreenPos2, float dR, float dS, ProjectionParams projectionParams)
+            Vector2 newScreenPos1, Vector2 newScreenPos2, float dR, float dS, ProjectionParams projectionParams)
         {
             return Vector3.zero;
         }

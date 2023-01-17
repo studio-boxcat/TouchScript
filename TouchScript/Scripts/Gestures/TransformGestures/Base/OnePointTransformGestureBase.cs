@@ -3,21 +3,18 @@
  */
 
 using System.Collections.Generic;
+using TouchScript.Hit;
 using TouchScript.Layers;
 using TouchScript.Pointers;
 using TouchScript.Utils.Geom;
 using UnityEngine;
-
-#if DEBUG
-using System.Collections;
-#endif
 
 namespace TouchScript.Gestures.TransformGestures.Base
 {
     /// <summary>
     /// Abstract base class for Pinned Transform Gestures.
     /// </summary>
-    public abstract class OnePointTrasformGestureBase : TransformGestureBase
+    public abstract class OnePointTransformGestureBase : TransformGestureBase
     {
         #region Constants
 
@@ -82,7 +79,8 @@ namespace TouchScript.Gestures.TransformGestures.Base
         {
             base.pointersUpdated(pointers);
 
-            var projectionParams = activePointers[0].ProjectionParams;
+            var thePointer = activePointers[0];
+            var projectionParams = thePointer.GetPressData().Layer.GetProjectionParams();
             var dR = deltaRotation = 0;
             var dS = deltaScale = 1f;
 
@@ -93,7 +91,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
             if (!rotationEnabled && !scalingEnabled) return;
             if (!relevantPointers(pointers)) return;
 
-            var thePointer = activePointers[0];
             var worldCenter = cachedTransform.position;
             var screenCenter = projectionParams.ProjectFrom(worldCenter);
             var newScreenPos = thePointer.Position;
@@ -157,8 +154,8 @@ namespace TouchScript.Gestures.TransformGestures.Base
                         deltaRotation = dR;
                         deltaScale = dS;
                         setState(GestureState.Changed);
-						resetValues();
-						break;
+                        resetValues();
+                        break;
                 }
             }
         }
@@ -187,7 +184,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         /// <param name="projectionParams"> Layer projection parameters. </param>
         /// <returns> Angle in degrees. </returns>
         protected virtual float doRotation(Vector3 center, Vector2 oldScreenPos, Vector2 newScreenPos,
-                                 ProjectionParams projectionParams)
+            ProjectionParams projectionParams)
         {
             return 0;
         }
@@ -201,7 +198,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         /// <param name="projectionParams"> Layer projection parameters. </param>
         /// <returns> Multiplicative delta scaling. </returns>
         protected virtual float doScaling(Vector3 center, Vector2 oldScreenPos, Vector2 newScreenPos,
-                                ProjectionParams projectionParams)
+            ProjectionParams projectionParams)
         {
             return 1;
         }
@@ -220,14 +217,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
                 if (pointers[i] == activePointers[0]) return true;
             }
             return false;
-        }
-
-        /// <summary>
-        /// Returns screen position of a point with index 0.
-        /// </summary>
-        protected virtual Vector2 getPointScreenPosition()
-        {
-            return activePointers[0].Position;
         }
 
         /// <summary>

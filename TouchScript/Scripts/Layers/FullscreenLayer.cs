@@ -3,7 +3,6 @@
  */
 
 using TouchScript.Hit;
-using TouchScript.Pointers;
 using UnityEngine;
 
 namespace TouchScript.Layers
@@ -15,24 +14,17 @@ namespace TouchScript.Layers
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_Layers_FullscreenLayer.htm")]
     public class FullscreenLayer : TouchLayer
     {
-        #region Public properties
+        public override ProjectionParams GetProjectionParams()
+        {
+            throw new System.NotImplementedException();
+        }
 
-        /// <inheritdoc />
-        public override Vector3 WorldProjectionNormal => transform.forward;
-
-        #endregion
-
-        #region Public methods
-
-        /// <inheritdoc />
         public override HitResult Hit(Vector2 screenPosition, out HitData hit)
         {
             if (base.Hit(screenPosition, out hit) != HitResult.Hit) return HitResult.Miss;
 
-            hit = new HitData(transform, this);
+            hit = new HitData(transform, this, default);
             return HitResult.Hit;
         }
-
-        #endregion
     }
 }

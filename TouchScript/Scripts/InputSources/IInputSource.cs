@@ -28,12 +28,6 @@ namespace TouchScript.InputSources
         /// </summary>
         /// <param name="pointer">The pointer.</param>
         void INTERNAL_DiscardPointer(Pointer pointer);
-
-        /// <summary>
-        /// Used by <see cref="TouchManagerInstance"/> to return sync resolution on inputs.
-        /// DO NOT CALL THIS METHOD DIRECTLY FROM YOUR CODE!
-        /// </summary>
-        void INTERNAL_UpdateResolution();
     }
 
     public interface IInputHandler

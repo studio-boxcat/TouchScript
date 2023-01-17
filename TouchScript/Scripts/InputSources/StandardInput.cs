@@ -73,15 +73,6 @@ namespace TouchScript.InputSources
             if (mouseHandler != null && !handled) handled = mouseHandler.DiscardPointer(pointer);
         }
 
-        /// <inheritdoc />
-        public override void INTERNAL_UpdateResolution()
-        {
-            base.INTERNAL_UpdateResolution();
-
-            if (touchHandler != null) touchHandler.UpdateResolution(screenWidth, screenHeight);
-            if (mouseHandler != null) mouseHandler.UpdateResolution(screenWidth, screenHeight);
-        }
-
         #endregion
 
         #region Unity

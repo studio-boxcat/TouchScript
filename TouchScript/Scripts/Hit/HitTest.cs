@@ -19,10 +19,5 @@ namespace TouchScript.Hit
         /// Object should not recieve pointer.
         /// </summary>
         Miss = 2,
-
-        /// <summary>
-        /// Object should not recieve pointer and this pointer should be discarded and not tested with any other object.
-        /// </summary>
-        Discard = 3
     }
 }

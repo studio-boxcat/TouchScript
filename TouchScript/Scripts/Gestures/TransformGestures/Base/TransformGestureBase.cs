@@ -21,29 +21,9 @@ namespace TouchScript.Gestures.TransformGestures.Base
     {
         #region Events
 
-        /// <inheritdoc />
-        public event EventHandler<EventArgs> TransformStarted
-        {
-            add { transformStartedInvoker += value; }
-            remove { transformStartedInvoker -= value; }
-        }
-
-        /// <inheritdoc />
-        public event EventHandler<EventArgs> Transformed
-        {
-            add { transformedInvoker += value; }
-            remove { transformedInvoker -= value; }
-        }
-
-        /// <inheritdoc />
-        public event EventHandler<EventArgs> TransformCompleted
-        {
-            add { transformCompletedInvoker += value; }
-            remove { transformCompletedInvoker -= value; }
-        }
-
-        // Needed to overcome iOS AOT limitations
-        private EventHandler<EventArgs> transformStartedInvoker, transformedInvoker, transformCompletedInvoker;
+        public event EventHandler<EventArgs> TransformStarted;
+        public event EventHandler<EventArgs> Transformed;
+        public event EventHandler<EventArgs> TransformCompleted;
 
         #endregion
 
@@ -247,7 +227,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         protected override void onBegan()
         {
             base.onBegan();
-            if (transformStartedInvoker != null) transformStartedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
+            TransformStarted?.InvokeHandleExceptions(this, EventArgs.Empty);
         }
 
         /// <inheritdoc />
@@ -257,7 +237,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
 
             targetPositionOverridden = false;
 
-            if (transformedInvoker != null) transformedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
+            Transformed?.InvokeHandleExceptions(this, EventArgs.Empty);
         }
 
         /// <inheritdoc />
@@ -265,8 +245,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         {
             base.onRecognized();
 
-            if (transformCompletedInvoker != null)
-                transformCompletedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
+            TransformCompleted?.InvokeHandleExceptions(this, EventArgs.Empty);
         }
 
         /// <inheritdoc />

@@ -110,58 +110,16 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Occurs when gesture changes state.
         /// </summary>
-        public event EventHandler<GestureStateChangeEventArgs> StateChanged
-        {
-            add { stateChangedInvoker += value; }
-            remove { stateChangedInvoker -= value; }
-        }
+        public event EventHandler<GestureStateChangeEventArgs> StateChanged;
 
         /// <summary>
         /// Occurs when gesture is cancelled.
         /// </summary>
-        public event EventHandler<EventArgs> Cancelled
-        {
-            add { cancelledInvoker += value; }
-            remove { cancelledInvoker -= value; }
-        }
-
-        // Needed to overcome iOS AOT limitations
-        private EventHandler<GestureStateChangeEventArgs> stateChangedInvoker;
-        private EventHandler<EventArgs> cancelledInvoker;
+        public event EventHandler<EventArgs> Cancelled;
 
         #endregion
 
         #region Public properties
-
-        /// <summary>
-        /// Gets or sets minimum number of pointers this gesture reacts to.
-        /// The gesture will not be recognized if it has less than <see cref="MinPointers"/> pointers.
-        /// </summary>
-        /// <value> Minimum number of pointers. </value>
-        public int MinPointers
-        {
-            get { return minPointers; }
-            set
-            {
-                if (value < 0) return;
-                minPointers = value;
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets maximum number of pointers this gesture reacts to.
-        /// The gesture will not be recognized if it has more than <see cref="MaxPointers"/> pointers.
-        /// </summary>
-        /// <value> Maximum number of pointers. </value>
-        public int MaxPointers
-        {
-            get { return maxPointers; }
-            set
-            {
-                if (value < 0) return;
-                maxPointers = value;
-            }
-        }
 
         /// <summary>
         /// Gets or sets another gesture which must fail before this gesture can be recognized.
@@ -172,8 +130,6 @@ namespace TouchScript.Gestures
             get { return requireGestureToFail; }
             set
             {
-				if (!Application.isPlaying) return;
-
                 if (requireGestureToFail != null)
                     requireGestureToFail.StateChanged -= requiredToFailGestureStateChangedHandler;
                 requireGestureToFail = value;
@@ -211,7 +167,7 @@ namespace TouchScript.Gestures
                         break;
                     case GestureState.Recognized:
                         // Only retain/release pointers for continuos gestures
-                        if (PreviousState == GestureState.Changed || PreviousState == GestureState.Began)
+                        if (PreviousState is GestureState.Changed or GestureState.Began)
                             releasePointers(true);
                         onRecognized();
                         break;
@@ -219,14 +175,13 @@ namespace TouchScript.Gestures
                         onFailed();
                         break;
                     case GestureState.Cancelled:
-                        if (PreviousState == GestureState.Changed || PreviousState == GestureState.Began)
+                        if (PreviousState is GestureState.Changed or GestureState.Began)
                             releasePointers(false);
                         onCancelled();
                         break;
                 }
 
-                if (stateChangedInvoker != null)
-                    stateChangedInvoker.InvokeHandleExceptions(this, GestureStateChangeEventArgs.GetCachedEventArgs(state, PreviousState));
+                StateChanged?.InvokeHandleExceptions(this, GestureStateChangeEventArgs.GetCachedEventArgs(state, PreviousState));
             }
         }
 
@@ -333,15 +288,6 @@ namespace TouchScript.Gestures
         #region Private variables
 
         /// <summary>
-        /// Reference to global GestureManager.
-        /// </summary>
-        protected IGestureManager gestureManager
-        {
-            // implemented as a property because it returns IGestureManager but we need to reference GestureManagerInstance to access internal methods
-            get { return gestureManagerInstance; }
-        }
-
-        /// <summary>
         /// Reference to global TouchManager.
         /// </summary>
         protected TouchManagerInstance touchManager { get; private set; }
@@ -377,7 +323,7 @@ namespace TouchScript.Gestures
 
         private int numPointers;
         private ReadOnlyCollection<Pointer> readonlyActivePointers;
-        private GestureManagerInstance gestureManagerInstance;
+        private GestureManager gestureManagerInstance;
         private GestureState delayedStateChange = GestureState.Idle;
         private bool requiredGestureFailed = false;
         private GestureState state = GestureState.Idle;
@@ -510,8 +456,7 @@ namespace TouchScript.Gestures
         /// </summary>
         public virtual HitData GetScreenPositionHitData()
         {
-            HitData hit;
-            LayerManager.Instance.GetHitTarget(ScreenPosition, out hit);
+            LayerManager.GetHitTarget(ScreenPosition, out var hit);
             return hit;
         }
 
@@ -538,13 +483,8 @@ namespace TouchScript.Gestures
         protected virtual void OnEnable()
         {
             // TouchManager might be different in another scene
-            touchManager = TouchManager.Instance as TouchManagerInstance;
-            gestureManagerInstance = GestureManager.Instance as GestureManagerInstance;
-
-            if (touchManager == null)
-                Debug.LogError("No TouchManager found! Please add an instance of TouchManager to the scene!");
-            if (gestureManagerInstance == null)
-                Debug.LogError("No GesturehManager found! Please add an instance of GesturehManager to the scene!");
+            touchManager = TouchManager.Instance;
+            gestureManagerInstance = GestureManager.Instance;
 
             INTERNAL_Reset();
         }
@@ -627,7 +567,7 @@ namespace TouchScript.Gestures
                 else pointersNumState = PointersNumState.TooMany;
             }
 
-            if (state == GestureState.Began || state == GestureState.Changed)
+            if (state is GestureState.Began or GestureState.Changed)
             {
                 for (var i = 0; i < count; i++) pointers[i].INTERNAL_Retain();
             }
@@ -890,7 +830,7 @@ namespace TouchScript.Gestures
         /// </summary>
         protected virtual void onCancelled()
         {
-            if (cancelledInvoker != null) cancelledInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
+            Cancelled?.InvokeHandleExceptions(this, EventArgs.Empty);
         }
 
         #endregion

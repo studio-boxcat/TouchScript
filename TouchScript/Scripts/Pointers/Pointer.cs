@@ -4,10 +4,10 @@
 
 using System;
 using System.Text;
+using JetBrains.Annotations;
 using TouchScript.Core;
 using TouchScript.Hit;
 using TouchScript.InputSources;
-using TouchScript.Layers;
 using TouchScript.Utils;
 using UnityEngine;
 
@@ -97,7 +97,7 @@ namespace TouchScript.Pointers
         /// <inheritdoc />
         public PointerButtonState Buttons { get; set; }
 
-        /// <inheritdoc />
+        [NotNull]
         public readonly IInputSource InputSource;
 
         /// <inheritdoc />
@@ -115,25 +115,12 @@ namespace TouchScript.Pointers
         /// <inheritdoc />
         public uint Flags { get; set; }
 
-        /// <summary>
-        /// Projection parameters for the layer which created this pointer.
-        /// </summary>
-        public ProjectionParams ProjectionParams
-        {
-            get
-            {
-                if (pressData.Layer == null) return null;
-                return pressData.Layer.GetProjectionParams(this);
-            }
-        }
-
         #endregion
 
         #region Private variables
 
         private static StringBuilder builder;
 
-        private LayerManagerInstance layerManager;
         private int refCount = 0;
         private Vector2 position, newPosition;
         private HitData pressData, overData;
@@ -148,7 +135,7 @@ namespace TouchScript.Pointers
         {
             if (overDataIsDirty || forceRecalculate)
             {
-                layerManager.GetHitTarget(position, out overData);
+                LayerManager.GetHitTarget(position, out overData);
                 overDataIsDirty = false;
             }
             return overData;
@@ -223,7 +210,6 @@ namespace TouchScript.Pointers
         /// </summary>
         public Pointer(IInputSource input)
         {
-            layerManager = LayerManager.Instance as LayerManagerInstance;
             InputSource = input;
             INTERNAL_Reset();
         }
@@ -279,7 +265,7 @@ namespace TouchScript.Pointers
 
         internal void INTERNAL_ClearPressData()
         {
-            pressData = default(HitData);
+            pressData = default;
             refCount = 0;
         }
 

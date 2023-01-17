@@ -220,9 +220,6 @@ namespace TouchScript.InputSources.InputHandlers
         }
 
         /// <inheritdoc />
-        public void UpdateResolution(int width, int height) {}
-
-        /// <inheritdoc />
         public bool CancelPointer([NotNull] Pointer pointer, bool shouldReturn)
         {
             if (pointer.Equals(mousePointer))

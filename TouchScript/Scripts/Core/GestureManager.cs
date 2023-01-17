@@ -14,23 +14,20 @@ namespace TouchScript.Core
     /// <summary>
     /// Internal implementation of <see cref="IGestureManager"/>.
     /// </summary>
-    internal sealed class GestureManagerInstance : MonoBehaviour, IGestureManager
+    internal sealed class GestureManager : MonoBehaviour
     {
         #region Public properties
 
         /// <summary>
         /// Gets the instance of GestureManager singleton.
         /// </summary>
-        public static IGestureManager Instance => SessionStateManager.GestureManager;
-
-        /// <inheritdoc />
-        public IGestureDelegate GlobalGestureDelegate { get; set; }
+        public static GestureManager Instance;
 
         #endregion
 
         #region Private variables
 
-        private static GestureManagerInstance instance;
+        private static GestureManager instance;
 
         // Upcoming changes
         private List<Gesture> gesturesToReset = new List<Gesture>(20);
@@ -259,7 +256,7 @@ namespace TouchScript.Core
                         if (possibleGesture == startedGesture) continue;
 
                         // This gesture has started. Is gestureOnParentOrMe allowed to work in parallel?
-                        if (canPreventGesture(startedGesture, possibleGesture))
+                        if (startedGesture.CanPreventGesture(possibleGesture))
                         {
                             // activeGesture has already began and prevents gestureOnParentOrMe from getting pointers.
                             canReceivePointers = false;
@@ -274,7 +271,7 @@ namespace TouchScript.Core
                     for (var k = 0; k < targetPointersCount; k++)
                     {
                         var pointer = targetPointers[k];
-                        if (shouldReceivePointer(possibleGesture, pointer)) pointersSentToGesture.Add(pointer);
+                        if (possibleGesture.ShouldReceivePointer(pointer)) pointersSentToGesture.Add(pointer);
                     }
 
                     // If there are any pointers to send.
@@ -519,7 +516,7 @@ namespace TouchScript.Core
 
         private bool recognizeGestureIfNotPrevented(Gesture gesture)
         {
-            if (!shouldBegin(gesture)) return false;
+            if (!gesture.ShouldBegin()) return false;
 
             var gesturesToFail = gestureListPool.Get();
             bool canRecognize = true;
@@ -539,7 +536,7 @@ namespace TouchScript.Core
                 if (otherGesture.State == Gesture.GestureState.Began ||
                     otherGesture.State == Gesture.GestureState.Changed)
                 {
-                    if (canPreventGesture(otherGesture, gesture))
+                    if (otherGesture.CanPreventGesture(gesture))
                     {
                         canRecognize = false;
                         break;
@@ -547,7 +544,7 @@ namespace TouchScript.Core
                 }
                 else if (otherGesture.State == Gesture.GestureState.Possible)
                 {
-                    if (canPreventGesture(gesture, otherGesture))
+                    if (gesture.CanPreventGesture(otherGesture))
                     {
                         gesturesToFail.Add(otherGesture);
                     }
@@ -572,27 +569,6 @@ namespace TouchScript.Core
         private void failGesture(Gesture gesture)
         {
             gesture.INTERNAL_SetState(Gesture.GestureState.Failed);
-        }
-
-        private bool shouldReceivePointer(Gesture gesture, Pointer pointer)
-        {
-            bool result = true;
-            if (GlobalGestureDelegate != null) result = GlobalGestureDelegate.ShouldReceivePointer(gesture, pointer);
-            return result && gesture.ShouldReceivePointer(pointer);
-        }
-
-        private bool shouldBegin(Gesture gesture)
-        {
-            bool result = true;
-            if (GlobalGestureDelegate != null) result = GlobalGestureDelegate.ShouldBegin(gesture);
-            return result && gesture.ShouldBegin();
-        }
-
-        private bool canPreventGesture(Gesture first, Gesture second)
-        {
-            bool result = true;
-            if (GlobalGestureDelegate != null) result = !GlobalGestureDelegate.ShouldRecognizeSimultaneously(first, second);
-            return result && first.CanPreventGesture(second);
         }
 
         #endregion

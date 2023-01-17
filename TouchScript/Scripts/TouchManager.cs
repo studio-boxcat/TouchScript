@@ -2,11 +2,8 @@
  * @author Valentin Simonov / http://va.lent.in/
  */
 
-using System.Collections.Generic;
 using TouchScript.Core;
-using TouchScript.Layers;
 using UnityEngine;
-using Object = UnityEngine.Object;
 
 namespace TouchScript
 {
@@ -55,30 +52,12 @@ namespace TouchScript
 
         #endregion
 
-        #region Private variables
-
-		[SerializeField]
-        private Object displayDevice;
-
-        [SerializeField]
-        private List<TouchLayer> layers = new();
-
-        #endregion
-
         #region Unity
 
         private void Awake()
         {
             var touchManager = Instance;
             if (touchManager == null) return;
-
-            var layerManager = LayerManager.Instance;
-            if (layerManager == null) return;
-            for (var i = 0; i < layers.Count; i++)
-            {
-                var layer = layers[i];
-                if (layer != null) layerManager.AddLayer(layer, i);
-            }
         }
 
         #endregion

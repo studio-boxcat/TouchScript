@@ -15,7 +15,7 @@ namespace TouchScript.Gestures.TransformGestures
     /// </summary>
     [AddComponentMenu("TouchScript/Gestures/Pinned Transform Gesture")]
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_Gestures_TransformGestures_PinnedTransformGesture.htm")]
-    public class PinnedTransformGesture : OnePointTrasformGestureBase
+    public class PinnedTransformGesture : OnePointTransformGestureBase
     {
         #region Public properties
 
@@ -108,15 +108,13 @@ namespace TouchScript.Gestures.TransformGestures
 
         private void updateProjectionPlane()
         {
-            if (!Application.isPlaying) return;
-
             switch (projection)
             {
                 case TransformGesture.ProjectionType.Layer:
                     if (projectionLayer == null)
                         transformPlane = new Plane(cachedTransform.TransformDirection(Vector3.forward),
                             cachedTransform.position);
-                    else transformPlane = new Plane(projectionLayer.WorldProjectionNormal, cachedTransform.position);
+                    else transformPlane = new Plane(projectionLayer.transform.forward, cachedTransform.position);
                     break;
                 case TransformGesture.ProjectionType.Object:
                     transformPlane = new Plane(cachedTransform.TransformDirection(projectionPlaneNormal),

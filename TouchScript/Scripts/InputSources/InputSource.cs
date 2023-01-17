@@ -19,9 +19,6 @@ namespace TouchScript.InputSources
 
         private TouchManagerInstance touchManager;
 
-        protected int screenWidth;
-        protected int screenHeight;
-
         #endregion
 
         #region Public methods
@@ -45,13 +42,6 @@ namespace TouchScript.InputSources
         /// <inheritdoc />
         public virtual void INTERNAL_DiscardPointer([NotNull] Pointer pointer) {}
 
-        /// <inheritdoc />
-        public virtual void INTERNAL_UpdateResolution()
-        {
-            screenWidth = Screen.width;
-            screenHeight = Screen.height;
-        }
-
         #endregion
 
         #region Unity methods
@@ -66,8 +56,6 @@ namespace TouchScript.InputSources
             touchManager.AddInput(this);
 
             init();
-
-            INTERNAL_UpdateResolution();
         }
 
         /// <summary>
