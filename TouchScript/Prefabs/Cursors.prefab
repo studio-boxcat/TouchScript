@@ -51,8 +51,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mouseCursor: {fileID: 11416202, guid: a71503570adc6194b9bbc69bf19cc2de, type: 3}
-  useDPI: 1
-  cursorSize: 2
   cursorPixelSize: 64
 --- !u!223 &22341586
 Canvas:
