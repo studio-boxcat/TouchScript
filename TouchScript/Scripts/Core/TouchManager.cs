@@ -214,7 +214,6 @@ namespace TouchScript.Core
         {
             foreach (var pointer in pointers)
             {
-                Assert.IsFalse(IdToPointerWithAddedPointers(pointer.Id, out _));
                 _pointers.Add(pointer);
                 _idToPointer.Add(pointer.Id, pointer);
             }

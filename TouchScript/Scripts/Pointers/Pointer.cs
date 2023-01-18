@@ -49,11 +49,6 @@ namespace TouchScript.Pointers
         public enum PointerButtonState : byte
         {
             /// <summary>
-            /// No button is pressed.
-            /// </summary>
-            Nothing = 0,
-
-            /// <summary>
             /// Any button is pressed.
             /// </summary>
             ButtonPressed = 1 << 0,
@@ -212,7 +207,7 @@ namespace TouchScript.Pointers
             INTERNAL_ClearPressData();
             position = newPosition = PreviousPosition = Vector2.zero;
             Flags = 0;
-            Buttons = PointerButtonState.Nothing;
+            Buttons = default;
             overDataIsDirty = true;
         }
 

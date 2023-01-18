@@ -270,7 +270,7 @@ namespace TouchScript.InputSources.InputHandlers
 
         private Pointer.PointerButtonState getMouseButtons()
         {
-            Pointer.PointerButtonState buttons = Pointer.PointerButtonState.Nothing;
+            Pointer.PointerButtonState buttons = default;
 
             if (Input.GetMouseButton(0)) buttons |= Pointer.PointerButtonState.ButtonPressed;
             if (Input.GetMouseButtonDown(0)) buttons |= Pointer.PointerButtonState.ButtonDown;
@@ -282,7 +282,7 @@ namespace TouchScript.InputSources.InputHandlers
         private void updateButtons(Pointer.PointerButtonState oldButtons, Pointer.PointerButtonState newButtons)
         {
             // pressed something
-            if (oldButtons == Pointer.PointerButtonState.Nothing)
+            if (oldButtons == default)
             {
                 // pressed and released this frame
                 if ((newButtons & Pointer.PointerButtonState.ButtonPressed) == 0)
@@ -332,7 +332,7 @@ namespace TouchScript.InputSources.InputHandlers
         }
 
         [JetBrains.Annotations.NotNull]
-        private Pointer internalAddPointer(Vector2 position, Pointer.PointerButtonState buttons = Pointer.PointerButtonState.Nothing, uint flags = 0)
+        private Pointer internalAddPointer(Vector2 position, Pointer.PointerButtonState buttons = default, uint flags = 0)
         {
             var pointer = mousePool.Get();
             pointer.Position = position;

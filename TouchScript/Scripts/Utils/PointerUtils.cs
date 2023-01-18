@@ -83,10 +83,8 @@ namespace TouchScript.Utils
         /// <returns>Changed buttons state.</returns>
         public static Pointer.PointerButtonState UpPressedButtons(Pointer.PointerButtonState buttons)
         {
-            var btns = Pointer.PointerButtonState.Nothing;
-            if ((buttons & Pointer.PointerButtonState.ButtonPressed) != 0)
-                btns |= Pointer.PointerButtonState.ButtonUp;
-            return btns;
+            return (buttons & Pointer.PointerButtonState.ButtonPressed) != 0
+                ? Pointer.PointerButtonState.ButtonUp : default;
         }
     }
 }
