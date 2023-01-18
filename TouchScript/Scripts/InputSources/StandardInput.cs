@@ -5,7 +5,6 @@
 using JetBrains.Annotations;
 using TouchScript.Core;
 using TouchScript.InputSources.InputHandlers;
-using TouchScript.Pointers;
 using UnityEngine;
 
 namespace TouchScript.InputSources

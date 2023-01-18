@@ -12,9 +12,9 @@ namespace TouchScript
     /// </summary>
     public struct PointerEventArgs
     {
-        public readonly IReadOnlyList<Pointer> Pointers;
+        public readonly List<Pointer> Pointers;
 
-        public PointerEventArgs(IReadOnlyList<Pointer> pointers)
+        public PointerEventArgs(List<Pointer> pointers)
         {
             Pointers = pointers;
         }

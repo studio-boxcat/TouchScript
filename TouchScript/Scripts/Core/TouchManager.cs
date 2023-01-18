@@ -383,9 +383,11 @@ namespace TouchScript.Core
 
             public static void Release(List<Pointer> list)
             {
-                list.Clear();
                 if (_usingStaticList && list == _list)
+                {
                     _usingStaticList = false;
+                    list.Clear();
+                }
             }
         }
     }

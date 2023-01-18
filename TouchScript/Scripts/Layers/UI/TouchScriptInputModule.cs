@@ -5,6 +5,7 @@
 using System.Collections.Generic;
 using TouchScript.Core;
 using TouchScript.Hit;
+using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
@@ -180,12 +181,9 @@ namespace TouchScript.Layers.UI
 
             public virtual void ProcessAdded(object sender, PointerEventArgs pointerEventArgs)
             {
-                var pointers = pointerEventArgs.Pointers;
                 var raycast = new RaycastResult();
-                var count = pointers.Count;
-                for (var i = 0; i < count; i++)
+                foreach (var pointer in pointerEventArgs.Pointers)
                 {
-                    var pointer = pointers[i];
                     var over = pointer.GetOverData();
 
                     // Don't update the pointer if it is not over an UI element
@@ -208,12 +206,9 @@ namespace TouchScript.Layers.UI
 
             public virtual void ProcessUpdated(object sender, PointerEventArgs pointerEventArgs)
             {
-                var pointers = pointerEventArgs.Pointers;
                 var raycast = new RaycastResult();
-                var count = pointers.Count;
-                for (var i = 0; i < count; i++)
+                foreach (var pointer in pointerEventArgs.Pointers)
                 {
-                    var pointer = pointers[i];
                     var over = pointer.GetOverData();
 
                     // Don't update the pointer if it is pressed not over an UI element
@@ -281,12 +276,8 @@ namespace TouchScript.Layers.UI
 
             public virtual void ProcessPressed(object sender, PointerEventArgs pointerEventArgs)
             {
-                var pointers = pointerEventArgs.Pointers;
-                var count = pointers.Count;
-                for (var i = 0; i < count; i++)
+                foreach (var pointer in pointerEventArgs.Pointers)
                 {
-                    var pointer = pointers[i];
-
                     var over = pointer.GetOverData();
                     // Don't update the pointer if it is not over an UI element
                     if (over.IsNotUI()) continue;
@@ -336,11 +327,8 @@ namespace TouchScript.Layers.UI
 
             public virtual void ProcessReleased(object sender, PointerEventArgs pointerEventArgs)
             {
-                var pointers = pointerEventArgs.Pointers;
-                var count = pointers.Count;
-                for (var i = 0; i < count; i++)
+                foreach (var pointer in pointerEventArgs.Pointers)
                 {
-                    var pointer = pointers[i];
                     var press = pointer.GetPressData();
                     // Don't update the pointer if it is was not pressed over an UI element
                     if (press.IsNotUI()) continue;
@@ -390,12 +378,8 @@ namespace TouchScript.Layers.UI
 
             public virtual void ProcessCancelled(object sender, PointerEventArgs pointerEventArgs)
             {
-                var pointers = pointerEventArgs.Pointers;
-                var count = pointers.Count;
-                for (var i = 0; i < count; i++)
+                foreach (var pointer in pointerEventArgs.Pointers)
                 {
-                    var pointer = pointers[i];
-
                     var over = pointer.GetOverData();
 
                     PointerEventData data;
@@ -427,18 +411,13 @@ namespace TouchScript.Layers.UI
 
             public virtual void ProcessRemoved(object sender, PointerEventArgs pointerEventArgs)
             {
-                var pointers = pointerEventArgs.Pointers;
-                var count = pointers.Count;
-                for (var i = 0; i < count; i++)
+                foreach (var pointer in pointerEventArgs.Pointers)
                 {
-                    var pointer = pointers[i];
-
                     var over = pointer.GetOverData();
                     // Don't update the pointer if it is not over an UI element
                     if (over.IsNotUI()) continue;
 
-                    PointerEventData data;
-                    GetPointerData((int) pointer.Id, out data, true);
+                    GetPointerData((int) pointer.Id, out var data, true);
 
                     if (data.pointerEnter) ExecuteEvents.ExecuteHierarchy(data.pointerEnter, data, ExecuteEvents.pointerExitHandler);
                     RemovePointerData((int) pointer.Id);
