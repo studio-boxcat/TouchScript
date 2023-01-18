@@ -180,7 +180,7 @@ namespace TouchScript.InputSources.InputHandlers
         {
             var pointer = touchPool.Get();
             pointer.Position = position;
-            pointer.Buttons |= Pointer.PointerButtonState.FirstButtonDown | Pointer.PointerButtonState.FirstButtonPressed;
+            pointer.Buttons |= Pointer.PointerButtonState.ButtonDown | Pointer.PointerButtonState.ButtonPressed;
             pointerEventListener.AddPointer(pointer);
             pointerEventListener.PressPointer(pointer);
             return pointer;
@@ -190,7 +190,7 @@ namespace TouchScript.InputSources.InputHandlers
         {
             var newPointer = touchPool.Get();
             newPointer.CopyFrom(pointer);
-            pointer.Buttons |= Pointer.PointerButtonState.FirstButtonDown | Pointer.PointerButtonState.FirstButtonPressed;
+            pointer.Buttons |= Pointer.PointerButtonState.ButtonDown | Pointer.PointerButtonState.ButtonPressed;
             newPointer.Flags |= Pointer.FLAG_RETURNED;
             pointerEventListener.AddPointer(newPointer);
             pointerEventListener.PressPointer(newPointer);
@@ -199,8 +199,8 @@ namespace TouchScript.InputSources.InputHandlers
 
         private void internalRemovePointer(Pointer pointer)
         {
-            pointer.Buttons &= ~Pointer.PointerButtonState.FirstButtonPressed;
-            pointer.Buttons |= Pointer.PointerButtonState.FirstButtonUp;
+            pointer.Buttons &= ~Pointer.PointerButtonState.ButtonPressed;
+            pointer.Buttons |= Pointer.PointerButtonState.ButtonUp;
             pointerEventListener.ReleasePointer(pointer);
             pointerEventListener.RemovePointer(pointer);
         }

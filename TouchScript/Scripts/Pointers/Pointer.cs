@@ -46,7 +46,7 @@ namespace TouchScript.Pointers
         /// The state of buttons for a pointer. Combines 3 types of button events: Pressed (holding a button), Down (just pressed this frame) and Up (released this frame).
         /// </summary>
         [Flags]
-        public enum PointerButtonState
+        public enum PointerButtonState : byte
         {
             /// <summary>
             /// No button is pressed.
@@ -54,37 +54,19 @@ namespace TouchScript.Pointers
             Nothing = 0,
 
             /// <summary>
-            /// Indicates a primary action, analogous to a left mouse button down.
-            /// A <see cref="TouchPointer"/> or <see cref="ObjectPointer"/> has this flag set when it is in contact with the digitizer surface.
-            /// A <see cref="PenPointer"/> has this flag set when it is in contact with the digitizer surface with no buttons pressed.
-            /// A <see cref="MousePointer"/> has this flag set when the left mouse button is down.
-            /// </summary>
-            FirstButtonPressed = 1 << 0,
-
-            /// <summary>
-            /// First button pressed this frame.
-            /// </summary>
-            FirstButtonDown = 1 << 11,
-
-            /// <summary>
-            /// First button released this frame.
-            /// </summary>
-            FirstButtonUp = 1 << 12,
-
-            /// <summary>
             /// Any button is pressed.
             /// </summary>
-            AnyButtonPressed = FirstButtonPressed,
+            ButtonPressed = 1 << 0,
 
             /// <summary>
             /// Any button down this frame.
             /// </summary>
-            AnyButtonDown = FirstButtonDown,
+            ButtonDown = 1 << 1,
 
             /// <summary>
             /// Any button up this frame.
             /// </summary>
-            AnyButtonUp = FirstButtonUp
+            ButtonUp = 1 << 2
         }
 
         #endregion
@@ -236,7 +218,7 @@ namespace TouchScript.Pointers
 
         internal void INTERNAL_FrameStarted()
         {
-            Buttons &= ~(PointerButtonState.AnyButtonDown | PointerButtonState.AnyButtonUp);
+            Buttons &= ~(PointerButtonState.ButtonDown | PointerButtonState.ButtonUp);
             overDataIsDirty = true;
         }
 

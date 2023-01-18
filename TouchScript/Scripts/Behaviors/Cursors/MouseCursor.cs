@@ -81,7 +81,7 @@ namespace TouchScript.Behaviors.Cursors
         {
             var hash = base.gethash(pointer);
 
-            if (ShowButtons) hash += (uint) (pointer.Buttons & Pointer.PointerButtonState.AnyButtonPressed);
+            if (ShowButtons) hash += (uint) (pointer.Buttons & Pointer.PointerButtonState.ButtonPressed);
 
             return hash;
         }

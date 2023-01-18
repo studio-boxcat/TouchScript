@@ -14,19 +14,6 @@ namespace TouchScript.Utils
     /// </summary>
     public static class PointerUtils
     {
-        private static StringBuilder sb;
-
-        /// <summary>
-        /// Determines whether the pointer is over its target GameObject.
-        /// </summary>
-        /// <param name="pointer"> The pointer. </param>
-        /// <returns> <c>true</c> if the pointer is over the GameObject; <c>false</c> otherwise.</returns>
-        public static bool IsPointerOnTarget(Pointer pointer)
-        {
-            if (pointer == null) return false;
-            return IsPointerOnTarget(pointer, pointer.GetPressData().Target);
-        }
-
         /// <summary>
         /// Determines whether the pointer is over a specific GameObject.
         /// </summary>
@@ -35,8 +22,7 @@ namespace TouchScript.Utils
         /// <returns> <c>true</c> if the pointer is over the GameObject; <c>false</c> otherwise.</returns>
         public static bool IsPointerOnTarget(Pointer pointer, Transform target)
         {
-            HitData hit;
-            return IsPointerOnTarget(pointer, target, out hit);
+            return IsPointerOnTarget(pointer, target, out _);
         }
 
         /// <summary>
@@ -59,49 +45,10 @@ namespace TouchScript.Utils
         /// Formats currently pressed buttons as a string.
         /// </summary>
         /// <param name="buttons">The buttons state.</param>
-        /// <returns>Formatted string of currently pressed buttons.</returns>
-        public static string PressedButtonsToString(Pointer.PointerButtonState buttons)
-        {
-            initStringBuilder();
-
-            PressedButtonsToString(buttons, sb);
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// Formats currently pressed buttons as a string.
-        /// </summary>
-        /// <param name="buttons">The buttons state.</param>
         /// <param name="builder">The string builder to use.</param>
         public static void PressedButtonsToString(Pointer.PointerButtonState buttons, StringBuilder builder)
         {
-            if ((buttons & Pointer.PointerButtonState.FirstButtonPressed) != 0) builder.Append("1");
-            else builder.Append("_");
-        }
-
-        /// <summary>
-        /// Formats the state of buttons as a string.
-        /// </summary>
-        /// <param name="buttons">The buttons state.</param>
-        /// <returns>Formatted string of the buttons state.</returns>
-        public static string ButtonsToString(Pointer.PointerButtonState buttons)
-        {
-            initStringBuilder();
-
-            ButtonsToString(buttons, sb);
-            return sb.ToString();
-        }
-
-        /// <summary>
-        /// Formats the state of buttons as a string.
-        /// </summary>
-        /// <param name="buttons">The buttons state.</param>
-        /// <param name="builder">The string builder to use.</param>
-        public static void ButtonsToString(Pointer.PointerButtonState buttons, StringBuilder builder)
-        {
-            if ((buttons & Pointer.PointerButtonState.FirstButtonDown) != 0) builder.Append("v");
-            else if ((buttons & Pointer.PointerButtonState.FirstButtonUp) != 0) builder.Append("^");
-            else if ((buttons & Pointer.PointerButtonState.FirstButtonPressed) != 0) builder.Append("1");
+            if ((buttons & Pointer.PointerButtonState.ButtonPressed) != 0) builder.Append("1");
             else builder.Append("_");
         }
 
@@ -112,8 +59,8 @@ namespace TouchScript.Utils
         /// <returns>Changed buttons state.</returns>
         public static Pointer.PointerButtonState DownPressedButtons(Pointer.PointerButtonState buttons)
         {
-            if ((buttons & Pointer.PointerButtonState.FirstButtonPressed) != 0)
-                buttons |= Pointer.PointerButtonState.FirstButtonDown;
+            if ((buttons & Pointer.PointerButtonState.ButtonPressed) != 0)
+                buttons |= Pointer.PointerButtonState.ButtonDown;
             return buttons;
         }
 
@@ -124,8 +71,8 @@ namespace TouchScript.Utils
         /// <returns>Changed buttons state.</returns>
         public static Pointer.PointerButtonState PressDownButtons(Pointer.PointerButtonState buttons)
         {
-            if ((buttons & Pointer.PointerButtonState.FirstButtonDown) != 0)
-                buttons |= Pointer.PointerButtonState.FirstButtonPressed;
+            if ((buttons & Pointer.PointerButtonState.ButtonDown) != 0)
+                buttons |= Pointer.PointerButtonState.ButtonPressed;
             return buttons;
         }
 
@@ -137,15 +84,9 @@ namespace TouchScript.Utils
         public static Pointer.PointerButtonState UpPressedButtons(Pointer.PointerButtonState buttons)
         {
             var btns = Pointer.PointerButtonState.Nothing;
-            if ((buttons & Pointer.PointerButtonState.FirstButtonPressed) != 0)
-                btns |= Pointer.PointerButtonState.FirstButtonUp;
+            if ((buttons & Pointer.PointerButtonState.ButtonPressed) != 0)
+                btns |= Pointer.PointerButtonState.ButtonUp;
             return btns;
-        }
-
-        private static void initStringBuilder()
-        {
-            if (sb == null) sb = new StringBuilder();
-            sb.Length = 0;
         }
     }
 }

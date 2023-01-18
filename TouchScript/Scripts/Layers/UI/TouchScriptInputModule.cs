@@ -191,8 +191,7 @@ namespace TouchScript.Layers.UI
                     // Don't update the pointer if it is not over an UI element
                     if (over.IsNotUI()) continue;
 
-                    PointerEventData data;
-                    GetPointerData(pointer.Id, out data, true);
+                    GetPointerData(pointer.Id, out var data, true);
                     data.Reset();
                     var target = over.Target;
                     var currentOverGo = target == null ? null : target.gameObject;
@@ -218,7 +217,7 @@ namespace TouchScript.Layers.UI
                     var over = pointer.GetOverData();
 
                     // Don't update the pointer if it is pressed not over an UI element
-                    if ((pointer.Buttons & Pointer.PointerButtonState.AnyButtonPressed) > 0)
+                    if ((pointer.Buttons & Pointer.PointerButtonState.ButtonPressed) > 0)
                     {
                         var press = pointer.GetPressData();
                         if (press.IsNotUI()) continue;

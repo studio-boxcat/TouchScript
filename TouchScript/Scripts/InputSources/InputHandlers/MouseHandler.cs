@@ -132,7 +132,7 @@ namespace TouchScript.InputSources.InputHandlers
                 {
                     case State.Mouse:
                         if (Input.GetKeyDown(KeyCode.LeftAlt) && !Input.GetKeyUp(KeyCode.LeftAlt)
-                            && ((newButtons & Pointer.PointerButtonState.AnyButtonPressed) == 0))
+                            && ((newButtons & Pointer.PointerButtonState.ButtonPressed) == 0))
                         {
                             stateWaitingForFake();
                         }
@@ -144,7 +144,7 @@ namespace TouchScript.InputSources.InputHandlers
                     case State.WaitingForFake:
                         if (Input.GetKey(KeyCode.LeftAlt))
                         {
-                            if ((newButtons & Pointer.PointerButtonState.AnyButtonDown) != 0)
+                            if ((newButtons & Pointer.PointerButtonState.ButtonDown) != 0)
                             {
                                 // A button is down while holding Alt
                                 fakeMousePointer = internalAddPointer(pos, newButtons, mousePointer.Flags | Pointer.FLAG_ARTIFICIAL);
@@ -169,7 +169,7 @@ namespace TouchScript.InputSources.InputHandlers
                                 fakeMousePointer.Position = pos;
                                 pointerEventListener.UpdatePointer(fakeMousePointer);
                             }
-                            if ((newButtons & Pointer.PointerButtonState.AnyButtonPressed) == 0)
+                            if ((newButtons & Pointer.PointerButtonState.ButtonPressed) == 0)
                             {
                                 // All buttons are released, Alt is still holding
                                 stateStationaryFake();
@@ -183,7 +183,7 @@ namespace TouchScript.InputSources.InputHandlers
                         break;
                     case State.StationaryFake:
                         if (buttons != newButtons) updateButtons(buttons, newButtons);
-                        if ((newButtons & Pointer.PointerButtonState.AnyButtonPressed) != 0)
+                        if ((newButtons & Pointer.PointerButtonState.ButtonPressed) != 0)
                         {
                             if (mousePointPos != pos)
                             {
@@ -272,9 +272,9 @@ namespace TouchScript.InputSources.InputHandlers
         {
             Pointer.PointerButtonState buttons = Pointer.PointerButtonState.Nothing;
 
-            if (Input.GetMouseButton(0)) buttons |= Pointer.PointerButtonState.FirstButtonPressed;
-            if (Input.GetMouseButtonDown(0)) buttons |= Pointer.PointerButtonState.FirstButtonDown;
-            if (Input.GetMouseButtonUp(0)) buttons |= Pointer.PointerButtonState.FirstButtonUp;
+            if (Input.GetMouseButton(0)) buttons |= Pointer.PointerButtonState.ButtonPressed;
+            if (Input.GetMouseButtonDown(0)) buttons |= Pointer.PointerButtonState.ButtonDown;
+            if (Input.GetMouseButtonUp(0)) buttons |= Pointer.PointerButtonState.ButtonUp;
 
             return buttons;
         }
@@ -285,7 +285,7 @@ namespace TouchScript.InputSources.InputHandlers
             if (oldButtons == Pointer.PointerButtonState.Nothing)
             {
                 // pressed and released this frame
-                if ((newButtons & Pointer.PointerButtonState.AnyButtonPressed) == 0)
+                if ((newButtons & Pointer.PointerButtonState.ButtonPressed) == 0)
                 {
                     // Add pressed buttons for processing
                     mousePointer.Buttons = PointerUtils.PressDownButtons(newButtons);
@@ -303,7 +303,7 @@ namespace TouchScript.InputSources.InputHandlers
             else
             {
                 // released this frame
-                if ((newButtons & Pointer.PointerButtonState.AnyButtonPressed) == 0)
+                if ((newButtons & Pointer.PointerButtonState.ButtonPressed) == 0)
                 {
                     mousePointer.Buttons = newButtons;
                     internalReleaseMousePointer(newButtons);
@@ -355,7 +355,7 @@ namespace TouchScript.InputSources.InputHandlers
             newPointer.CopyFrom(pointer);
             newPointer.Flags |= Pointer.FLAG_RETURNED;
             pointerEventListener.AddPointer(newPointer);
-            if ((newPointer.Buttons & Pointer.PointerButtonState.AnyButtonPressed) != 0)
+            if ((newPointer.Buttons & Pointer.PointerButtonState.ButtonPressed) != 0)
             {
                 // Adding down state this frame
                 newPointer.Buttons = PointerUtils.DownPressedButtons(newPointer.Buttons);
