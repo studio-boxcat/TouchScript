@@ -10,8 +10,6 @@ using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Pool;
-using UnityEngine.Serialization;
 
 namespace TouchScript.Core
 {
@@ -48,32 +46,29 @@ namespace TouchScript.Core
         private StandardInput input;
 
         readonly List<Pointer> _pointers = new(30);
-        readonly HashSet<Pointer> _pressedPointers = new();
-        readonly Dictionary<int, Pointer> _idToPointer = new(30);
+        readonly Dictionary<PointerId, Pointer> _idToPointer = new(30);
 
         // Upcoming changes
         readonly List<Pointer> _pointersAdded = new();
-        readonly List<int> _pointersUpdated = new();
-        readonly List<int> _pointersPressed = new();
-        readonly List<int> _pointersReleased = new();
-        readonly List<int> _pointersRemoved = new();
-        readonly List<int> _pointersCancelled = new();
-
-        private int nextPointerId = 0;
+        readonly List<PointerId> _pointersUpdated = new();
+        readonly List<PointerId> _pointersPressed = new();
+        readonly List<PointerId> _pointersReleased = new();
+        readonly List<PointerId> _pointersRemoved = new();
+        readonly List<PointerId> _pointersCancelled = new();
 
         #endregion
 
         #region Public methods
 
         /// <inheritdoc />
-        public void CancelPointer(int id, bool shouldReturn)
+        public void CancelPointer(PointerId id, bool shouldReturn)
         {
             if (_idToPointer.TryGetValue(id, out var pointer))
                 pointer.InputSource.CancelPointer(pointer, shouldReturn);
         }
 
         /// <inheritdoc />
-        public void CancelPointer(int id)
+        public void CancelPointer(PointerId id)
         {
             CancelPointer(id, false);
         }
@@ -92,11 +87,12 @@ namespace TouchScript.Core
 
         void IPointerEventListener.AddPointer(Pointer pointer)
         {
+            Assert.AreNotEqual(PointerId.Invalid, pointer.Id);
+
             // XXX: AddPointer 는 한프레임에 여러번 불릴 수 있는 것일까? 중복원소가 있더라도 Warning 은 생략함.
             if (_pointersAdded.Contains(pointer))
                 return;
 
-            pointer.INTERNAL_Init(nextPointerId++);
             _pointersAdded.Add(pointer);
         }
 
@@ -111,12 +107,12 @@ namespace TouchScript.Core
                 _pointersUpdated.Add(id);
         }
 
-        static void CheckAndAddPointer(int id, List<int> list)
+        static void CheckAndAddPointer(PointerId id, List<PointerId> list)
         {
             if (list.Contains(id))
             {
 #if DEBUG
-                Debug.LogWarning($"TouchScript > Pointer with id [{id.ToString()}] is requested to more than once this frame.");
+                Debug.LogWarning($"TouchScript > Pointer with id [{((int) id).ToString()}] is requested to more than once this frame.");
 #endif
                 return;
             }
@@ -184,7 +180,7 @@ namespace TouchScript.Core
 
         #region Private functions
 
-        bool IdToPointer(int id, out Pointer pointer)
+        bool IdToPointer(PointerId id, out Pointer pointer)
         {
             if (_idToPointer.TryGetValue(id, out pointer))
                 return true;
@@ -195,7 +191,7 @@ namespace TouchScript.Core
             return false;
         }
 
-        bool IdToPointerWithAddedPointers(int id, out Pointer pointer)
+        bool IdToPointerWithAddedPointers(PointerId id, out Pointer pointer)
         {
             if (_idToPointer.TryGetValue(id, out pointer))
                 return true;
@@ -221,7 +217,7 @@ namespace TouchScript.Core
             PointersAdded?.InvokeHandleExceptions(this, new PointerEventArgs(pointers));
         }
 
-        private void UpdateUpdated(List<int> pointers)
+        private void UpdateUpdated(List<PointerId> pointers)
         {
             var list = PointerListPool.Rent();
             foreach (var id in pointers)
@@ -234,7 +230,7 @@ namespace TouchScript.Core
             PointerListPool.Release(list);
         }
 
-        void UpdatePressed(List<int> pointers)
+        void UpdatePressed(List<PointerId> pointers)
         {
             var list = PointerListPool.Rent();
             foreach (var id in pointers)
@@ -242,7 +238,6 @@ namespace TouchScript.Core
                 if (IdToPointer(id, out var pointer) == false)
                     continue;
                 list.Add(pointer);
-                _pressedPointers.Add(pointer);
 
                 var hit = pointer.GetOverData();
                 pointer.INTERNAL_SetPressData(hit);
@@ -252,7 +247,7 @@ namespace TouchScript.Core
             PointerListPool.Release(list);
         }
 
-        void UpdateReleased(List<int> pointers)
+        void UpdateReleased(List<PointerId> pointers)
         {
             var list = PointerListPool.Rent();
             foreach (var id in pointers)
@@ -260,7 +255,6 @@ namespace TouchScript.Core
                 if (IdToPointer(id, out var pointer) == false)
                     continue;
                 list.Add(pointer);
-                _pressedPointers.Remove(pointer);
             }
 
             PointersReleased?.InvokeHandleExceptions(this, new PointerEventArgs(list));
@@ -270,7 +264,7 @@ namespace TouchScript.Core
             PointerListPool.Release(list);
         }
 
-        void UpdateRemoved(List<int> pointers)
+        void UpdateRemoved(List<PointerId> pointers)
         {
             var list = PointerListPool.Rent();
             foreach (var id in pointers)
@@ -279,7 +273,6 @@ namespace TouchScript.Core
                     continue;
                 _idToPointer.Remove(id);
                 _pointers.Remove(pointer);
-                _pressedPointers.Remove(pointer);
                 list.Add(pointer);
             }
 
@@ -290,7 +283,7 @@ namespace TouchScript.Core
             PointerListPool.Release(list);
         }
 
-        private void UpdateCancelled(List<int> pointers)
+        private void UpdateCancelled(List<PointerId> pointers)
         {
             var list = PointerListPool.Rent();
             foreach (var id in pointers)
@@ -299,7 +292,6 @@ namespace TouchScript.Core
                     continue;
                 _idToPointer.Remove(id);
                 _pointers.Remove(pointer);
-                _pressedPointers.Remove(pointer);
                 list.Add(pointer);
             }
 
@@ -311,11 +303,11 @@ namespace TouchScript.Core
         }
 
         static readonly List<Pointer> _tmpPointersAdded = new();
-        static readonly List<int> _tmpPointersUpdated = new();
-        static readonly List<int> _tmpPointersPressed = new();
-        static readonly List<int> _tmpPointersReleased = new();
-        static readonly List<int> _tmpPointersRemoved = new();
-        static readonly List<int> _tmpPointersCancelled = new();
+        static readonly List<PointerId> _tmpPointersUpdated = new();
+        static readonly List<PointerId> _tmpPointersPressed = new();
+        static readonly List<PointerId> _tmpPointersReleased = new();
+        static readonly List<PointerId> _tmpPointersRemoved = new();
+        static readonly List<PointerId> _tmpPointersCancelled = new();
 
         void UpdatePointers()
         {
@@ -356,7 +348,7 @@ namespace TouchScript.Core
             src.Clear();
         }
 
-        private bool wasPointerAddedThisFrame(int id)
+        private bool wasPointerAddedThisFrame(PointerId id)
         {
             foreach (var p in _pointersAdded)
             {

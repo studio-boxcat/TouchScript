@@ -29,7 +29,7 @@ namespace TouchScript.Core
 
         // Upcoming changes
         private List<Gesture> gesturesToReset = new(20);
-        private Dictionary<int, List<Gesture>> pointerToGestures = new(10);
+        private Dictionary<PointerId, List<Gesture>> pointerToGestures = new(10);
 
         #endregion
 

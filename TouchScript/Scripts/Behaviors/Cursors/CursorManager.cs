@@ -27,7 +27,7 @@ namespace TouchScript.Behaviors.Cursors
 
         private RectTransform rect;
         private ObjectPool<PointerCursor> mousePool;
-        private Dictionary<int, PointerCursor> cursors = new Dictionary<int, PointerCursor>(10);
+        private Dictionary<PointerId, PointerCursor> cursors = new(10);
 
         #endregion
 
@@ -95,8 +95,6 @@ namespace TouchScript.Behaviors.Cursors
             for (var i = 0; i < count; i++)
             {
                 var pointer = e.Pointers[i];
-                // Don't show internal pointers
-                if ((pointer.Flags & Pointer.FLAG_INTERNAL) > 0) continue;
 
                 var cursor = mousePool.Get();
                 cursor.Size = cursorPixelSize;

@@ -16,49 +16,28 @@ namespace TouchScript.InputSources
     /// </summary>
     [AddComponentMenu("TouchScript/Input Sources/Standard Input")]
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_InputSources_StandardInput.htm")]
-    public sealed class StandardInput : InputSource
+    public sealed class StandardInput : MonoBehaviour
     {
         #region Private variables
 
-        [NotNull] private MouseHandler mouseHandler;
-        [NotNull] private TouchHandler touchHandler;
+        [NotNull] private MouseSource _mouseSource;
+        [NotNull] private TouchSource _touchSource;
 
         #endregion
 
         #region Public methods
 
         /// <inheritdoc />
-        public override bool UpdateInput()
+        public bool UpdateInput()
         {
             var handled = false;
 
-            handled = touchHandler.UpdateInput();
+            handled = _touchSource.UpdateInput();
 
-            if (handled) mouseHandler.CancelMousePointer();
-            else handled = mouseHandler.UpdateInput();
+            if (handled) _mouseSource.CancelMousePointer();
+            else handled = _mouseSource.UpdateInput();
 
             return handled;
-        }
-
-        /// <inheritdoc />
-        public override bool CancelPointer(Pointer pointer, bool shouldReturn)
-        {
-            var handled = false;
-            handled = touchHandler.CancelPointer(pointer, shouldReturn);
-            if (!handled) handled = mouseHandler.CancelPointer(pointer, shouldReturn);
-            return handled;
-        }
-
-        #endregion
-
-        #region Internal methods
-
-        /// <inheritdoc />
-        public override void INTERNAL_DiscardPointer(Pointer pointer)
-        {
-            var handled = false;
-            handled = touchHandler.DiscardPointer(pointer);
-            if (!handled) mouseHandler.DiscardPointer(pointer);
         }
 
         #endregion
@@ -69,8 +48,8 @@ namespace TouchScript.InputSources
         {
             Input.simulateMouseWithTouches = false;
 
-            mouseHandler = new MouseHandler(this, TouchManager.Instance);
-            touchHandler = new TouchHandler(this, TouchManager.Instance);
+            _mouseSource = new MouseSource(TouchManager.Instance);
+            _touchSource = new TouchSource(TouchManager.Instance);
         }
 
         #endregion

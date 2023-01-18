@@ -22,8 +22,6 @@ namespace TouchScript.Utils
 
         public string Name { get; set; }
 
-        public int CountAll { get; private set; }
-
         public ObjectPool(int capacity, UnityFunc<T> actionNew, UnityAction<T> actionOnGet = null,
                           UnityAction<T> actionOnRelease = null, string name = null)
         {
@@ -40,7 +38,6 @@ namespace TouchScript.Utils
             for (var i = 0; i < count; i++)
             {
                 var element = onNew();
-                CountAll++;
                 stack.Push(element);
             }
         }
@@ -51,7 +48,6 @@ namespace TouchScript.Utils
             if (stack.Count == 0)
             {
                 element = onNew();
-                CountAll++;
             }
             else
             {

@@ -191,7 +191,7 @@ namespace TouchScript.Layers.UI
                     // Don't update the pointer if it is not over an UI element
                     if (over.IsNotUI()) continue;
 
-                    GetPointerData(pointer.Id, out var data, true);
+                    GetPointerData((int) pointer.Id, out var data, true);
                     data.Reset();
                     var target = over.Target;
                     var currentOverGo = target == null ? null : target.gameObject;
@@ -224,7 +224,7 @@ namespace TouchScript.Layers.UI
                     }
 
                     PointerEventData data;
-                    GetPointerData(pointer.Id, out data, true);
+                    GetPointerData((int) pointer.Id, out data, true);
 
                     // If not over an UI element this and previous frame, don't process further.
                     // Need to check the previous hover state to properly process leaving a UI element.
@@ -292,7 +292,7 @@ namespace TouchScript.Layers.UI
                     if (over.IsNotUI()) continue;
 
                     PointerEventData data;
-                    GetPointerData(pointer.Id, out data, true);
+                    GetPointerData((int) pointer.Id, out data, true);
                     var target = over.Target;
                     var currentOverGo = target == null ? null : target.gameObject;
 
@@ -348,7 +348,7 @@ namespace TouchScript.Layers.UI
                     var over = pointer.GetOverData();
 
                     PointerEventData data;
-                    GetPointerData(pointer.Id, out data, true);
+                    GetPointerData((int) pointer.Id, out data, true);
                     var target = over.Target;
                     var currentOverGo = target == null ? null : target.gameObject;
 
@@ -399,7 +399,7 @@ namespace TouchScript.Layers.UI
                     var over = pointer.GetOverData();
 
                     PointerEventData data;
-                    GetPointerData(pointer.Id, out data, true);
+                    GetPointerData((int) pointer.Id, out data, true);
                     var target = over.Target;
                     var currentOverGo = target == null ? null : target.gameObject;
 
@@ -438,10 +438,10 @@ namespace TouchScript.Layers.UI
                     if (over.IsNotUI()) continue;
 
                     PointerEventData data;
-                    GetPointerData(pointer.Id, out data, true);
+                    GetPointerData((int) pointer.Id, out data, true);
 
                     if (data.pointerEnter) ExecuteEvents.ExecuteHierarchy(data.pointerEnter, data, ExecuteEvents.pointerExitHandler);
-                    RemovePointerData(pointer.Id);
+                    RemovePointerData((int) pointer.Id);
                 }
             }
 
