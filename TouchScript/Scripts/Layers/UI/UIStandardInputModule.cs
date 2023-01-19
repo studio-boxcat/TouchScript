@@ -33,15 +33,15 @@ namespace TouchScript.Layers.UI
                 return false;
             }
 
-            protected bool GetPointerData(int id, out PointerEventData data, bool create)
+            protected bool GetPointerData(int id, out PointerEventData pointerEvent, bool create)
             {
-                if (!m_PointerData.TryGetValue(id, out data) && create)
+                if (!m_PointerData.TryGetValue(id, out pointerEvent) && create)
                 {
-                    data = new PointerEventData()
+                    pointerEvent = new PointerEventData()
                     {
                         pointerId = id,
                     };
-                    m_PointerData.Add(id, data);
+                    m_PointerData.Add(id, pointerEvent);
                     return true;
                 }
                 return false;
@@ -59,9 +59,8 @@ namespace TouchScript.Layers.UI
 
             protected PointerEventData GetLastPointerEventData(int id)
             {
-                PointerEventData data;
-                GetPointerData(id, out data, false);
-                return data;
+                GetPointerData(id, out var pointerEvent, false);
+                return pointerEvent;
             }
 
             private static bool ShouldStartDrag(Vector2 pressPos, Vector2 currentPos, float threshold, bool useDragThreshold)
@@ -77,9 +76,9 @@ namespace TouchScript.Layers.UI
                 if (input.eventSystem.currentSelectedGameObject == null)
                     return false;
 
-                var data = input.GetBaseEventData();
-                ExecuteEvents.Execute(input.eventSystem.currentSelectedGameObject, data, ExecuteEvents.updateSelectedHandler);
-                return data.used;
+                var pointerEvent = input.GetBaseEventData();
+                ExecuteEvents.Execute(input.eventSystem.currentSelectedGameObject, pointerEvent, ExecuteEvents.updateSelectedHandler);
+                return pointerEvent.used;
             }
 
             #endregion
@@ -124,18 +123,18 @@ namespace TouchScript.Layers.UI
                     // Don't update the pointer if it is not over an UI element
                     if (over.IsNotUI()) continue;
 
-                    GetPointerData((int) pointer.Id, out var data, true);
-                    data.Reset();
+                    GetPointerData((int) pointer.Id, out var pointerEvent, true);
+                    pointerEvent.Reset();
                     var target = over.Target;
                     var currentOverGo = target == null ? null : target.gameObject;
 
-                    data.position = pointer.Position;
-                    data.delta = Vector2.zero;
+                    pointerEvent.position = pointer.Position;
+                    pointerEvent.delta = Vector2.zero;
                     convertRaycast(over.RaycastHitUI, ref raycast);
-                    raycast.screenPosition = data.position;
-                    data.pointerCurrentRaycast = raycast;
+                    raycast.screenPosition = pointerEvent.position;
+                    pointerEvent.pointerCurrentRaycast = raycast;
 
-                    input.HandlePointerExitAndEnter(data, currentOverGo);
+                    input.HandlePointerExitAndEnter(pointerEvent, currentOverGo);
                 }
             }
 
@@ -153,58 +152,58 @@ namespace TouchScript.Layers.UI
                         if (press.IsNotUI()) continue;
                     }
 
-                    PointerEventData data;
-                    GetPointerData((int) pointer.Id, out data, true);
+                    PointerEventData pointerEvent;
+                    GetPointerData((int) pointer.Id, out pointerEvent, true);
 
                     // If not over an UI element this and previous frame, don't process further.
                     // Need to check the previous hover state to properly process leaving a UI element.
                     if (over.IsNotUI())
                     {
-                        if (data.hovered.Count == 0) continue;
+                        if (pointerEvent.hovered.Count == 0) continue;
                     }
 
-                    data.Reset();
+                    pointerEvent.Reset();
                     var target = over.Target;
                     var currentOverGo = target == null ? null : target.gameObject;
 
-                    data.position = pointer.Position;
-                    data.delta = pointer.Position - pointer.PreviousPosition;
+                    pointerEvent.position = pointer.Position;
+                    pointerEvent.delta = pointer.Position - pointer.PreviousPosition;
                     convertRaycast(over.RaycastHitUI, ref raycast);
-                    raycast.screenPosition = data.position;
-                    data.pointerCurrentRaycast = raycast;
+                    raycast.screenPosition = pointerEvent.position;
+                    pointerEvent.pointerCurrentRaycast = raycast;
 
-                    input.HandlePointerExitAndEnter(data, currentOverGo);
+                    input.HandlePointerExitAndEnter(pointerEvent, currentOverGo);
 
-                    bool moving = data.IsPointerMoving();
+                    bool moving = pointerEvent.IsPointerMoving();
 
-                    if (moving && data.pointerDrag != null
-                               && !data.dragging
-                               && ShouldStartDrag(data.pressPosition, data.position, input.eventSystem.pixelDragThreshold, data.useDragThreshold))
+                    if (moving && pointerEvent.pointerDrag != null
+                               && !pointerEvent.dragging
+                               && ShouldStartDrag(pointerEvent.pressPosition, pointerEvent.position, input.eventSystem.pixelDragThreshold, pointerEvent.useDragThreshold))
                     {
-                        ExecuteEvents.Execute(data.pointerDrag, data, ExecuteEvents.beginDragHandler);
-                        data.dragging = true;
+                        ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.beginDragHandler);
+                        pointerEvent.dragging = true;
                     }
 
                     // Drag notification
-                    if (data.dragging && moving && data.pointerDrag != null)
+                    if (pointerEvent.dragging && moving && pointerEvent.pointerDrag != null)
                     {
                         // Before doing drag we should cancel any pointer down state
                         // And clear selection!
-                        if (data.pointerPress != data.pointerDrag)
+                        if (pointerEvent.pointerPress != pointerEvent.pointerDrag)
                         {
-                            ExecuteEvents.Execute(data.pointerPress, data, ExecuteEvents.pointerUpHandler);
+                            ExecuteEvents.Execute(pointerEvent.pointerPress, pointerEvent, ExecuteEvents.pointerUpHandler);
 
-                            data.eligibleForClick = false;
-                            data.pointerPress = null;
+                            pointerEvent.eligibleForClick = false;
+                            pointerEvent.pointerPress = null;
                         }
-                        ExecuteEvents.Execute(data.pointerDrag, data, ExecuteEvents.dragHandler);
+                        ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.dragHandler);
                     }
 
                     if (!Mathf.Approximately(pointer.ScrollDelta.sqrMagnitude, 0.0f))
                     {
-                        data.scrollDelta = pointer.ScrollDelta;
+                        pointerEvent.scrollDelta = pointer.ScrollDelta;
                         var scrollHandler = ExecuteEvents.GetEventHandler<IScrollHandler>(currentOverGo);
-                        ExecuteEvents.ExecuteHierarchy(scrollHandler, data, ExecuteEvents.scrollHandler);
+                        ExecuteEvents.ExecuteHierarchy(scrollHandler, pointerEvent, ExecuteEvents.scrollHandler);
                     }
                 }
             }
@@ -217,32 +216,32 @@ namespace TouchScript.Layers.UI
                     // Don't update the pointer if it is not over an UI element
                     if (over.IsNotUI()) continue;
 
-                    PointerEventData data;
-                    GetPointerData((int) pointer.Id, out data, true);
+                    PointerEventData pointerEvent;
+                    GetPointerData((int) pointer.Id, out pointerEvent, true);
                     var target = over.Target;
                     var currentOverGo = target == null ? null : target.gameObject;
 
-                    data.eligibleForClick = true;
-                    data.delta = Vector2.zero;
-                    data.dragging = false;
-                    data.useDragThreshold = true;
-                    data.position = pointer.Position;
-                    data.pressPosition = pointer.Position;
-                    data.pointerPressRaycast = data.pointerCurrentRaycast;
+                    pointerEvent.eligibleForClick = true;
+                    pointerEvent.delta = Vector2.zero;
+                    pointerEvent.dragging = false;
+                    pointerEvent.useDragThreshold = true;
+                    pointerEvent.position = pointer.Position;
+                    pointerEvent.pressPosition = pointer.Position;
+                    pointerEvent.pointerPressRaycast = pointerEvent.pointerCurrentRaycast;
 
-                    DeselectIfSelectionChanged(currentOverGo, data);
+                    DeselectIfSelectionChanged(currentOverGo, pointerEvent);
 
-                    if (data.pointerEnter != currentOverGo)
+                    if (pointerEvent.pointerEnter != currentOverGo)
                     {
                         // send a pointer enter to the touched element if it isn't the one to select...
-                        input.HandlePointerExitAndEnter(data, currentOverGo);
-                        data.pointerEnter = currentOverGo;
+                        input.HandlePointerExitAndEnter(pointerEvent, currentOverGo);
+                        pointerEvent.pointerEnter = currentOverGo;
                     }
 
                     // search for the control that will receive the press
                     // if we can't find a press handler set the press
                     // handler to be what would receive a click.
-                    var newPressed = ExecuteEvents.ExecuteHierarchy(currentOverGo, data, ExecuteEvents.pointerDownHandler);
+                    var newPressed = ExecuteEvents.ExecuteHierarchy(currentOverGo, pointerEvent, ExecuteEvents.pointerDownHandler);
 
                     // didnt find a press handler... search for a click handler
                     if (newPressed == null)
@@ -250,13 +249,13 @@ namespace TouchScript.Layers.UI
 
                     // Debug.Log("Pressed: " + newPressed);
 
-                    data.pointerPress = newPressed;
+                    pointerEvent.pointerPress = newPressed;
 
                     // Save the drag handler as well
-                    data.pointerDrag = ExecuteEvents.GetEventHandler<IDragHandler>(currentOverGo);
+                    pointerEvent.pointerDrag = ExecuteEvents.GetEventHandler<IDragHandler>(currentOverGo);
 
-                    if (data.pointerDrag != null)
-                        ExecuteEvents.Execute(data.pointerDrag, data, ExecuteEvents.initializePotentialDrag);
+                    if (pointerEvent.pointerDrag != null)
+                        ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.initializePotentialDrag);
                 }
             }
 
@@ -270,42 +269,42 @@ namespace TouchScript.Layers.UI
 
                     var over = pointer.GetOverData();
 
-                    GetPointerData((int) pointer.Id, out var data, true);
+                    GetPointerData((int) pointer.Id, out var pointerEvent, true);
                     var target = over.Target;
                     var currentOverGo = target == null ? null : target.gameObject;
 
-                    ExecuteEvents.Execute(data.pointerPress, data, ExecuteEvents.pointerUpHandler);
+                    ExecuteEvents.Execute(pointerEvent.pointerPress, pointerEvent, ExecuteEvents.pointerUpHandler);
                     var pointerUpHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
-                    if (data.pointerPress == pointerUpHandler && data.eligibleForClick)
+                    if (pointerEvent.pointerPress == pointerUpHandler && pointerEvent.eligibleForClick)
                     {
-                        ExecuteEvents.Execute(data.pointerPress, data, ExecuteEvents.pointerClickHandler);
+                        ExecuteEvents.Execute(pointerEvent.pointerPress, pointerEvent, ExecuteEvents.pointerClickHandler);
                     }
-                    else if (data.pointerDrag != null && data.dragging)
+                    else if (pointerEvent.pointerDrag != null && pointerEvent.dragging)
                     {
-                        ExecuteEvents.ExecuteHierarchy(currentOverGo, data, ExecuteEvents.dropHandler);
+                        ExecuteEvents.ExecuteHierarchy(currentOverGo, pointerEvent, ExecuteEvents.dropHandler);
                     }
 
-                    data.eligibleForClick = false;
-                    data.pointerPress = null;
+                    pointerEvent.eligibleForClick = false;
+                    pointerEvent.pointerPress = null;
 
-                    if (data.pointerDrag != null && data.dragging)
-                        ExecuteEvents.Execute(data.pointerDrag, data, ExecuteEvents.endDragHandler);
+                    if (pointerEvent.pointerDrag != null && pointerEvent.dragging)
+                        ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.endDragHandler);
 
-                    data.dragging = false;
-                    data.pointerDrag = null;
+                    pointerEvent.dragging = false;
+                    pointerEvent.pointerDrag = null;
 
                     // send exit events as we need to simulate this on touch up on touch device
-                    ExecuteEvents.ExecuteHierarchy(data.pointerEnter, data, ExecuteEvents.pointerExitHandler);
-                    data.pointerEnter = null;
+                    ExecuteEvents.ExecuteHierarchy(pointerEvent.pointerEnter, pointerEvent, ExecuteEvents.pointerExitHandler);
+                    pointerEvent.pointerEnter = null;
 
                     // redo pointer enter / exit to refresh state
                     // so that if we moused over somethign that ignored it before
                     // due to having pressed on something else
                     // it now gets it.
-                    if (currentOverGo != data.pointerEnter)
+                    if (currentOverGo != pointerEvent.pointerEnter)
                     {
-                        input.HandlePointerExitAndEnter(data, null);
-                        input.HandlePointerExitAndEnter(data, currentOverGo);
+                        input.HandlePointerExitAndEnter(pointerEvent, null);
+                        input.HandlePointerExitAndEnter(pointerEvent, currentOverGo);
                     }
                 }
             }
@@ -316,30 +315,29 @@ namespace TouchScript.Layers.UI
                 {
                     var over = pointer.GetOverData();
 
-                    PointerEventData data;
-                    GetPointerData((int) pointer.Id, out data, true);
+                    GetPointerData((int) pointer.Id, out var pointerEvent, true);
                     var target = over.Target;
                     var currentOverGo = target == null ? null : target.gameObject;
 
-                    ExecuteEvents.Execute(data.pointerPress, data, ExecuteEvents.pointerUpHandler);
+                    ExecuteEvents.Execute(pointerEvent.pointerPress, pointerEvent, ExecuteEvents.pointerUpHandler);
 
-                    if (data.pointerDrag != null && data.dragging)
+                    if (pointerEvent.pointerDrag != null && pointerEvent.dragging)
                     {
-                        ExecuteEvents.ExecuteHierarchy(currentOverGo, data, ExecuteEvents.dropHandler);
+                        ExecuteEvents.ExecuteHierarchy(currentOverGo, pointerEvent, ExecuteEvents.dropHandler);
                     }
 
-                    data.eligibleForClick = false;
-                    data.pointerPress = null;
+                    pointerEvent.eligibleForClick = false;
+                    pointerEvent.pointerPress = null;
 
-                    if (data.pointerDrag != null && data.dragging)
-                        ExecuteEvents.Execute(data.pointerDrag, data, ExecuteEvents.endDragHandler);
+                    if (pointerEvent.pointerDrag != null && pointerEvent.dragging)
+                        ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.endDragHandler);
 
-                    data.dragging = false;
-                    data.pointerDrag = null;
+                    pointerEvent.dragging = false;
+                    pointerEvent.pointerDrag = null;
 
                     // send exit events as we need to simulate this on touch up on touch device
-                    ExecuteEvents.ExecuteHierarchy(data.pointerEnter, data, ExecuteEvents.pointerExitHandler);
-                    data.pointerEnter = null;
+                    ExecuteEvents.ExecuteHierarchy(pointerEvent.pointerEnter, pointerEvent, ExecuteEvents.pointerExitHandler);
+                    pointerEvent.pointerEnter = null;
                 }
             }
 
@@ -351,9 +349,9 @@ namespace TouchScript.Layers.UI
                     // Don't update the pointer if it is not over an UI element
                     if (over.IsNotUI()) continue;
 
-                    GetPointerData((int) pointer.Id, out var data, true);
+                    GetPointerData((int) pointer.Id, out var pointerEvent, true);
 
-                    if (data.pointerEnter) ExecuteEvents.ExecuteHierarchy(data.pointerEnter, data, ExecuteEvents.pointerExitHandler);
+                    if (pointerEvent.pointerEnter) ExecuteEvents.ExecuteHierarchy(pointerEvent.pointerEnter, pointerEvent, ExecuteEvents.pointerExitHandler);
                     RemovePointerData((int) pointer.Id);
                 }
             }
