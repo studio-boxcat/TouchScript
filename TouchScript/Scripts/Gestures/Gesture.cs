@@ -262,26 +262,6 @@ namespace TouchScript.Gestures
         public virtual bool ShouldBegin() => true;
 
         /// <summary>
-        /// Cancels this gesture.
-        /// </summary>
-        /// <param name="cancelPointers"> if set to <c>true</c> also implicitly cancels all pointers owned by the gesture. </param>
-        /// <param name="returnPointers"> if set to <c>true</c> redispatched all canceled pointers. </param>
-        public void Cancel(bool cancelPointers, bool returnPointers)
-        {
-            switch (state)
-            {
-                case GestureState.Cancelled:
-                case GestureState.Failed:
-                    return;
-            }
-
-            setState(GestureState.Cancelled);
-
-            if (!cancelPointers) return;
-            for (var i = 0; i < numPointers; i++) touchManager.CancelPointer(activePointers[i].Id, returnPointers);
-        }
-
-        /// <summary>
         /// Returns <see cref="HitData"/> for gesture's <see cref="ScreenPosition"/>, i.e. what is right beneath it.
         /// </summary>
         public HitData GetScreenPositionHitData()
