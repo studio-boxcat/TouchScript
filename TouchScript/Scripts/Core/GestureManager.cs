@@ -2,8 +2,8 @@
  * @author Valentin Simonov / http://va.lent.in/
  */
 
-using System;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using TouchScript.Gestures;
 using TouchScript.Utils;
 using TouchScript.Pointers;
@@ -27,6 +27,8 @@ namespace TouchScript.Core
 
         #region Private variables
 
+        [SerializeField, Required, ChildGameObjectsOnly]
+        TouchManager _touchManager;
         // Upcoming changes
         private List<Gesture> gesturesToReset = new(20);
         private Dictionary<PointerId, List<Gesture>> pointerToGestures = new(10);
@@ -70,28 +72,18 @@ namespace TouchScript.Core
             gestureListPool.WarmUp(20);
             pointerListPool.WarmUp(20);
             transformListPool.WarmUp(1);
-        }
 
-        private void OnEnable()
-        {
-            var touchManager = TouchManager.Instance;
-            touchManager.FrameStarted += frameStartedHandler;
-            touchManager.FrameFinished += frameFinishedHandler;
-            touchManager.PointersUpdated += pointersUpdatedHandler;
-            touchManager.PointersPressed += pointersPressedHandler;
-            touchManager.PointersReleased += pointersReleasedHandler;
-            touchManager.PointersCancelled += pointersCancelledHandler;
-        }
+            _touchManager.FrameStarted += resetGestures;
+            _touchManager.FrameFinished += () =>
+            {
+                resetGestures();
+                clearFrameCaches();
+            };
 
-        private void OnDisable()
-        {
-            var touchManager = TouchManager.Instance;
-            touchManager.FrameStarted -= frameStartedHandler;
-            touchManager.FrameFinished -= frameFinishedHandler;
-            touchManager.PointersUpdated -= pointersUpdatedHandler;
-            touchManager.PointersPressed -= pointersPressedHandler;
-            touchManager.PointersReleased -= pointersReleasedHandler;
-            touchManager.PointersCancelled -= pointersCancelledHandler;
+            _touchManager.PointersUpdated += updateUpdated;
+            _touchManager.PointersPressed += updatePressed;
+            _touchManager.PointersReleased += updateReleased;
+            _touchManager.PointersCancelled += updateCancelled;
         }
 
         #endregion
@@ -537,41 +529,6 @@ namespace TouchScript.Core
             gestureListPool.Release(gesturesInHierarchy);
 
             return canRecognize;
-        }
-
-        #endregion
-
-        #region Pointer events handlers
-
-        private void frameFinishedHandler(object sender, EventArgs eventArgs)
-        {
-            resetGestures();
-            clearFrameCaches();
-        }
-
-        private void frameStartedHandler(object sender, EventArgs eventArgs)
-        {
-            resetGestures();
-        }
-
-        private void pointersPressedHandler(object sender, PointerEventArgs pointerEventArgs)
-        {
-            updatePressed(pointerEventArgs.Pointers);
-        }
-
-        private void pointersUpdatedHandler(object sender, PointerEventArgs pointerEventArgs)
-        {
-            updateUpdated(pointerEventArgs.Pointers);
-        }
-
-        private void pointersReleasedHandler(object sender, PointerEventArgs pointerEventArgs)
-        {
-            updateReleased(pointerEventArgs.Pointers);
-        }
-
-        private void pointersCancelledHandler(object sender, PointerEventArgs pointerEventArgs)
-        {
-            updateCancelled(pointerEventArgs.Pointers);
         }
 
         #endregion

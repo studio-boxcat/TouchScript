@@ -263,7 +263,7 @@ namespace TouchScript.Behaviors
 
         #region Event handlers
 
-        private void stateChangedHandler(object sender, GestureStateChangeEventArgs gestureStateChangeEventArgs)
+        private void stateChangedHandler(GestureStateChangeEventArgs gestureStateChangeEventArgs)
         {
             switch (gestureStateChangeEventArgs.State)
             {
@@ -284,7 +284,7 @@ namespace TouchScript.Behaviors
             }
         }
 
-        private void frameFinishedHandler(object sender, EventArgs eventArgs)
+        private void frameFinishedHandler()
         {
             update();
         }

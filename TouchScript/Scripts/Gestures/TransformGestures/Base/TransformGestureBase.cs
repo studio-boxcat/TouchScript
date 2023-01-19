@@ -21,9 +21,9 @@ namespace TouchScript.Gestures.TransformGestures.Base
     {
         #region Events
 
-        public event EventHandler<EventArgs> TransformStarted;
-        public event EventHandler<EventArgs> Transformed;
-        public event EventHandler<EventArgs> TransformCompleted;
+        public event Action TransformStarted;
+        public event Action Transformed;
+        public event Action TransformCompleted;
 
         #endregion
 
@@ -227,7 +227,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         protected override void onBegan()
         {
             base.onBegan();
-            TransformStarted?.InvokeHandleExceptions(this, EventArgs.Empty);
+            TransformStarted?.InvokeHandleExceptions();
         }
 
         /// <inheritdoc />
@@ -237,7 +237,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
 
             targetPositionOverridden = false;
 
-            Transformed?.InvokeHandleExceptions(this, EventArgs.Empty);
+            Transformed?.InvokeHandleExceptions();
         }
 
         /// <inheritdoc />
@@ -245,7 +245,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         {
             base.onRecognized();
 
-            TransformCompleted?.InvokeHandleExceptions(this, EventArgs.Empty);
+            TransformCompleted?.InvokeHandleExceptions();
         }
 
         /// <inheritdoc />

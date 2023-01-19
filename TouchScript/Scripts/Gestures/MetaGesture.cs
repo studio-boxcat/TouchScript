@@ -4,10 +4,9 @@
 
 using System;
 using System.Collections.Generic;
-using TouchScript.Utils;
 using TouchScript.Pointers;
+using TouchScript.Utils;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 namespace TouchScript.Gestures
 {
@@ -23,66 +22,22 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Occurs when a pointer is added.
         /// </summary>
-        public event EventHandler<MetaGestureEventArgs> PointerPressed
-        {
-            add { pointerPressedInvoker += value; }
-            remove { pointerPressedInvoker -= value; }
-        }
+        public event Action<Pointer> PointerPressed;
 
         /// <summary>
         /// Occurs when a pointer is updated.
         /// </summary>
-        public event EventHandler<MetaGestureEventArgs> PointerUpdated
-        {
-            add { pointerUpdatedInvoker += value; }
-            remove { pointerUpdatedInvoker -= value; }
-        }
+        public event Action<Pointer> PointerUpdated;
 
         /// <summary>
         /// Occurs when a pointer is removed.
         /// </summary>
-        public event EventHandler<MetaGestureEventArgs> PointerReleased
-        {
-            add { pointerReleasedInvoker += value; }
-            remove { pointerReleasedInvoker -= value; }
-        }
+        public event Action<Pointer> PointerReleased;
 
         /// <summary>
         /// Occurs when a pointer is cancelled.
         /// </summary>
-        public event EventHandler<MetaGestureEventArgs> PointerCancelled
-        {
-            add { pointerCancelledInvoker += value; }
-            remove { pointerCancelledInvoker -= value; }
-        }
-
-        // Needed to overcome iOS AOT limitations
-        private EventHandler<MetaGestureEventArgs> pointerPressedInvoker,
-                                                   pointerUpdatedInvoker,
-                                                   pointerReleasedInvoker,
-                                                   pointerCancelledInvoker;
-
-		#endregion
-
-		#region Private variables
-
-#if UNITY_5_6_OR_NEWER
-		private CustomSampler gestureSampler;
-#endif
-
-		#endregion
-
-		#region Unity
-
-		/// <inheritdoc />
-		protected override void Awake()
-		{
-			base.Awake();
-
-#if UNITY_5_6_OR_NEWER
-			gestureSampler = CustomSampler.Create("[TouchScript] Meta Gesture");
-#endif
-		}
+        public event Action<Pointer> PointerCancelled;
 
 		#endregion
 
@@ -91,113 +46,61 @@ namespace TouchScript.Gestures
 		/// <inheritdoc />
 		protected override void pointersPressed(IList<Pointer> pointers)
         {
-#if UNITY_5_6_OR_NEWER
-			gestureSampler.Begin();
-#endif
-
             base.pointersPressed(pointers);
 
             if (State == GestureState.Idle) setState(GestureState.Began);
 
             var length = pointers.Count;
-            if (pointerPressedInvoker != null)
+            if (PointerPressed != null)
             {
                 for (var i = 0; i < length; i++)
-                    pointerPressedInvoker.InvokeHandleExceptions(this, new MetaGestureEventArgs(pointers[i]));
+                    PointerPressed.InvokeHandleExceptions(pointers[i]);
             }
-
-#if UNITY_5_6_OR_NEWER
-			gestureSampler.End();
-#endif
         }
 
         /// <inheritdoc />
         protected override void pointersUpdated(IList<Pointer> pointers)
         {
-#if UNITY_5_6_OR_NEWER
-			gestureSampler.Begin();
-#endif
-
             base.pointersUpdated(pointers);
 
-            if (State == GestureState.Began || State == GestureState.Changed) setState(GestureState.Changed);
+            if (State is GestureState.Began or GestureState.Changed) setState(GestureState.Changed);
 
             var length = pointers.Count;
-            if (pointerUpdatedInvoker != null)
+            if (PointerUpdated != null)
             {
                 for (var i = 0; i < length; i++)
-                    pointerUpdatedInvoker.InvokeHandleExceptions(this, new MetaGestureEventArgs(pointers[i]));
+                    PointerUpdated.InvokeHandleExceptions(pointers[i]);
             }
-
-#if UNITY_5_6_OR_NEWER
-			gestureSampler.End();
-#endif
         }
 
         /// <inheritdoc />
         protected override void pointersReleased(IList<Pointer> pointers)
         {
-#if UNITY_5_6_OR_NEWER
-			gestureSampler.Begin();
-#endif
-
             base.pointersReleased(pointers);
 
-            if ((State == GestureState.Began || State == GestureState.Changed) && NumPointers == 0) setState(GestureState.Ended);
+            if (State is GestureState.Began or GestureState.Changed && NumPointers == 0) setState(GestureState.Ended);
 
             var length = pointers.Count;
-            if (pointerReleasedInvoker != null)
+            if (PointerReleased != null)
             {
                 for (var i = 0; i < length; i++)
-                    pointerReleasedInvoker.InvokeHandleExceptions(this, new MetaGestureEventArgs(pointers[i]));
+                    PointerReleased.InvokeHandleExceptions(pointers[i]);
             }
-
-#if UNITY_5_6_OR_NEWER
-			gestureSampler.End();
-#endif
         }
 
         /// <inheritdoc />
         protected override void pointersCancelled(IList<Pointer> pointers)
         {
-#if UNITY_5_6_OR_NEWER
-			gestureSampler.Begin();
-#endif
-
             base.pointersCancelled(pointers);
 
             var length = pointers.Count;
-            if (pointerCancelledInvoker != null)
+            if (PointerCancelled != null)
             {
                 for (var i = 0; i < length; i++)
-                    pointerCancelledInvoker.InvokeHandleExceptions(this, new MetaGestureEventArgs(pointers[i]));
+                    PointerCancelled.InvokeHandleExceptions(pointers[i]);
             }
-
-#if UNITY_5_6_OR_NEWER
-			gestureSampler.End();
-#endif
         }
 
         #endregion
-    }
-
-    /// <summary>
-    /// EventArgs for MetaGesture events.
-    /// </summary>
-    public class MetaGestureEventArgs : EventArgs
-    {
-        /// <summary>
-        /// Current pointer.
-        /// </summary>
-        public Pointer Pointer { get; private set; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="MetaGestureEventArgs"/> class.
-        /// </summary>
-        /// <param name="pointer"> Pointer the event is for. </param>
-        public MetaGestureEventArgs(Pointer pointer)
-        {
-            Pointer = pointer;
-        }
     }
 }

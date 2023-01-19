@@ -49,14 +49,7 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Occurs when gesture is recognized.
         /// </summary>
-        public event EventHandler<EventArgs> Flicked
-        {
-            add { flickedInvoker += value; }
-            remove { flickedInvoker -= value; }
-        }
-
-        // Needed to overcome iOS AOT limitations
-        private EventHandler<EventArgs> flickedInvoker;
+        public event Action Flicked;
 
         #endregion
 
@@ -232,7 +225,7 @@ namespace TouchScript.Gestures
         protected override void onRecognized()
         {
             base.onRecognized();
-            if (flickedInvoker != null) flickedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
+            Flicked?.InvokeHandleExceptions();
         }
 
         /// <inheritdoc />

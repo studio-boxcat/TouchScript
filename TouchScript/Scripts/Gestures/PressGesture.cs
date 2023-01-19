@@ -30,7 +30,7 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Occurs when gesture is recognized.
         /// </summary>
-        public event EventHandler<EventArgs> Pressed;
+        public event Action Pressed;
 
         #endregion
 
@@ -95,7 +95,7 @@ namespace TouchScript.Gestures
         protected override void onRecognized()
         {
             base.onRecognized();
-            Pressed?.InvokeHandleExceptions(this, EventArgs.Empty);
+            Pressed?.InvokeHandleExceptions();
         }
 
         #endregion

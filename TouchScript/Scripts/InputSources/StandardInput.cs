@@ -3,6 +3,7 @@
  */
 
 using JetBrains.Annotations;
+using Sirenix.OdinInspector;
 using TouchScript.Core;
 using TouchScript.InputSources.InputHandlers;
 using UnityEngine;
@@ -19,8 +20,10 @@ namespace TouchScript.InputSources
     {
         #region Private variables
 
-        [NotNull] private MouseSource _mouseSource;
-        [NotNull] private TouchSource _touchSource;
+        [SerializeField, Required, ChildGameObjectsOnly]
+        TouchManager _touchManager;
+        [NotNull] MouseSource _mouseSource;
+        [NotNull] TouchSource _touchSource;
 
         #endregion
 
@@ -47,8 +50,8 @@ namespace TouchScript.InputSources
         {
             Input.simulateMouseWithTouches = false;
 
-            _mouseSource = new MouseSource(TouchManager.Instance);
-            _touchSource = new TouchSource(TouchManager.Instance);
+            _mouseSource = new MouseSource(_touchManager);
+            _touchSource = new TouchSource(_touchManager);
         }
 
         #endregion

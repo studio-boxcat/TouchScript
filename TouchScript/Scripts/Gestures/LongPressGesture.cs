@@ -26,14 +26,14 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Occurs when gesture is recognized.
         /// </summary>
-        public event EventHandler<EventArgs> LongPressed
+        public event Action LongPressed
         {
             add { longPressedInvoker += value; }
             remove { longPressedInvoker -= value; }
         }
 
         // Needed to overcome iOS AOT limitations
-        private EventHandler<EventArgs> longPressedInvoker;
+        private Action longPressedInvoker;
 
         #endregion
 
@@ -162,7 +162,7 @@ namespace TouchScript.Gestures
         protected override void onRecognized()
         {
             base.onRecognized();
-            if (longPressedInvoker != null) longPressedInvoker.InvokeHandleExceptions(this, EventArgs.Empty);
+            if (longPressedInvoker != null) longPressedInvoker.InvokeHandleExceptions();
         }
 
         /// <inheritdoc />

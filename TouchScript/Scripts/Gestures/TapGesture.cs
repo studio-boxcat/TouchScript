@@ -22,7 +22,7 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Occurs when gesture is recognized.
         /// </summary>
-        public event EventHandler<EventArgs> Tapped;
+        public event Action Tapped;
 
         #endregion
 
@@ -119,7 +119,7 @@ namespace TouchScript.Gestures
 
             if (State is GestureState.Idle or GestureState.Possible)
                 setState(GestureState.Failed);
-            Tapped?.InvokeHandleExceptions(this, EventArgs.Empty);
+            Tapped?.InvokeHandleExceptions();
         }
 
         /// <inheritdoc />

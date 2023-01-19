@@ -50,12 +50,12 @@ namespace TouchScript.Behaviors.Cursors
             var touchManager = TouchManager.Instance;
             if (touchManager == null) return;
 
-            touchManager.PointersAdded += pointersAddedHandler;
-            touchManager.PointersRemoved += pointersRemovedHandler;
-            touchManager.PointersPressed += pointersPressedHandler;
-            touchManager.PointersReleased += pointersReleasedHandler;
+            touchManager.PointersAdded += PointersAddedHandler;
+            touchManager.PointersRemoved += PointersRemovedHandler;
+            touchManager.PointersPressed += PointersPressedHandler;
+            touchManager.PointersReleased += PointersReleasedHandler;
             touchManager.PointersUpdated += PointersUpdatedHandler;
-            touchManager.PointersCancelled += pointersCancelledHandler;
+            touchManager.PointersCancelled += PointersRemovedHandler;
         }
 
         private void OnDisable()
@@ -63,12 +63,12 @@ namespace TouchScript.Behaviors.Cursors
             var touchManager = TouchManager.Instance;
             if (touchManager == null) return;
 
-            touchManager.PointersAdded -= pointersAddedHandler;
-            touchManager.PointersRemoved -= pointersRemovedHandler;
-            touchManager.PointersPressed -= pointersPressedHandler;
-            touchManager.PointersReleased -= pointersReleasedHandler;
+            touchManager.PointersAdded -= PointersAddedHandler;
+            touchManager.PointersRemoved -= PointersRemovedHandler;
+            touchManager.PointersPressed -= PointersPressedHandler;
+            touchManager.PointersReleased -= PointersReleasedHandler;
             touchManager.PointersUpdated -= PointersUpdatedHandler;
-            touchManager.PointersCancelled -= pointersCancelledHandler;
+            touchManager.PointersCancelled -= PointersRemovedHandler;
         }
 
         #endregion
@@ -89,13 +89,10 @@ namespace TouchScript.Behaviors.Cursors
 
         #region Event handlers
 
-        private void pointersAddedHandler(object sender, PointerEventArgs e)
+        private void PointersAddedHandler(List<Pointer> pointers)
         {
-            var count = e.Pointers.Count;
-            for (var i = 0; i < count; i++)
+            foreach (var pointer in pointers)
             {
-                var pointer = e.Pointers[i];
-
                 var cursor = mousePool.Get();
                 cursor.Size = cursorPixelSize;
                 cursor.Init(rect, pointer);
@@ -103,12 +100,10 @@ namespace TouchScript.Behaviors.Cursors
             }
         }
 
-        private void pointersRemovedHandler(object sender, PointerEventArgs e)
+        private void PointersRemovedHandler(List<Pointer> pointers)
         {
-            var count = e.Pointers.Count;
-            for (var i = 0; i < count; i++)
+            foreach (var pointer in pointers)
             {
-                var pointer = e.Pointers[i];
                 if (!cursors.TryGetValue(pointer.Id, out var cursor)) continue;
                 cursors.Remove(pointer.Id);
 
@@ -116,42 +111,31 @@ namespace TouchScript.Behaviors.Cursors
             }
         }
 
-        private void pointersPressedHandler(object sender, PointerEventArgs e)
+        private void PointersPressedHandler(List<Pointer> pointers)
         {
-            var count = e.Pointers.Count;
-            for (var i = 0; i < count; i++)
+            foreach (var pointer in pointers)
             {
-                var pointer = e.Pointers[i];
                 if (!cursors.TryGetValue(pointer.Id, out var cursor)) continue;
                 cursor.SetState(pointer, PointerCursor.CursorState.Pressed);
             }
         }
 
-        private void PointersUpdatedHandler(object sender, PointerEventArgs e)
+        private void PointersUpdatedHandler(List<Pointer> pointers)
         {
-            var count = e.Pointers.Count;
-            for (var i = 0; i < count; i++)
+            foreach (var pointer in pointers)
             {
-                var pointer = e.Pointers[i];
                 if (!cursors.TryGetValue(pointer.Id, out var cursor)) continue;
                 cursor.UpdatePointer(pointer);
             }
         }
 
-        private void pointersReleasedHandler(object sender, PointerEventArgs e)
+        private void PointersReleasedHandler(List<Pointer> pointers)
         {
-            var count = e.Pointers.Count;
-            for (var i = 0; i < count; i++)
+            foreach (var pointer in pointers)
             {
-                var pointer = e.Pointers[i];
                 if (!cursors.TryGetValue(pointer.Id, out var cursor)) continue;
                 cursor.SetState(pointer, PointerCursor.CursorState.Released);
             }
-        }
-
-        private void pointersCancelledHandler(object sender, PointerEventArgs e)
-        {
-            pointersRemovedHandler(sender, e);
         }
 
         #endregion

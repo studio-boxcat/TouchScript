@@ -20,14 +20,14 @@ namespace TouchScript.Core
     {
         #region Events
 
-        public event EventHandler FrameStarted;
-        public event EventHandler FrameFinished;
-        public event EventHandler<PointerEventArgs> PointersAdded;
-        public event EventHandler<PointerEventArgs> PointersUpdated;
-        public event EventHandler<PointerEventArgs> PointersPressed;
-        public event EventHandler<PointerEventArgs> PointersReleased;
-        public event EventHandler<PointerEventArgs> PointersRemoved;
-        public event EventHandler<PointerEventArgs> PointersCancelled;
+        public event Action FrameStarted;
+        public event Action FrameFinished;
+        public event Action<List<Pointer>> PointersAdded;
+        public event Action<List<Pointer>> PointersUpdated;
+        public event Action<List<Pointer>> PointersPressed;
+        public event Action<List<Pointer>> PointersReleased;
+        public event Action<List<Pointer>> PointersRemoved;
+        public event Action<List<Pointer>> PointersCancelled;
 
         #endregion
 
@@ -176,13 +176,6 @@ namespace TouchScript.Core
             UpdatePointers();
         }
 
-        void ForceUpdateWithoutInput()
-        {
-            foreach (var pointer in _pointers)
-                pointer.INTERNAL_FrameStarted();
-            UpdatePointers();
-        }
-
         #endregion
 
         #region Private functions
@@ -221,7 +214,7 @@ namespace TouchScript.Core
                 _idToPointer.Add(pointer.Id, pointer);
             }
 
-            PointersAdded?.InvokeHandleExceptions(this, new PointerEventArgs(pointers));
+            PointersAdded?.InvokeHandleExceptions(pointers);
         }
 
         private void UpdateUpdated(List<PointerId> pointers)
@@ -233,7 +226,7 @@ namespace TouchScript.Core
                     continue;
                 list.Add(pointer);
             }
-            PointersUpdated?.InvokeHandleExceptions(this, new PointerEventArgs(list));
+            PointersUpdated?.InvokeHandleExceptions(list);
             PointerListPool.Release(list);
         }
 
@@ -250,7 +243,7 @@ namespace TouchScript.Core
                 pointer.INTERNAL_SetPressData(hit);
             }
 
-            PointersPressed?.InvokeHandleExceptions(this, new PointerEventArgs(list));
+            PointersPressed?.InvokeHandleExceptions(list);
             PointerListPool.Release(list);
         }
 
@@ -264,7 +257,7 @@ namespace TouchScript.Core
                 list.Add(pointer);
             }
 
-            PointersReleased?.InvokeHandleExceptions(this, new PointerEventArgs(list));
+            PointersReleased?.InvokeHandleExceptions(list);
 
             foreach (var pointer in list)
                 pointer.INTERNAL_ClearPressData();
@@ -283,7 +276,7 @@ namespace TouchScript.Core
                 list.Add(pointer);
             }
 
-            PointersRemoved?.InvokeHandleExceptions(this, new PointerEventArgs(list));
+            PointersRemoved?.InvokeHandleExceptions(list);
 
             foreach (var pointer in list)
                 pointer.InputSource.INTERNAL_DiscardPointer(pointer);
@@ -302,7 +295,7 @@ namespace TouchScript.Core
                 list.Add(pointer);
             }
 
-            PointersCancelled?.InvokeHandleExceptions(this, new PointerEventArgs(list));
+            PointersCancelled?.InvokeHandleExceptions(list);
 
             foreach (var pointer in list)
                 pointer.InputSource.INTERNAL_DiscardPointer(pointer);
@@ -318,7 +311,7 @@ namespace TouchScript.Core
 
         void UpdatePointers()
         {
-            FrameStarted?.InvokeHandleExceptions(this, EventArgs.Empty);
+            FrameStarted?.InvokeHandleExceptions();
 
             ClearAndPour(_pointersAdded, _tmpPointersAdded);
             ClearAndPour(_pointersUpdated, _tmpPointersUpdated);
@@ -343,7 +336,7 @@ namespace TouchScript.Core
             if (_tmpPointersCancelled.Count > 0)
                 UpdateCancelled(_tmpPointersCancelled);
 
-            FrameFinished?.InvokeHandleExceptions(this, EventArgs.Empty);
+            FrameFinished?.InvokeHandleExceptions();
         }
 
         static void ClearAndPour<T>(List<T> src, List<T> dst)

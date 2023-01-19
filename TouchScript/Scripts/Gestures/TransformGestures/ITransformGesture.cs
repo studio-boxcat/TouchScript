@@ -16,18 +16,18 @@ namespace TouchScript.Gestures.TransformGestures
         /// <summary>
         /// Occurs when gesture starts.
         /// </summary>
-        event EventHandler<EventArgs> TransformStarted;
+        event Action TransformStarted;
 
         /// <summary>
         /// Occurs when gesture data updates.
         /// </summary>
-        event EventHandler<EventArgs> Transformed;
+        event Action Transformed;
 
         /// <summary>
         /// Occurs when gesture finishes.
         /// Note that all transformation deltas are zero during this event. To get up-to-date deltas please subscribe to <see cref="Transformed"/> event.
         /// </summary>
-        event EventHandler<EventArgs> TransformCompleted;
+        event Action TransformCompleted;
 
         /// <summary>
         /// Contains transform operations which happened this frame.

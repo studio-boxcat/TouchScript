@@ -110,12 +110,12 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Occurs when gesture changes state.
         /// </summary>
-        public event EventHandler<GestureStateChangeEventArgs> StateChanged;
+        public event Action<GestureStateChangeEventArgs> StateChanged;
 
         /// <summary>
         /// Occurs when gesture is cancelled.
         /// </summary>
-        public event EventHandler<EventArgs> Cancelled;
+        public event Action Cancelled;
 
         #endregion
 
@@ -164,7 +164,7 @@ namespace TouchScript.Gestures
                         break;
                 }
 
-                StateChanged?.InvokeHandleExceptions(this, GestureStateChangeEventArgs.GetCachedEventArgs(state, PreviousState));
+                StateChanged?.InvokeHandleExceptions(GestureStateChangeEventArgs.GetCachedEventArgs(state, PreviousState));
             }
         }
 
@@ -718,7 +718,7 @@ namespace TouchScript.Gestures
         /// </summary>
         protected virtual void onCancelled()
         {
-            Cancelled?.InvokeHandleExceptions(this, EventArgs.Empty);
+            Cancelled?.InvokeHandleExceptions();
         }
 
         #endregion
@@ -761,7 +761,7 @@ namespace TouchScript.Gestures
     /// <summary>
     /// Event arguments for Gesture state change events.
     /// </summary>
-    public class GestureStateChangeEventArgs : EventArgs
+    public class GestureStateChangeEventArgs
     {
         /// <summary>
         /// Previous gesture state.

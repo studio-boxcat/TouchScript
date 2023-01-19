@@ -3,13 +3,13 @@
  */
 
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using TouchScript.Core;
 using TouchScript.Hit;
 using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
-using Pointer = TouchScript.Pointers.Pointer;
 
 namespace TouchScript.Layers.UI
 {
@@ -20,33 +20,26 @@ namespace TouchScript.Layers.UI
     {
         #region Private variables
 
+        [SerializeField, Required, ChildGameObjectsOnly]
+        TouchManager _touchManager;
         private UIStandardInputModule ui;
 
         #endregion
 
         #region Public methods
 
-        public void Connect(TouchManager touchManager)
+        protected override void Awake()
         {
-            Assert.IsNull(ui);
+            base.Awake();
+
             ui = new UIStandardInputModule(this);
+            var touchManager = _touchManager;
             touchManager.PointersAdded += ui.ProcessAdded;
             touchManager.PointersUpdated += ui.ProcessUpdated;
             touchManager.PointersPressed += ui.ProcessPressed;
             touchManager.PointersReleased += ui.ProcessReleased;
             touchManager.PointersRemoved += ui.ProcessRemoved;
             touchManager.PointersCancelled += ui.ProcessCancelled;
-        }
-
-        public void Disconnect(TouchManager touchManager)
-        {
-            touchManager.PointersAdded -= ui.ProcessAdded;
-            touchManager.PointersUpdated -= ui.ProcessUpdated;
-            touchManager.PointersPressed -= ui.ProcessPressed;
-            touchManager.PointersReleased -= ui.ProcessReleased;
-            touchManager.PointersRemoved -= ui.ProcessRemoved;
-            touchManager.PointersCancelled -= ui.ProcessCancelled;
-            ui = null;
         }
 
         public override void Process()
@@ -63,11 +56,17 @@ namespace TouchScript.Layers.UI
 
         public override bool IsModuleSupported() => true;
 
-        public override void DeactivateModule() {}
+        public override void DeactivateModule()
+        {
+        }
 
-        public override void ActivateModule() {}
+        public override void ActivateModule()
+        {
+        }
 
-        public override void UpdateModule() {}
+        public override void UpdateModule()
+        {
+        }
 
         #endregion
 
@@ -179,10 +178,10 @@ namespace TouchScript.Layers.UI
 
             #region Event processors
 
-            public virtual void ProcessAdded(object sender, PointerEventArgs pointerEventArgs)
+            public virtual void ProcessAdded(List<Pointer> pointers)
             {
                 var raycast = new RaycastResult();
-                foreach (var pointer in pointerEventArgs.Pointers)
+                foreach (var pointer in pointers)
                 {
                     var over = pointer.GetOverData();
 
@@ -204,10 +203,10 @@ namespace TouchScript.Layers.UI
                 }
             }
 
-            public virtual void ProcessUpdated(object sender, PointerEventArgs pointerEventArgs)
+            public virtual void ProcessUpdated(List<Pointer> pointers)
             {
                 var raycast = new RaycastResult();
-                foreach (var pointer in pointerEventArgs.Pointers)
+                foreach (var pointer in pointers)
                 {
                     var over = pointer.GetOverData();
 
@@ -274,9 +273,9 @@ namespace TouchScript.Layers.UI
                 }
             }
 
-            public virtual void ProcessPressed(object sender, PointerEventArgs pointerEventArgs)
+            public virtual void ProcessPressed(List<Pointer> pointers)
             {
-                foreach (var pointer in pointerEventArgs.Pointers)
+                foreach (var pointer in pointers)
                 {
                     var over = pointer.GetOverData();
                     // Don't update the pointer if it is not over an UI element
@@ -325,9 +324,9 @@ namespace TouchScript.Layers.UI
                 }
             }
 
-            public virtual void ProcessReleased(object sender, PointerEventArgs pointerEventArgs)
+            public virtual void ProcessReleased(List<Pointer> pointers)
             {
-                foreach (var pointer in pointerEventArgs.Pointers)
+                foreach (var pointer in pointers)
                 {
                     var press = pointer.GetPressData();
                     // Don't update the pointer if it is was not pressed over an UI element
@@ -376,9 +375,9 @@ namespace TouchScript.Layers.UI
                 }
             }
 
-            public virtual void ProcessCancelled(object sender, PointerEventArgs pointerEventArgs)
+            public virtual void ProcessCancelled(List<Pointer> pointers)
             {
-                foreach (var pointer in pointerEventArgs.Pointers)
+                foreach (var pointer in pointers)
                 {
                     var over = pointer.GetOverData();
 
@@ -409,9 +408,9 @@ namespace TouchScript.Layers.UI
                 }
             }
 
-            public virtual void ProcessRemoved(object sender, PointerEventArgs pointerEventArgs)
+            public virtual void ProcessRemoved(List<Pointer> pointers)
             {
-                foreach (var pointer in pointerEventArgs.Pointers)
+                foreach (var pointer in pointers)
                 {
                     var over = pointer.GetOverData();
                     // Don't update the pointer if it is not over an UI element
