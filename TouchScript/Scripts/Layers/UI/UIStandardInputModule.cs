@@ -21,7 +21,7 @@ namespace TouchScript.Layers.UI
                 this.input = input;
             }
 
-            #region Unchanged from PointerInputModule
+            #region From PointerInputModule
 
             private Dictionary<int, PointerEventData> m_PointerData = new Dictionary<int, PointerEventData>(10);
 
@@ -83,6 +83,8 @@ namespace TouchScript.Layers.UI
 
             #endregion
 
+            #region From StandardInputModule
+
             public void Process()
             {
                 bool usedEvent = SendUpdateEventToSelectedObject();
@@ -92,6 +94,8 @@ namespace TouchScript.Layers.UI
                 //                    ProcessMouseEvent();
             }
 
+            #endregion
+
             #region Changed
 
             protected void RemovePointerData(int id)
@@ -99,7 +103,7 @@ namespace TouchScript.Layers.UI
                 m_PointerData.Remove(id);
             }
 
-            private void convertRaycast(RaycastHitUI old, ref RaycastResult current)
+            private static void ConvertRaycast(RaycastHitUI old, ref RaycastResult current)
             {
                 current.module = old.Raycaster;
                 current.gameObject = old.Target == null ? null : old.Target.gameObject;
@@ -130,7 +134,7 @@ namespace TouchScript.Layers.UI
 
                     pointerEvent.position = pointer.Position;
                     pointerEvent.delta = Vector2.zero;
-                    convertRaycast(over.RaycastHitUI, ref raycast);
+                    ConvertRaycast(over.RaycastHitUI, ref raycast);
                     raycast.screenPosition = pointerEvent.position;
                     pointerEvent.pointerCurrentRaycast = raycast;
 
@@ -168,7 +172,7 @@ namespace TouchScript.Layers.UI
 
                     pointerEvent.position = pointer.Position;
                     pointerEvent.delta = pointer.Position - pointer.PreviousPosition;
-                    convertRaycast(over.RaycastHitUI, ref raycast);
+                    ConvertRaycast(over.RaycastHitUI, ref raycast);
                     raycast.screenPosition = pointerEvent.position;
                     pointerEvent.pointerCurrentRaycast = raycast;
 
