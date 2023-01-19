@@ -8,6 +8,7 @@ using TouchScript.Gestures;
 using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace TouchScript.Core
 {
@@ -175,8 +176,7 @@ namespace TouchScript.Core
                 var target = pointer.GetPressData().Target;
                 if (target == null) continue;
 
-                List<Pointer> list;
-                if (!pointersOnTarget.TryGetValue(target, out list))
+                if (!pointersOnTarget.TryGetValue(target, out var list))
                 {
                     list = pointerListPool.Get();
                     pointersOnTarget.Add(target, list);
@@ -193,7 +193,6 @@ namespace TouchScript.Core
 
                 // Pointers that hit <target>.
                 var targetPointers = pointersOnTarget[target];
-                var targetPointersCount = targetPointers.Count;
 
                 // Gestures on objects in the hierarchy from "root" to target.
                 var gesturesOnParentsAndMe = getHierarchyEndingWith(target);
@@ -210,7 +209,6 @@ namespace TouchScript.Core
                     if (gesture.State is Gesture.GestureState.Began or Gesture.GestureState.Changed) startedGestures.Add(gesture);
                 }
 
-                var startedCount = startedGestures.Count;
                 var possibleGestureCount = gesturesOnParentsAndMe.Count;
                 for (var j = 0; j < possibleGestureCount; j++)
                 {
@@ -225,11 +223,9 @@ namespace TouchScript.Core
                     var canReceivePointers = true;
 
                     // For every possible gesture in gesturesInHierarchy we need to check if it prevents gestureOnParentOrMe from getting pointers.
-                    for (var k = 0; k < startedCount; k++)
+                    foreach (var startedGesture in startedGestures)
                     {
-                        var startedGesture = startedGestures[k];
-
-                        if (possibleGesture == startedGesture) continue;
+                        if (ReferenceEquals(possibleGesture, startedGesture)) continue;
 
                         // This gesture has started. Is gestureOnParentOrMe allowed to work in parallel?
                         if (startedGesture.CanPreventGesture(possibleGesture))
@@ -244,10 +240,10 @@ namespace TouchScript.Core
 
                     // Filter incoming pointers for gesture.
                     var pointersSentToGesture = pointerListPool.Get();
-                    for (var k = 0; k < targetPointersCount; k++)
+                    foreach (var pointer in pointersSentToGesture)
                     {
-                        var pointer = targetPointers[k];
-                        if (possibleGesture.ShouldReceivePointer(pointer)) pointersSentToGesture.Add(pointer);
+                        if (possibleGesture.ShouldReceivePointer(pointer))
+                            pointersSentToGesture.Add(pointer);
                     }
 
                     // If there are any pointers to send.
@@ -281,10 +277,8 @@ namespace TouchScript.Core
             transformListPool.Release(activeTargets);
 
             // Dispatch gesture events with pointers assigned to them.
-            count = activeGesturesThisUpdate.Count;
-            for (var i = 0; i < count; i++)
+            foreach (var gesture in activeGesturesThisUpdate)
             {
-                var gesture = activeGesturesThisUpdate[i];
                 var list = pointersToDispatchForGesture[gesture];
                 if (!gestureIsActive(gesture))
                 {
@@ -292,10 +286,8 @@ namespace TouchScript.Core
                     continue;
                 }
 
-                var numPointers = list.Count;
-                for (var j = 0; j < numPointers; j++)
+                foreach (var pointer in list)
                 {
-                    var pointer = list[j];
                     if (!pointerToGestures.TryGetValue(pointer.Id, out var gestureList))
                     {
                         gestureList = gestureListPool.Get();
@@ -313,14 +305,12 @@ namespace TouchScript.Core
             pointersToDispatchForGesture.Clear();
         }
 
-        private void updateUpdated(IReadOnlyList<Pointer> pointers)
+        private void updateUpdated(List<Pointer> pointers)
         {
             sortPointersForActiveGestures(pointers);
 
-            var count = activeGesturesThisUpdate.Count;
-            for (var i = 0; i < count; i++)
+            foreach (var gesture in activeGesturesThisUpdate)
             {
-                var gesture = activeGesturesThisUpdate[i];
                 var list = pointersToDispatchForGesture[gesture];
                 if (gestureIsActive(gesture))
                 {
@@ -333,14 +323,12 @@ namespace TouchScript.Core
             pointersToDispatchForGesture.Clear();
         }
 
-        private void updateReleased(IReadOnlyList<Pointer> pointers)
+        private void updateReleased(List<Pointer> pointers)
         {
             sortPointersForActiveGestures(pointers);
 
-            var count = activeGesturesThisUpdate.Count;
-            for (var i = 0; i < count; i++)
+            foreach (var gesture in activeGesturesThisUpdate)
             {
-                var gesture = activeGesturesThisUpdate[i];
                 var list = pointersToDispatchForGesture[gesture];
                 if (gestureIsActive(gesture))
                 {
@@ -354,14 +342,12 @@ namespace TouchScript.Core
             pointersToDispatchForGesture.Clear();
         }
 
-        private void updateCancelled(IReadOnlyList<Pointer> pointers)
+        private void updateCancelled(List<Pointer> pointers)
         {
             sortPointersForActiveGestures(pointers);
 
-            var count = activeGesturesThisUpdate.Count;
-            for (var i = 0; i < count; i++)
+            foreach (var gesture in activeGesturesThisUpdate)
             {
-                var gesture = activeGesturesThisUpdate[i];
                 var list = pointersToDispatchForGesture[gesture];
                 if (gestureIsActive(gesture))
                 {
@@ -375,18 +361,17 @@ namespace TouchScript.Core
             pointersToDispatchForGesture.Clear();
         }
 
-        private void sortPointersForActiveGestures(IReadOnlyList<Pointer> pointers)
+        private void sortPointersForActiveGestures(List<Pointer> pointers)
         {
-            var count = pointers.Count;
-            for (var i = 0; i < count; i++)
+            Assert.AreEqual(0, pointersToDispatchForGesture.Count);
+            Assert.AreEqual(0, activeGesturesThisUpdate.Count);
+
+            foreach (var pointer in pointers)
             {
-                var pointer = pointers[i];
                 if (!pointerToGestures.TryGetValue(pointer.Id, out var gestures)) continue;
 
-                var gestureCount = gestures.Count;
-                for (var j = 0; j < gestureCount; j++)
+                foreach (var gesture in gestures)
                 {
-                    var gesture = gestures[j];
                     if (!pointersToDispatchForGesture.TryGetValue(gesture, out var toDispatch))
                     {
                         toDispatch = pointerListPool.Get();
@@ -398,12 +383,10 @@ namespace TouchScript.Core
             }
         }
 
-        private void removePointers(IReadOnlyList<Pointer> pointers)
+        private void removePointers(List<Pointer> pointers)
         {
-            var count = pointers.Count;
-            for (var i = 0; i < count; i++)
+            foreach (var pointer in pointers)
             {
-                var pointer = pointers[i];
                 if (!pointerToGestures.TryGetValue(pointer.Id, out var list)) continue;
 
                 pointerToGestures.Remove(pointer.Id);
@@ -421,12 +404,10 @@ namespace TouchScript.Core
                 var gesture = gesturesToReset[i];
                 if (Equals(gesture, null)) continue; // Reference comparison
 
-                var activePointers = gesture.ActivePointers;
-                var activeCount = activePointers.Count;
-                for (var j = 0; j < activeCount; j++)
+                foreach (var pointer in gesture.ActivePointers)
                 {
-                    var pointer = activePointers[j];
-                    if (pointerToGestures.TryGetValue(pointer.Id, out var list)) list.Remove(gesture);
+                    if (pointerToGestures.TryGetValue(pointer.Id, out var list))
+                        list.Remove(gesture);
                 }
 
                 if (gesture == null) continue; // Unity "null" comparison

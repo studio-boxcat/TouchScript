@@ -212,7 +212,7 @@ namespace TouchScript.Gestures
         /// Gets list of gesture's active pointers.
         /// </summary>
         /// <value> The list of pointers owned by this gesture. </value>
-        public IReadOnlyList<Pointer> ActivePointers => activePointers;
+        public List<Pointer> ActivePointers => activePointers;
 
         /// <summary>
         /// Gets the number of active pointerss.
