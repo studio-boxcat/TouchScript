@@ -22,52 +22,6 @@ namespace TouchScript.Gestures
         #region Constants
 
         /// <summary>
-        /// Possible states of a gesture.
-        /// </summary>
-        public enum GestureState
-        {
-            /// <summary>
-            /// Gesture is idle.
-            /// </summary>
-            Idle,
-
-            /// <summary>
-            /// Gesture started looking for the patern.
-            /// </summary>
-            Possible,
-
-            /// <summary>
-            /// Continuous gesture has just begun.
-            /// </summary>
-            Began,
-
-            /// <summary>
-            /// Started continuous gesture is updated.
-            /// </summary>
-            Changed,
-
-            /// <summary>
-            /// Continuous gesture is ended.
-            /// </summary>
-            Ended,
-
-            /// <summary>
-            /// Gesture is cancelled.
-            /// </summary>
-            Cancelled,
-
-            /// <summary>
-            /// Gesture is failed by itself or by another recognized gesture.
-            /// </summary>
-            Failed,
-
-            /// <summary>
-            /// Gesture is recognized.
-            /// </summary>
-            Recognized = Ended
-        }
-
-        /// <summary>
         /// Current state of the number of pointers.
         /// </summary>
         protected enum PointersNumState
@@ -110,7 +64,7 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Occurs when gesture changes state.
         /// </summary>
-        public event Action<GestureStateChangeEventArgs> StateChanged;
+        public event Action<GestureState, GestureState> StateChanged;
 
         /// <summary>
         /// Occurs when gesture is cancelled.
@@ -127,7 +81,7 @@ namespace TouchScript.Gestures
         /// <value> Current state of the gesture. </value>
         public GestureState State
         {
-            get { return state; }
+            get => state;
             private set
             {
                 PreviousState = state;
@@ -148,7 +102,7 @@ namespace TouchScript.Gestures
                     case GestureState.Changed:
                         onChanged();
                         break;
-                    case GestureState.Recognized:
+                    case GestureState.Ended:
                         // Only retain/release pointers for continuos gestures
                         if (PreviousState is GestureState.Changed or GestureState.Began)
                             releasePointers(true);
@@ -164,7 +118,7 @@ namespace TouchScript.Gestures
                         break;
                 }
 
-                StateChanged?.InvokeHandleExceptions(GestureStateChangeEventArgs.GetCachedEventArgs(state, PreviousState));
+                StateChanged?.InvokeHandleExceptions(PreviousState, state);
             }
         }
 
@@ -250,12 +204,8 @@ namespace TouchScript.Gestures
         [SerializeField]
         private int maxPointers = 0;
 
-        [SerializeField]
-        // Serialized list of gestures for Unity IDE.
-        private List<Gesture> friendlyGestures = new List<Gesture>();
-
         private int numPointers;
-        private GestureManager gestureManagerInstance;
+        private GestureManager gestureManager;
         private GestureState state = GestureState.Idle;
 
         /// <summary>
@@ -275,28 +225,6 @@ namespace TouchScript.Gestures
         #region Public methods
 
         /// <summary>
-        /// Adds a friendly gesture.
-        /// </summary>
-        /// <param name="gesture"> The gesture. </param>
-        public void AddFriendlyGesture(Gesture gesture)
-        {
-            if (gesture == null || gesture == this) return;
-
-            registerFriendlyGesture(gesture);
-            gesture.registerFriendlyGesture(this);
-        }
-
-        /// <summary>
-        /// Checks if a gesture is friendly with this gesture.
-        /// </summary>
-        /// <param name="gesture"> A gesture to check. </param>
-        /// <returns> <c>true</c> if gestures are friendly; <c>false</c> otherwise. </returns>
-        public bool IsFriendly(Gesture gesture)
-        {
-            return friendlyGestures.Contains(gesture);
-        }
-
-        /// <summary>
         /// Determines whether gesture controls a pointer.
         /// </summary>
         /// <param name="pointer"> The pointer. </param>
@@ -311,18 +239,14 @@ namespace TouchScript.Gestures
         /// </summary>
         /// <param name="gesture"> The gesture. </param>
         /// <returns> <c>true</c> if this instance can prevent the specified gesture; <c>false</c> otherwise. </returns>
-        public virtual bool CanPreventGesture(Gesture gesture)
-        {
-            if (gesture.CanBePreventedByGesture(this)) return !IsFriendly(gesture);
-            return false;
-        }
+        public virtual bool CanPreventGesture(Gesture gesture) => gesture.CanBePreventedByGesture(this);
 
         /// <summary>
         /// Determines whether this instance can be prevented by specified gesture.
         /// </summary>
         /// <param name="gesture"> The gesture. </param>
         /// <returns> <c>true</c> if this instance can be prevented by specified gesture; <c>false</c> otherwise. </returns>
-        public virtual bool CanBePreventedByGesture(Gesture gesture) => !IsFriendly(gesture);
+        public virtual bool CanBePreventedByGesture(Gesture gesture) => true;
 
         /// <summary>
         /// Specifies if gesture can receive this specific pointer point.
@@ -374,12 +298,6 @@ namespace TouchScript.Gestures
         protected virtual void Awake()
         {
             cachedTransform = transform;
-
-            var count = friendlyGestures.Count;
-            for (var i = 0; i < count; i++)
-            {
-                AddFriendlyGesture(friendlyGestures[i]);
-            }
         }
 
         /// <summary>
@@ -389,7 +307,7 @@ namespace TouchScript.Gestures
         {
             // TouchManager might be different in another scene
             touchManager = TouchManager.Instance;
-            gestureManagerInstance = GestureManager.Instance;
+            gestureManager = GestureManager.Instance;
 
             INTERNAL_Reset();
         }
@@ -400,19 +318,6 @@ namespace TouchScript.Gestures
         protected virtual void OnDisable()
         {
             setState(GestureState.Cancelled);
-        }
-
-        /// <summary>
-        /// Unity OnDestroy handler.
-        /// </summary>
-        protected virtual void OnDestroy()
-        {
-            var copy = new List<Gesture>(friendlyGestures);
-            var count = copy.Count;
-            for (var i = 0; i < count; i++)
-            {
-                INTERNAL_RemoveFriendlyGesture(copy[i]);
-            }
         }
 
         #endregion
@@ -471,7 +376,7 @@ namespace TouchScript.Gestures
                 else pointersNumState = PointersNumState.TooMany;
             }
 
-            if (state is GestureState.Began or GestureState.Changed)
+            if (state.IsBeganOrChanged())
             {
                 for (var i = 0; i < count; i++) pointers[i].INTERNAL_Retain();
             }
@@ -595,14 +500,6 @@ namespace TouchScript.Gestures
             pointersCancelled(pointers);
         }
 
-        internal virtual void INTERNAL_RemoveFriendlyGesture(Gesture gesture)
-        {
-            if (gesture == null || gesture == this) return;
-
-            unregisterFriendlyGesture(gesture);
-            gesture.unregisterFriendlyGesture(this);
-        }
-
         #endregion
 
         #region Protected methods
@@ -624,9 +521,7 @@ namespace TouchScript.Gestures
         /// <returns> <c>true</c> if state was changed; otherwise, <c>false</c>. </returns>
         protected bool setState(GestureState value)
         {
-            if (gestureManagerInstance == null) return false;
-
-            var newState = gestureManagerInstance.INTERNAL_GestureChangeState(this, value);
+            var newState = gestureManager.INTERNAL_GestureChangeState(this, value);
             State = newState;
 
             return value == newState;
@@ -741,58 +636,6 @@ namespace TouchScript.Gestures
             }
         }
 
-        private void registerFriendlyGesture(Gesture gesture)
-        {
-            if (gesture == null || gesture == this) return;
-
-            if (!friendlyGestures.Contains(gesture)) friendlyGestures.Add(gesture);
-        }
-
-        private void unregisterFriendlyGesture(Gesture gesture)
-        {
-            if (gesture == null || gesture == this) return;
-
-            friendlyGestures.Remove(gesture);
-        }
-
         #endregion
-    }
-
-    /// <summary>
-    /// Event arguments for Gesture state change events.
-    /// </summary>
-    public class GestureStateChangeEventArgs
-    {
-        /// <summary>
-        /// Previous gesture state.
-        /// </summary>
-        public Gesture.GestureState PreviousState { get; private set; }
-
-        /// <summary>
-        /// Current gesture state.
-        /// </summary>
-        public Gesture.GestureState State { get; private set; }
-
-        private static GestureStateChangeEventArgs instance;
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="GestureStateChangeEventArgs"/> class.
-        /// </summary>
-        public GestureStateChangeEventArgs() {}
-
-        /// <summary>
-        /// Returns cached instance of EventArgs.
-        /// This cached EventArgs is reused throughout the library not to alocate new ones on every call.
-        /// </summary>
-        /// <param name="state"> Current gesture state. </param>
-        /// <param name="previousState"> Previous gesture state. </param>
-        /// <returns>Cached EventArgs object.</returns>
-        public static GestureStateChangeEventArgs GetCachedEventArgs(Gesture.GestureState state, Gesture.GestureState previousState)
-        {
-            if (instance == null) instance = new GestureStateChangeEventArgs();
-            instance.State = state;
-            instance.PreviousState = previousState;
-            return instance;
-        }
     }
 }

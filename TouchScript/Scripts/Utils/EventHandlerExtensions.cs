@@ -13,13 +13,20 @@ namespace TouchScript.Utils
     /// </summary>
     public static class ActionExtensions
     {
-        /// <summary>
-        /// Invokes an event handling exceptions.
-        /// </summary>
-        /// <typeparam name="T"> EventArgs type. </typeparam>
-        /// <param name="action"> Event. </param>
-        /// <param name="arg"> EventArgs. </param>
-        /// <returns> The exception caught or <c>null</c>. </returns>
+        public static Exception InvokeHandleExceptions(this Action action)
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
+                return ex;
+            }
+            return null;
+        }
+
         public static Exception InvokeHandleExceptions<T>(this Action<T> action, T arg)
         {
             try
@@ -34,18 +41,11 @@ namespace TouchScript.Utils
             return null;
         }
 
-        /// <summary>
-        /// Invokes an event handling exceptions.
-        /// </summary>
-        /// <param name="action"> Event. </param>
-        /// <param name="sender"> Event sender. </param>
-        /// <param name="args"> EventArgs. </param>
-        /// <returns> The exception caught or <c>null</c>. </returns>
-        public static Exception InvokeHandleExceptions(this Action action)
+        public static Exception InvokeHandleExceptions<T0, T1>(this Action<T0, T1> action, T0 arg0, T1 arg1)
         {
             try
             {
-                action();
+                action(arg0, arg1);
             }
             catch (Exception ex)
             {

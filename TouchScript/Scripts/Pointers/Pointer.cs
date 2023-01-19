@@ -8,7 +8,6 @@ using JetBrains.Annotations;
 using TouchScript.Core;
 using TouchScript.Hit;
 using TouchScript.InputSources;
-using TouchScript.Utils;
 using UnityEngine;
 
 namespace TouchScript.Pointers
@@ -23,13 +22,12 @@ namespace TouchScript.Pointers
         #region Public properties
 
         public PointerId Id { get; private set; }
-        public PointerButtonState Button;
+        public bool Pressing;
         [NotNull]
         public readonly IInputSource InputSource;
         public Vector2 Position { get; private set; }
         public Vector2 NewPosition;
         public Vector2 PreviousPosition { get; private set; }
-        public Vector2 ScrollDelta;
         public bool IsReturned;
 
         #endregion
@@ -70,11 +68,10 @@ namespace TouchScript.Pointers
         /// <param name="target">The target pointer to copy values from.</param>
         public void CopyFrom(Pointer target)
         {
-            Button = target.Button;
+            Pressing = target.Pressing;
             Position = target.Position;
             NewPosition = target.NewPosition;
             PreviousPosition = target.PreviousPosition;
-            ScrollDelta = target.ScrollDelta;
             IsReturned = target.IsReturned;
         }
 
@@ -84,9 +81,7 @@ namespace TouchScript.Pointers
         /// <inheritdoc />
         public bool Equals(Pointer other)
         {
-            if (other == null)
-                return false;
-
+            if (other == null) return false;
             return Id == other.Id;
         }
 
@@ -100,7 +95,7 @@ namespace TouchScript.Pointers
             _sb.Length = 0;
             _sb.Append("(Pointer id: ");
             _sb.Append(Id);
-            _sb.Append(", buttons: ").Append(Button.Pressed);
+            _sb.Append(", pressing: ").Append(Pressing);
             _sb.Append(", isReturned: ").Append(IsReturned);
             _sb.Append(", position: ").Append(Position.ToString());
             _sb.Append(")");
@@ -136,13 +131,12 @@ namespace TouchScript.Pointers
             INTERNAL_ClearPressData();
             Position = NewPosition = PreviousPosition = default;
             IsReturned = false;
-            Button = default;
+            Pressing = false;
             _overDataIsDirty = true;
         }
 
         internal void INTERNAL_FrameStarted()
         {
-            Button.UnsetAction();
             _overDataIsDirty = true;
         }
 

@@ -5,10 +5,13 @@ namespace TouchScript.Pointers
         Invalid = -1,
     }
 
-    public static class PointerIdIssuer
+    public static class PointerIdUtils
     {
         static PointerId _nextPointerId = (PointerId) 1;
 
-        public static PointerId Issue() => _nextPointerId++;
+        public static PointerId IssueId() => _nextPointerId++;
+
+        public static bool IsInvalid(this PointerId value) => value == PointerId.Invalid;
+        public static bool IsValid(this PointerId value) => value != PointerId.Invalid;
     }
 }

@@ -16,14 +16,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
     /// </summary>
     public abstract class TwoPointTransformGestureBase : TransformGestureBase
     {
-        #region Constants
-
-        #endregion
-
-        #region Events
-
-        #endregion
-
         #region Private variables
 
         /// <summary>

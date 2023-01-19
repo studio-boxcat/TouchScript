@@ -216,7 +216,7 @@ namespace TouchScript.Gestures
                 {
                     ScreenFlickVector = totalMovement;
                     ScreenFlickTime = Time.unscaledTime - lastTime;
-                    setState(GestureState.Recognized);
+                    setState(GestureState.Ended);
                 }
             }
         }

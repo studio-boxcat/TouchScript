@@ -167,7 +167,7 @@ namespace TouchScript.InputSources.InputHandlers
         private Pointer internalAddPointer(Vector2 position)
         {
             var pointer = _pointerPool.Get(position);
-            pointer.Button.PressDown();
+            pointer.Pressing = true;
             _pointerEventListener.AddPointer(pointer);
             _pointerEventListener.PressPointer(pointer);
             return pointer;
@@ -177,7 +177,7 @@ namespace TouchScript.InputSources.InputHandlers
         {
             var newPointer = _pointerPool.Get(pointer.Position);
             newPointer.CopyFrom(pointer);
-            pointer.Button.PressDown();
+            pointer.Pressing = true;
             newPointer.IsReturned = true;
             _pointerEventListener.AddPointer(newPointer);
             _pointerEventListener.PressPointer(newPointer);
@@ -186,7 +186,7 @@ namespace TouchScript.InputSources.InputHandlers
 
         private void internalRemovePointer(Pointer pointer)
         {
-            pointer.Button.PressUp();
+            pointer.Pressing = false;
             _pointerEventListener.ReleasePointer(pointer);
             _pointerEventListener.RemovePointer(pointer);
         }

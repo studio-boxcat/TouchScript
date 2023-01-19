@@ -39,39 +39,5 @@ namespace TouchScript.Utils
             if (hit.Target == null) return false;
             return hit.Target.IsChildOf(target);
         }
-
-        /// <summary>
-        /// Adds pressed state to downed buttons.
-        /// </summary>
-        /// <param name="buttons">The buttons state.</param>
-        /// <returns>Changed buttons state.</returns>
-        public static PointerButtonState DownPressedButtons(PointerButtonState buttons)
-        {
-            if (buttons.Pressed)
-                buttons.Down = true;
-            return buttons;
-        }
-
-        /// <summary>
-        /// Adds downed state to pressed buttons.
-        /// </summary>
-        /// <param name="buttons">The buttons state.</param>
-        /// <returns>Changed buttons state.</returns>
-        public static PointerButtonState PressDownButtons(PointerButtonState buttons)
-        {
-            if (buttons.Down)
-                buttons.Pressed = true;
-            return buttons;
-        }
-
-        /// <summary>
-        /// Converts pressed buttons to up state.
-        /// </summary>
-        /// <param name="buttons">The buttons state.</param>
-        /// <returns>Changed buttons state.</returns>
-        public static PointerButtonState UpPressedButtons(PointerButtonState buttons)
-        {
-            return new PointerButtonState {Up = buttons.Pressed};
-        }
     }
 }

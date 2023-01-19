@@ -63,7 +63,7 @@ namespace TouchScript.Gestures
         {
             base.pointersUpdated(pointers);
 
-            if (State is GestureState.Began or GestureState.Changed) setState(GestureState.Changed);
+            if (State.IsBeganOrChanged()) setState(GestureState.Changed);
 
             var length = pointers.Count;
             if (PointerUpdated != null)
@@ -78,7 +78,7 @@ namespace TouchScript.Gestures
         {
             base.pointersReleased(pointers);
 
-            if (State is GestureState.Began or GestureState.Changed && NumPointers == 0) setState(GestureState.Ended);
+            if (State.IsBeganOrChanged() && NumPointers == 0) setState(GestureState.Ended);
 
             var length = pointers.Count;
             if (PointerReleased != null)

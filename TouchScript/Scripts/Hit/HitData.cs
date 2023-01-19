@@ -10,7 +10,7 @@ namespace TouchScript.Hit
     /// <summary>
     /// An object representing a point hit by a pointer in 3D, 2D or UI space.
     /// </summary>
-    public struct HitData
+    public readonly struct HitData
     {
         public readonly Transform Target;
         public readonly TouchLayer Layer;

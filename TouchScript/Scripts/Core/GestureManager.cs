@@ -3,12 +3,14 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 using Sirenix.OdinInspector;
 using TouchScript.Gestures;
 using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
+using Logger = TouchScript.Utils.Logger;
 
 namespace TouchScript.Core
 {
@@ -30,9 +32,10 @@ namespace TouchScript.Core
 
         [SerializeField, Required, ChildGameObjectsOnly]
         TouchManager _touchManager;
+
         // Upcoming changes
-        private List<Gesture> gesturesToReset = new(20);
-        private Dictionary<PointerId, List<Gesture>> pointerToGestures = new(10);
+        readonly List<Gesture> _gesturesToReset = new(4);
+        readonly PointerToGestures _pointerToGestures = new(4);
 
         #endregion
 
@@ -40,26 +43,18 @@ namespace TouchScript.Core
 
         // Temporary collections for update methods.
         // Dictionary<Transform, List<Pointer>> - pointers sorted by targets
-        private Dictionary<Transform, List<Pointer>> pointersOnTarget = new(10);
-        // Dictionary<Gesture, List<Pointer>> - pointers sorted by gesture
-        private Dictionary<Gesture, List<Pointer>> pointersToDispatchForGesture = new(10);
-        private List<Gesture> activeGesturesThisUpdate = new(20);
-
-        private Dictionary<Transform, List<Gesture>> hierarchyEndingWithCache = new(4);
-        private Dictionary<Transform, List<Gesture>> hierarchyBeginningWithCache = new(4);
+        readonly TransformToPointers _pointersOnTarget = new(4);
+        readonly GestureToPointers _gestureToPointers = new(4);
+        readonly GestureCache _gestureCache = new(4);
 
         #endregion
 
         #region Pools
 
-        private static ObjectPool<List<Gesture>> gestureListPool = new(10,
-            () => new List<Gesture>(10), null, (l) => l.Clear());
-
-        private static ObjectPool<List<Pointer>> pointerListPool = new(20,
-            () => new List<Pointer>(10), null, (l) => l.Clear());
-
-        private static ObjectPool<List<Transform>> transformListPool = new(10,
-            () => new List<Transform>(10), null, (l) => l.Clear());
+        static readonly ObjectPool<List<Gesture>> _gestureListPool = new(4,
+            () => new List<Gesture>(), null, (l) => l.Clear());
+        static readonly ObjectPool<List<Pointer>> _pointerListPool = new(4,
+            () => new List<Pointer>(), null, (l) => l.Clear());
 
         #endregion
 
@@ -70,15 +65,11 @@ namespace TouchScript.Core
             // gameObject.hideFlags = HideFlags.HideInHierarchy;
             // DontDestroyOnLoad(gameObject);
 
-            gestureListPool.WarmUp(20);
-            pointerListPool.WarmUp(20);
-            transformListPool.WarmUp(1);
-
-            _touchManager.FrameStarted += resetGestures;
+            _touchManager.FrameStarted += ResetGestures;
             _touchManager.FrameFinished += () =>
             {
-                resetGestures();
-                clearFrameCaches();
+                ResetGestures();
+                _gestureCache.Clear();
             };
 
             _touchManager.PointersUpdated += updateUpdated;
@@ -91,19 +82,19 @@ namespace TouchScript.Core
 
         #region Internal methods
 
-        internal Gesture.GestureState INTERNAL_GestureChangeState(Gesture gesture, Gesture.GestureState state)
+        internal GestureState INTERNAL_GestureChangeState(Gesture gesture, GestureState state)
         {
             bool recognized = false;
             switch (state)
             {
-                case Gesture.GestureState.Idle:
-                case Gesture.GestureState.Possible:
+                case GestureState.Idle:
+                case GestureState.Possible:
                     break;
-                case Gesture.GestureState.Began:
+                case GestureState.Began:
                     switch (gesture.State)
                     {
-                        case Gesture.GestureState.Idle:
-                        case Gesture.GestureState.Possible:
+                        case GestureState.Idle:
+                        case GestureState.Possible:
                             break;
                         default:
                             print(string.Format("Gesture {0} erroneously tried to enter state {1} from state {2}",
@@ -113,15 +104,15 @@ namespace TouchScript.Core
                     recognized = recognizeGestureIfNotPrevented(gesture);
                     if (!recognized)
                     {
-                        if (!gesturesToReset.Contains(gesture)) gesturesToReset.Add(gesture);
-                        return Gesture.GestureState.Failed;
+                        if (!_gesturesToReset.Contains(gesture)) _gesturesToReset.Add(gesture);
+                        return GestureState.Failed;
                     }
                     break;
-                case Gesture.GestureState.Changed:
+                case GestureState.Changed:
                     switch (gesture.State)
                     {
-                        case Gesture.GestureState.Began:
-                        case Gesture.GestureState.Changed:
+                        case GestureState.Began:
+                        case GestureState.Changed:
                             break;
                         default:
                             print(string.Format("Gesture {0} erroneously tried to enter state {1} from state {2}",
@@ -129,20 +120,20 @@ namespace TouchScript.Core
                             break;
                     }
                     break;
-                case Gesture.GestureState.Failed:
-                    if (!gesturesToReset.Contains(gesture)) gesturesToReset.Add(gesture);
+                case GestureState.Failed:
+                    if (!_gesturesToReset.Contains(gesture)) _gesturesToReset.Add(gesture);
                     break;
-                case Gesture.GestureState.Recognized: // Ended
-                    if (!gesturesToReset.Contains(gesture)) gesturesToReset.Add(gesture);
+                case GestureState.Ended: // Ended
+                    if (!_gesturesToReset.Contains(gesture)) _gesturesToReset.Add(gesture);
                     switch (gesture.State)
                     {
-                        case Gesture.GestureState.Idle:
-                        case Gesture.GestureState.Possible:
+                        case GestureState.Idle:
+                        case GestureState.Possible:
                             recognized = recognizeGestureIfNotPrevented(gesture);
-                            if (!recognized) return Gesture.GestureState.Failed;
+                            if (!recognized) return GestureState.Failed;
                             break;
-                        case Gesture.GestureState.Began:
-                        case Gesture.GestureState.Changed:
+                        case GestureState.Began:
+                        case GestureState.Changed:
                             break;
                         default:
                             print(string.Format("Gesture {0} erroneously tried to enter state {1} from state {2}",
@@ -150,8 +141,8 @@ namespace TouchScript.Core
                             break;
                     }
                     break;
-                case Gesture.GestureState.Cancelled:
-                    if (!gesturesToReset.Contains(gesture)) gesturesToReset.Add(gesture);
+                case GestureState.Cancelled:
+                    if (!_gesturesToReset.Contains(gesture)) _gesturesToReset.Add(gesture);
                     break;
             }
 
@@ -162,60 +153,35 @@ namespace TouchScript.Core
 
         #region Private functions
 
-        private void updatePressed(IReadOnlyList<Pointer> pointers)
+        private void updatePressed(List<Pointer> pointers)
         {
-            var activeTargets = transformListPool.Get();
-            var gesturesInHierarchy = gestureListPool.Get();
-            var startedGestures = gestureListPool.Get();
+            _pointersOnTarget.EnsureCleared();
+            _gestureToPointers.EnsureCleared();
 
             // Arrange pointers by target.
-            var count = pointers.Count;
-            for (var i = 0; i < count; i++)
+            foreach (var pointer in pointers)
             {
-                var pointer = pointers[i];
                 var target = pointer.GetPressData().Target;
-                if (target == null) continue;
-
-                if (!pointersOnTarget.TryGetValue(target, out var list))
-                {
-                    list = pointerListPool.Get();
-                    pointersOnTarget.Add(target, list);
-                    activeTargets.Add(target);
-                }
-                list.Add(pointer);
+                if (target != null)
+                    _pointersOnTarget.Add(target, pointer);
             }
 
+            var startedGestures = _gestureListPool.Get();
             // Process all targets - get and sort all gestures on targets in hierarchy.
-            count = activeTargets.Count;
-            for (var i = 0; i < count; i++)
+            foreach (var (target, targetPointers) in _pointersOnTarget)
             {
-                var target = activeTargets[i];
+                Assert.AreEqual(0, startedGestures.Count);
 
-                // Pointers that hit <target>.
-                var targetPointers = pointersOnTarget[target];
+                // Gestures on objects in the target.
+                var possibleGestures = _gestureCache.GetGesturesOfTarget(target);
+                foreach (var gesture in possibleGestures)
+                    if (gesture.State.IsBeganOrChanged())
+                        startedGestures.Add(gesture);
 
-                // Gestures on objects in the hierarchy from "root" to target.
-                var gesturesOnParentsAndMe = getHierarchyEndingWith(target);
-
-                // Gestures in the target's hierarchy which might affect gestures on the target.
-                // Gestures on all parents and all children.
-                gesturesInHierarchy.AddRange(gesturesOnParentsAndMe);
-                gesturesInHierarchy.AddRange(getHierarchyBeginningWith(target));
-                var gesturesInHierarchyCount = gesturesInHierarchy.Count;
-
-                for (var j = 0; j < gesturesInHierarchyCount; j++)
-                {
-                    var gesture = gesturesInHierarchy[j];
-                    if (gesture.State is Gesture.GestureState.Began or Gesture.GestureState.Changed) startedGestures.Add(gesture);
-                }
-
-                var possibleGestureCount = gesturesOnParentsAndMe.Count;
-                for (var j = 0; j < possibleGestureCount; j++)
+                foreach (var possibleGesture in possibleGestures)
                 {
                     // WARNING! Gesture state might change during this loop.
                     // For example when one of them recognizes.
-
-                    var possibleGesture = gesturesOnParentsAndMe[j];
 
                     // If the gesture is not active it can't start or recognize.
                     if (!gestureIsActive(possibleGesture)) continue;
@@ -239,225 +205,96 @@ namespace TouchScript.Core
                     if (!canReceivePointers) continue;
 
                     // Filter incoming pointers for gesture.
-                    var pointersSentToGesture = pointerListPool.Get();
-                    foreach (var pointer in pointersSentToGesture)
-                    {
-                        if (possibleGesture.ShouldReceivePointer(pointer))
-                            pointersSentToGesture.Add(pointer);
-                    }
-
-                    // If there are any pointers to send.
-                    if (pointersSentToGesture.Count > 0)
-                    {
-                        if (pointersToDispatchForGesture.TryGetValue(possibleGesture, out var gesturePointers))
-                        {
-                            gesturePointers.AddRange(pointersSentToGesture);
-                            pointerListPool.Release(pointersSentToGesture);
-                        }
-                        else
-                        {
-                            // Add gesture to the list of active gestures this update.
-                            activeGesturesThisUpdate.Add(possibleGesture);
-                            pointersToDispatchForGesture.Add(possibleGesture, pointersSentToGesture);
-                        }
-                    }
-                    else
-                    {
-                        pointerListPool.Release(pointersSentToGesture);
-                    }
+                    _gestureToPointers.AddReceivablePointersToGesture(possibleGesture, targetPointers);
                 }
 
-                gesturesInHierarchy.Clear();
                 startedGestures.Clear();
-                pointerListPool.Release(targetPointers);
             }
-
-            gestureListPool.Release(gesturesInHierarchy);
-            gestureListPool.Release(startedGestures);
-            transformListPool.Release(activeTargets);
 
             // Dispatch gesture events with pointers assigned to them.
-            foreach (var gesture in activeGesturesThisUpdate)
+            foreach (var (gesture, list) in _gestureToPointers)
             {
-                var list = pointersToDispatchForGesture[gesture];
                 if (!gestureIsActive(gesture))
-                {
-                    pointerListPool.Release(list);
                     continue;
-                }
 
-                foreach (var pointer in list)
-                {
-                    if (!pointerToGestures.TryGetValue(pointer.Id, out var gestureList))
-                    {
-                        gestureList = gestureListPool.Get();
-                        pointerToGestures.Add(pointer.Id, gestureList);
-                    }
-                    gestureList.Add(gesture);
-                }
-
+                _pointerToGestures.AddGestureToPointers(gesture, list);
                 gesture.INTERNAL_PointersPressed(list);
-                pointerListPool.Release(list);
             }
 
-            pointersOnTarget.Clear();
-            activeGesturesThisUpdate.Clear();
-            pointersToDispatchForGesture.Clear();
+            _gestureListPool.Release(startedGestures);
+            _pointersOnTarget.Clear();
+            _gestureToPointers.Clear();
         }
 
         private void updateUpdated(List<Pointer> pointers)
         {
-            sortPointersForActiveGestures(pointers);
-
-            foreach (var gesture in activeGesturesThisUpdate)
+            _gestureToPointers.EnsureCleared();
+            _gestureToPointers.AddRange(pointers, _pointerToGestures);
+            foreach (var (gesture, list) in _gestureToPointers)
             {
-                var list = pointersToDispatchForGesture[gesture];
                 if (gestureIsActive(gesture))
-                {
                     gesture.INTERNAL_PointersUpdated(list);
-                }
-                pointerListPool.Release(list);
             }
 
-            activeGesturesThisUpdate.Clear();
-            pointersToDispatchForGesture.Clear();
+            _gestureToPointers.Clear();
         }
 
         private void updateReleased(List<Pointer> pointers)
         {
-            sortPointersForActiveGestures(pointers);
-
-            foreach (var gesture in activeGesturesThisUpdate)
+            _gestureToPointers.EnsureCleared();
+            _gestureToPointers.AddRange(pointers, _pointerToGestures);
+            foreach (var (gesture, list) in _gestureToPointers)
             {
-                var list = pointersToDispatchForGesture[gesture];
                 if (gestureIsActive(gesture))
-                {
                     gesture.INTERNAL_PointersReleased(list);
-                }
-                pointerListPool.Release(list);
             }
 
-            removePointers(pointers);
-            activeGesturesThisUpdate.Clear();
-            pointersToDispatchForGesture.Clear();
+            _pointerToGestures.RemovePointers(pointers);
+            _gestureToPointers.Clear();
         }
 
         private void updateCancelled(List<Pointer> pointers)
         {
-            sortPointersForActiveGestures(pointers);
-
-            foreach (var gesture in activeGesturesThisUpdate)
+            _gestureToPointers.EnsureCleared();
+            _gestureToPointers.AddRange(pointers, _pointerToGestures);
+            foreach (var (gesture, list) in _gestureToPointers)
             {
-                var list = pointersToDispatchForGesture[gesture];
                 if (gestureIsActive(gesture))
-                {
                     gesture.INTERNAL_PointersCancelled(list);
-                }
-                pointerListPool.Release(list);
             }
 
-            removePointers(pointers);
-            activeGesturesThisUpdate.Clear();
-            pointersToDispatchForGesture.Clear();
+            _pointerToGestures.RemovePointers(pointers);
+            _gestureToPointers.Clear();
         }
 
-        private void sortPointersForActiveGestures(List<Pointer> pointers)
+        private void ResetGestures()
         {
-            Assert.AreEqual(0, pointersToDispatchForGesture.Count);
-            Assert.AreEqual(0, activeGesturesThisUpdate.Count);
+            if (_gesturesToReset.Count == 0) return;
 
-            foreach (var pointer in pointers)
+            foreach (var gesture in _gesturesToReset)
             {
-                if (!pointerToGestures.TryGetValue(pointer.Id, out var gestures)) continue;
+                _pointerToGestures.RemoveGestureFromPointers(gesture.ActivePointers, gesture);
 
-                foreach (var gesture in gestures)
+                // Unity "null" comparison
+                if (gesture != null)
                 {
-                    if (!pointersToDispatchForGesture.TryGetValue(gesture, out var toDispatch))
-                    {
-                        toDispatch = pointerListPool.Get();
-                        pointersToDispatchForGesture.Add(gesture, toDispatch);
-                        activeGesturesThisUpdate.Add(gesture);
-                    }
-                    toDispatch.Add(pointer);
+                    gesture.INTERNAL_Reset();
+                    gesture.INTERNAL_SetState(GestureState.Idle);
                 }
             }
+
+            _gesturesToReset.Clear();
         }
 
-        private void removePointers(List<Pointer> pointers)
-        {
-            foreach (var pointer in pointers)
-            {
-                if (!pointerToGestures.TryGetValue(pointer.Id, out var list)) continue;
-
-                pointerToGestures.Remove(pointer.Id);
-                gestureListPool.Release(list);
-            }
-        }
-
-        private void resetGestures()
-        {
-            if (gesturesToReset.Count == 0) return;
-
-            var count = gesturesToReset.Count;
-            for (var i = 0; i < count; i++)
-            {
-                var gesture = gesturesToReset[i];
-                if (Equals(gesture, null)) continue; // Reference comparison
-
-                foreach (var pointer in gesture.ActivePointers)
-                {
-                    if (pointerToGestures.TryGetValue(pointer.Id, out var list))
-                        list.Remove(gesture);
-                }
-
-                if (gesture == null) continue; // Unity "null" comparison
-                gesture.INTERNAL_Reset();
-                gesture.INTERNAL_SetState(Gesture.GestureState.Idle);
-            }
-            gesturesToReset.Clear();
-        }
-
-        private void clearFrameCaches()
-        {
-            foreach (var kv in hierarchyEndingWithCache) gestureListPool.Release(kv.Value);
-            foreach (var kv in hierarchyBeginningWithCache) gestureListPool.Release(kv.Value);
-            hierarchyEndingWithCache.Clear();
-            hierarchyBeginningWithCache.Clear();
-        }
-
-        // parent <- parent <- target
-        private List<Gesture> getHierarchyEndingWith(Transform target)
-        {
-            if (hierarchyEndingWithCache.TryGetValue(target, out var list)) return list;
-
-            list = gestureListPool.Get();
-            target.GetComponentsInParent(false, list);
-            hierarchyEndingWithCache.Add(target, list);
-
-            return list;
-        }
-
-        // target <- child*
-        private List<Gesture> getHierarchyBeginningWith(Transform target)
-        {
-            if (hierarchyBeginningWithCache.TryGetValue(target, out var list)) return list;
-
-            list = gestureListPool.Get();
-            target.GetComponentsInChildren(list);
-            hierarchyBeginningWithCache.Add(target, list);
-
-            return list;
-        }
-
-        private bool gestureIsActive(Gesture gesture)
+        static bool gestureIsActive(Gesture gesture)
         {
             if (gesture.gameObject.activeInHierarchy == false) return false;
             if (gesture.enabled == false) return false;
             switch (gesture.State)
             {
-                case Gesture.GestureState.Failed:
-                case Gesture.GestureState.Recognized:
-                case Gesture.GestureState.Cancelled:
+                case GestureState.Failed:
+                case GestureState.Ended:
+                case GestureState.Cancelled:
                     return false;
                 default:
                     return true;
@@ -468,22 +305,18 @@ namespace TouchScript.Core
         {
             if (!gesture.ShouldBegin()) return false;
 
-            var gesturesToFail = gestureListPool.Get();
+            var gesturesToFail = _gestureListPool.Get();
             bool canRecognize = true;
             var target = gesture.transform;
 
-            var gesturesInHierarchy = gestureListPool.Get();
-            gesturesInHierarchy.AddRange(getHierarchyEndingWith(target));
-            gesturesInHierarchy.AddRange(getHierarchyBeginningWith(target));
+            var otherGestures = _gestureCache.GetGesturesOfTarget(target);
 
-            var count = gesturesInHierarchy.Count;
-            for (var i = 0; i < count; i++)
+            foreach (var otherGesture in otherGestures)
             {
-                var otherGesture = gesturesInHierarchy[i];
-                if (gesture == otherGesture) continue;
+                if (ReferenceEquals(gesture, otherGesture)) continue;
                 if (!gestureIsActive(otherGesture)) continue;
 
-                if (otherGesture.State is Gesture.GestureState.Began or Gesture.GestureState.Changed)
+                if (otherGesture.State.IsBeganOrChanged())
                 {
                     if (otherGesture.CanPreventGesture(gesture))
                     {
@@ -491,7 +324,7 @@ namespace TouchScript.Core
                         break;
                     }
                 }
-                else if (otherGesture.State == Gesture.GestureState.Possible)
+                else if (otherGesture.State == GestureState.Possible)
                 {
                     if (gesture.CanPreventGesture(otherGesture))
                     {
@@ -503,15 +336,231 @@ namespace TouchScript.Core
             if (canRecognize)
             {
                 foreach (var gestureToFail in gesturesToFail)
-                    gestureToFail.INTERNAL_SetState(Gesture.GestureState.Failed);
+                    gestureToFail.INTERNAL_SetState(GestureState.Failed);
             }
 
-            gestureListPool.Release(gesturesToFail);
-            gestureListPool.Release(gesturesInHierarchy);
+            _gestureListPool.Release(gesturesToFail);
 
             return canRecognize;
         }
 
         #endregion
+
+        readonly struct GestureToPointers
+        {
+            readonly List<(Gesture, List<Pointer>)> _list;
+            readonly Dictionary<Gesture, List<Pointer>> _dict;
+
+            public GestureToPointers(int capacity)
+            {
+                _list = new List<(Gesture, List<Pointer>)>(capacity);
+                _dict = new Dictionary<Gesture, List<Pointer>>(capacity);
+            }
+
+            static readonly List<Pointer> _pointerBuffer = new();
+
+            public void AddReceivablePointersToGesture(Gesture gesture, List<Pointer> pointers)
+            {
+                Assert.AreEqual(0, _pointerBuffer.Count);
+
+                // 포인터 모으기.
+                foreach (var pointer in pointers)
+                {
+                    if (gesture.ShouldReceivePointer(pointer))
+                        _pointerBuffer.Add(pointer);
+                }
+                if (_pointerBuffer.Count == 0)
+                    return;
+
+                // 버퍼에 등록하기.
+                if (_dict.TryGetValue(gesture, out var list) == false)
+                {
+                    list = _pointerListPool.Get();
+                    // Add gesture to the list of active gestures this update.
+                    _dict[gesture] = list;
+                    _list.Add((gesture, list));
+                }
+
+                Assert.IsFalse(list.Any(p => _pointerBuffer.Contains(p)));
+                list.AddRange(_pointerBuffer);
+
+                _pointerBuffer.Clear();
+            }
+
+            public void AddRange(List<Pointer> pointers, PointerToGestures pointerToGestures)
+            {
+                foreach (var pointer in pointers)
+                {
+                    if (!pointerToGestures.TryGetValue(pointer.Id, out var gestures))
+                        continue;
+
+                    foreach (var gesture in gestures)
+                    {
+                        if (!_dict.TryGetValue(gesture, out var list))
+                        {
+                            list = _pointerListPool.Get();
+                            _dict.Add(gesture, list);
+                            _list.Add((gesture, list));
+                        }
+
+                        Assert.IsFalse(list.Contains(pointer));
+                        list.Add(pointer);
+                    }
+                }
+            }
+
+            public void Clear()
+            {
+                if (_list.Count == 0)
+                    return;
+                foreach (var (_, list) in _list)
+                    _pointerListPool.Release(list);
+                _dict.Clear();
+                _list.Clear();
+            }
+
+            public void EnsureCleared()
+            {
+                if (_list.Count > 0)
+                {
+                    Logger.Error("_gesturesToPointers 가 초기화되지 않은 상태입니다.");
+                    Clear();
+                }
+            }
+
+            public List<(Gesture, List<Pointer>)>.Enumerator GetEnumerator() => _list.GetEnumerator();
+        }
+
+        readonly struct PointerToGestures
+        {
+            readonly Dictionary<PointerId, List<Gesture>> _dict;
+
+
+            public PointerToGestures(int capacity)
+            {
+                _dict = new Dictionary<PointerId, List<Gesture>>(capacity);
+            }
+
+            public bool TryGetValue(PointerId pointerId, out List<Gesture> gestures)
+            {
+                return _dict.TryGetValue(pointerId, out gestures);
+            }
+
+            public void AddGestureToPointers(Gesture gesture, List<Pointer> pointers)
+            {
+                foreach (var pointer in pointers)
+                {
+                    if (!_dict.TryGetValue(pointer.Id, out var list))
+                    {
+                        list = _gestureListPool.Get();
+                        _dict.Add(pointer.Id, list);
+                    }
+
+                    Assert.IsFalse(list.Contains(gesture));
+                    list.Add(gesture);
+                }
+            }
+
+            public void RemovePointers(List<Pointer> pointers)
+            {
+                foreach (var pointer in pointers)
+                {
+                    Assert.IsTrue(pointer.Id.IsValid());
+
+                    if (_dict.TryGetValue(pointer.Id, out var list))
+                    {
+                        _dict.Remove(pointer.Id);
+                        _gestureListPool.Release(list);
+                    }
+                }
+            }
+
+            public void RemoveGestureFromPointers(List<Pointer> pointers, Gesture gesture)
+            {
+                foreach (var pointer in pointers)
+                {
+                    if (_dict.TryGetValue(pointer.Id, out var list))
+                        list.Remove(gesture);
+                }
+            }
+        }
+
+        readonly struct TransformToPointers
+        {
+            readonly Dictionary<Transform, List<Pointer>> _dict;
+            readonly List<(Transform, List<Pointer>)> _list;
+
+            public TransformToPointers(int capacity)
+            {
+                _dict = new Dictionary<Transform, List<Pointer>>(capacity);
+                _list = new List<(Transform, List<Pointer>)>(capacity);
+            }
+
+            public void Add(Transform target, Pointer pointer)
+            {
+                if (_dict.TryGetValue(target, out var list))
+                {
+                    Assert.IsFalse(list.Contains(pointer));
+                    list.Add(pointer);
+                    return;
+                }
+
+                list = _pointerListPool.Get();
+                list.Add(pointer);
+                _dict.Add(target, list);
+                _list.Add((target, list));
+            }
+
+            public void Clear()
+            {
+                if (_list.Count == 0)
+                    return;
+                foreach (var (_, list) in _list)
+                    _pointerListPool.Release(list);
+                _dict.Clear();
+                _list.Clear();
+            }
+
+            public void EnsureCleared()
+            {
+                if (_list.Count > 0)
+                {
+                    Logger.Error("_gesturesToPointers 가 초기화되지 않은 상태입니다.");
+                    Clear();
+                }
+            }
+
+            public List<(Transform, List<Pointer>)>.Enumerator GetEnumerator() => _list.GetEnumerator();
+        }
+
+        readonly struct GestureCache
+        {
+            readonly Dictionary<Transform, List<Gesture>> _dict;
+
+            public GestureCache(int capacity)
+            {
+                _dict = new Dictionary<Transform, List<Gesture>>(capacity);
+            }
+
+            // target <- child*
+            public List<Gesture> GetGesturesOfTarget(Transform target)
+            {
+                if (_dict.TryGetValue(target, out var list))
+                    return list;
+
+                list = _gestureListPool.Get();
+                target.GetComponents(list);
+                _dict.Add(target, list);
+
+                return list;
+            }
+
+            public void Clear()
+            {
+                foreach (var list in _dict.Values)
+                    _gestureListPool.Release(list);
+                _dict.Clear();
+            }
+        }
     }
 }

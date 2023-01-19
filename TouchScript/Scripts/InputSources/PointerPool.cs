@@ -21,7 +21,7 @@ namespace TouchScript.InputSources
             if (_pool.TryPop(out var pointer) == false)
                 pointer = new Pointer(_input);
             Assert.AreEqual(PointerId.Invalid, pointer.Id);
-            pointer.INTERNAL_Init(PointerIdIssuer.Issue(), position);
+            pointer.INTERNAL_Init(PointerIdUtils.IssueId(), position);
             return pointer;
         }
 

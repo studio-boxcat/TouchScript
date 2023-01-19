@@ -88,23 +88,8 @@ namespace TouchScript.Core
         void IPointerEventListener.AddPointer(Pointer pointer)
         {
             Assert.AreNotEqual(PointerId.Invalid, pointer.Id);
-
-            // XXX: AddPointer 는 한프레임에 여러번 불릴 수 있는 것일까? 중복원소가 있더라도 Warning 은 생략함.
-            if (_pointersAdded.Contains(pointer))
-                return;
-
+            Assert.IsFalse(_pointersAdded.Contains(pointer));
             _pointersAdded.Add(pointer);
-        }
-
-        void IPointerEventListener.UpdatePointer(Pointer pointer)
-        {
-            var id = pointer.Id;
-            if (IdToPointerWithAddedPointers(id, out _) == false)
-                return;
-
-            // XXX: UpdatePointer 는 한프레임에 여러번 불릴 수 있는 것일까? 중복원소가 있더라도 Warning 은 생략함.
-            if (_pointersUpdated.Contains(id) == false)
-                _pointersUpdated.Add(id);
         }
 
         static void CheckAndAddPointer(PointerId id, List<PointerId> list)
@@ -120,8 +105,22 @@ namespace TouchScript.Core
             list.Add(id);
         }
 
+        void IPointerEventListener.UpdatePointer(Pointer pointer)
+        {
+            Assert.IsTrue(pointer.Id.IsValid());
+
+            var id = pointer.Id;
+            if (IdToPointerWithAddedPointers(id, out _) == false)
+                return;
+
+            CheckAndAddPointer(id, _pointersUpdated);
+        }
+
         void IPointerEventListener.PressPointer(Pointer pointer)
         {
+            Assert.IsTrue(pointer.Id.IsValid());
+            Assert.IsTrue(pointer.Pressing);
+
             var id = pointer.Id;
 
             if (IdToPointerWithAddedPointers(id, out _) == false)
@@ -133,8 +132,10 @@ namespace TouchScript.Core
         /// <inheritdoc />
         void IPointerEventListener.ReleasePointer(Pointer pointer)
         {
+            Assert.IsTrue(pointer.Id.IsValid());
+            Assert.IsFalse(pointer.Pressing);
+
             var id = pointer.Id;
-            pointer.Button.Pressed = false;
 
             if (IdToPointerWithAddedPointers(id, out _) == false)
                 return;
@@ -145,6 +146,8 @@ namespace TouchScript.Core
         /// <inheritdoc />
         void IPointerEventListener.RemovePointer(Pointer pointer)
         {
+            Assert.IsTrue(pointer.Id.IsValid());
+
             var id = pointer.Id;
 
             if (IdToPointerWithAddedPointers(id, out _) == false)

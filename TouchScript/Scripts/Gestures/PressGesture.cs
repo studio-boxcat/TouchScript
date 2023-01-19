@@ -5,10 +5,8 @@
 using System;
 using System.Collections.Generic;
 using TouchScript.Utils;
-using TouchScript.Utils.Attributes;
 using TouchScript.Pointers;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 namespace TouchScript.Gestures
 {
@@ -34,39 +32,7 @@ namespace TouchScript.Gestures
 
         #endregion
 
-        #region Public properties
-
-        /// <summary>
-        /// Gets or sets a value indicating whether actions coming from children should be ingored.
-        /// </summary>
-        /// <value> <c>true</c> if actions from children should be ignored; otherwise, <c>false</c>. </value>
-        public bool IgnoreChildren
-        {
-            get { return ignoreChildren; }
-            set { ignoreChildren = value; }
-        }
-
-        #endregion
-
-        #region Private variables
-
-        [SerializeField]
-        [ToggleLeft]
-        private bool ignoreChildren = false;
-
-        #endregion
-
         #region Gesture callbacks
-
-        /// <inheritdoc />
-        public override bool ShouldReceivePointer(Pointer pointer)
-        {
-            if (!IgnoreChildren) return base.ShouldReceivePointer(pointer);
-            if (!base.ShouldReceivePointer(pointer)) return false;
-
-            if (pointer.GetPressData().Target != cachedTransform) return false;
-            return true;
-        }
 
         /// <inheritdoc />
         public override bool CanPreventGesture(Gesture gesture) => false;
@@ -81,7 +47,7 @@ namespace TouchScript.Gestures
 
             if (pointersNumState == PointersNumState.PassedMinThreshold)
             {
-                setState(GestureState.Recognized);
+                setState(GestureState.Ended);
                 return;
             }
             if (pointersNumState == PointersNumState.PassedMinMaxThreshold)

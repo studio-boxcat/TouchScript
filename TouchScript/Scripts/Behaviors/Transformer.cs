@@ -263,23 +263,23 @@ namespace TouchScript.Behaviors
 
         #region Event handlers
 
-        private void stateChangedHandler(GestureStateChangeEventArgs gestureStateChangeEventArgs)
+        private void stateChangedHandler(GestureState oldState, GestureState newState)
         {
-            switch (gestureStateChangeEventArgs.State)
+            switch (newState)
             {
-                case Gesture.GestureState.Possible:
+                case GestureState.Possible:
                     stateManual();
                     break;
-                case Gesture.GestureState.Changed:
+                case GestureState.Changed:
                     manualUpdate();
                     break;
-                case Gesture.GestureState.Ended:
-                case Gesture.GestureState.Cancelled:
+                case GestureState.Ended:
+                case GestureState.Cancelled:
                     stateAutomatic();
                     break;
-                case Gesture.GestureState.Failed:
-                case Gesture.GestureState.Idle:
-                    if (gestureStateChangeEventArgs.PreviousState == Gesture.GestureState.Possible) stateAutomatic();
+                case GestureState.Failed:
+                case GestureState.Idle:
+                    if (oldState == GestureState.Possible) stateAutomatic();
                     break;
             }
         }

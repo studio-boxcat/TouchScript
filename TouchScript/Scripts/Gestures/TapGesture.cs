@@ -106,7 +106,7 @@ namespace TouchScript.Gestures
                     {
                         tapsDone++;
                         isActive = false;
-                        if (tapsDone >= numberOfTapsRequired) setState(GestureState.Recognized);
+                        if (tapsDone >= numberOfTapsRequired) setState(GestureState.Ended);
                     }
                 }
             }
@@ -117,7 +117,7 @@ namespace TouchScript.Gestures
         {
             base.onRecognized();
 
-            if (State is GestureState.Idle or GestureState.Possible)
+            if (State.IsIdleOrPossible())
                 setState(GestureState.Failed);
             Tapped?.InvokeHandleExceptions();
         }
@@ -128,7 +128,7 @@ namespace TouchScript.Gestures
             base.reset();
 
             isActive = false;
-            if (State is GestureState.Idle or GestureState.Possible)
+            if (State.IsIdleOrPossible())
                 setState(GestureState.Failed);
             tapsDone = 0;
         }
