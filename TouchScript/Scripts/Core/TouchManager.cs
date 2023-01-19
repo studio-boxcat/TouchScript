@@ -10,6 +10,7 @@ using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
+using Logger = TouchScript.Utils.Logger;
 
 namespace TouchScript.Core
 {
@@ -60,17 +61,10 @@ namespace TouchScript.Core
 
         #region Public methods
 
-        /// <inheritdoc />
         public void CancelPointer(PointerId id, bool shouldReturn)
         {
             if (_idToPointer.TryGetValue(id, out var pointer))
                 pointer.InputSource.CancelPointer(pointer, shouldReturn);
-        }
-
-        /// <inheritdoc />
-        public void CancelPointer(PointerId id)
-        {
-            CancelPointer(id, false);
         }
 
         public void CancelAllPointers()
@@ -188,9 +182,7 @@ namespace TouchScript.Core
             if (_idToPointer.TryGetValue(id, out pointer))
                 return true;
 
-#if DEBUG
-            Debug.LogWarning($"TouchScript > Id [{id.ToString()}] not found.");
-#endif
+            Logger.Warning($"TouchScript > Id [{id.ToString()}] not found.");
             return false;
         }
 
@@ -202,10 +194,7 @@ namespace TouchScript.Core
             if (wasPointerAddedThisFrame(id))
                 return true;
 
-#if DEBUG
-            Debug.LogWarning($"TouchScript > Id [{id.ToString()}] not found.");
-#endif
-
+            Logger.Warning($"TouchScript > Id [{id.ToString()}] not found.");
             return false;
         }
 

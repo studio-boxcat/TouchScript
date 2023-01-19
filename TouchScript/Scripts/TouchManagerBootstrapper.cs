@@ -1,6 +1,7 @@
 using Sirenix.OdinInspector;
 using TouchScript.Core;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace TouchScript
 {
@@ -13,12 +14,18 @@ namespace TouchScript
 
         void Awake()
         {
+            Assert.IsNull(TouchManager.Instance);
+            Assert.IsNull(GestureManager.Instance);
+
             TouchManager.Instance = _touchManager;
             GestureManager.Instance = _gestureManager;
         }
 
         void OnDestroy()
         {
+            Assert.IsTrue(ReferenceEquals(_touchManager, TouchManager.Instance));
+            Assert.IsTrue(ReferenceEquals(_gestureManager, GestureManager.Instance));
+
             TouchManager.Instance = null;
             GestureManager.Instance = null;
         }

@@ -5,12 +5,10 @@
 using TouchScript.Hit;
 using UnityEngine;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using TouchScript.Layers.UI;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using Sirenix.OdinInspector;
-using UnityEngine.Assertions;
 
 namespace TouchScript.Layers
 {
@@ -26,7 +24,7 @@ namespace TouchScript.Layers
 
         static readonly List<RaycastHitUI> _hitList = new(20);
 
-        [SerializeField, CanBeNull, ChildGameObjectsOnly]
+        [SerializeField, Required, ChildGameObjectsOnly]
         Camera _camera;
 
         #endregion
@@ -69,7 +67,8 @@ namespace TouchScript.Layers
             foreach (GraphicRaycaster raycaster in raycasters)
             {
                 var canvas = Raycaster.GetCanvasForRaycaster(raycaster);
-                if (canvas.renderMode == RenderMode.ScreenSpaceOverlay || canvas.worldCamera != _camera) continue;
+                if (canvas.renderMode == RenderMode.ScreenSpaceOverlay) continue;
+                if (ReferenceEquals(canvas.worldCamera, _camera) == false) continue;
                 performUISearchForCanvas(screenPosition, canvas, raycaster, result);
             }
         }

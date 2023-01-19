@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
+using Logger = TouchScript.Utils.Logger;
 
 namespace TouchScript.InputSources.InputHandlers
 {
@@ -92,7 +93,11 @@ namespace TouchScript.InputSources.InputHandlers
         /// <inheritdoc />
         public bool CancelPointer([NotNull] Pointer pointer, bool shouldReturn)
         {
-            Assert.AreEqual(_mousePointer, pointer);
+            if (_mousePointer != pointer)
+            {
+                Logger.Warning("알 수 없는 포인터입니다. 이전에 취소한 포인터일 수 있습니다: " + pointer.Id);
+                return false;
+            }
 
             // 우선 Pointer 를 Cancel 함.
             _pointerEventListener.CancelPointer(pointer);

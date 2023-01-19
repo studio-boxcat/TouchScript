@@ -3,7 +3,6 @@
  */
 
 using System;
-using System.Text;
 using JetBrains.Annotations;
 using TouchScript.Core;
 using TouchScript.Hit;
@@ -34,7 +33,6 @@ namespace TouchScript.Pointers
 
         #region Private variables
 
-        static StringBuilder _sb;
         int _refCount = 0;
         HitData _pressData, _overData;
         bool _overDataIsDirty = true;
@@ -43,7 +41,6 @@ namespace TouchScript.Pointers
 
         #region Public methods
 
-        /// <inheritdoc />
         public HitData GetOverData(bool forceRecalculate = false)
         {
             if (_overDataIsDirty || forceRecalculate)
@@ -75,32 +72,17 @@ namespace TouchScript.Pointers
             IsReturned = target.IsReturned;
         }
 
-        /// <inheritdoc />
         public override bool Equals(object other) => Equals(other as Pointer);
 
-        /// <inheritdoc />
         public bool Equals(Pointer other)
         {
             if (other == null) return false;
             return Id == other.Id;
         }
 
-        /// <inheritdoc />
         public override int GetHashCode() => (int) Id;
 
-        /// <inheritdoc />
-        public override string ToString()
-        {
-            _sb ??= new StringBuilder();
-            _sb.Length = 0;
-            _sb.Append("(Pointer id: ");
-            _sb.Append(Id);
-            _sb.Append(", pressing: ").Append(Pressing);
-            _sb.Append(", isReturned: ").Append(IsReturned);
-            _sb.Append(", position: ").Append(Position.ToString());
-            _sb.Append(")");
-            return _sb.ToString();
-        }
+        public override string ToString() => ((int) Id).ToString();
 
         #endregion
 

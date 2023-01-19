@@ -2,7 +2,6 @@
  * @author Valentin Simonov / http://va.lent.in/
  */
 
-using System;
 using TouchScript.Core;
 using TouchScript.Gestures;
 using TouchScript.Gestures.TransformGestures;
