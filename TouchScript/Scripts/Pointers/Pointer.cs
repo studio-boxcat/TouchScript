@@ -23,29 +23,13 @@ namespace TouchScript.Pointers
         #region Constants
 
         /// <summary>
-        /// This pointer was returned to the system after it was cancelled.
-        /// </summary>
-        public const uint FLAG_RETURNED = 1 << 1;
-
-        /// <summary>
         /// The state of buttons for a pointer. Combines 3 types of button events: Pressed (holding a button), Down (just pressed this frame) and Up (released this frame).
         /// </summary>
         [Flags]
         public enum PointerButtonState : byte
         {
-            /// <summary>
-            /// Any button is pressed.
-            /// </summary>
             ButtonPressed = 1 << 0,
-
-            /// <summary>
-            /// Any button down this frame.
-            /// </summary>
             ButtonDown = 1 << 1,
-
-            /// <summary>
-            /// Any button up this frame.
-            /// </summary>
             ButtonUp = 1 << 2
         }
 
@@ -53,38 +37,22 @@ namespace TouchScript.Pointers
 
         #region Public properties
 
-        /// <inheritdoc />
         public PointerId Id { get; private set; }
-
-        /// <inheritdoc />
-        public PointerButtonState Buttons { get; set; }
-
+        public PointerButtonState Buttons;
         [NotNull]
         public readonly IInputSource InputSource;
-
-        /// <inheritdoc />
-        public Vector2 Position
-        {
-            get => _position;
-            set => _newPosition = value;
-        }
-
-        /// <inheritdoc />
+        public Vector2 Position { get; private set; }
+        public Vector2 NewPosition;
         public Vector2 PreviousPosition { get; private set; }
-
-        public Vector2 ScrollDelta { get; set; }
-
-        /// <inheritdoc />
-        public uint Flags { get; set; }
+        public Vector2 ScrollDelta;
+        public bool IsReturned;
 
         #endregion
 
         #region Private variables
 
         static StringBuilder _sb;
-
         int _refCount = 0;
-        Vector2 _position, _newPosition;
         HitData _pressData, _overData;
         bool _overDataIsDirty = true;
 
@@ -97,7 +65,7 @@ namespace TouchScript.Pointers
         {
             if (_overDataIsDirty || forceRecalculate)
             {
-                LayerManager.GetHitTarget(_position, out _overData);
+                LayerManager.GetHitTarget(Position, out _overData);
                 _overDataIsDirty = false;
             }
             return _overData;
@@ -117,12 +85,12 @@ namespace TouchScript.Pointers
         /// <param name="target">The target pointer to copy values from.</param>
         public void CopyFrom(Pointer target)
         {
-            Flags = target.Flags;
             Buttons = target.Buttons;
-            _position = target._position;
-            _newPosition = target._newPosition;
+            Position = target.Position;
+            NewPosition = target.NewPosition;
             PreviousPosition = target.PreviousPosition;
             ScrollDelta = target.ScrollDelta;
+            IsReturned = target.IsReturned;
         }
 
         /// <inheritdoc />
@@ -149,10 +117,8 @@ namespace TouchScript.Pointers
             _sb.Append(Id);
             _sb.Append(", buttons: ");
             PointerUtils.PressedButtonsToString(Buttons, _sb);
-            _sb.Append(", flags: ");
-            BinaryUtils.ToBinaryString(Flags, _sb, 8);
-            _sb.Append(", position: ");
-            _sb.Append(Position);
+            _sb.Append(", isReturned: ").Append(IsReturned);
+            _sb.Append(", position: ").Append(Position.ToString());
             _sb.Append(")");
             return _sb.ToString();
         }
@@ -177,15 +143,15 @@ namespace TouchScript.Pointers
         public void INTERNAL_Init(PointerId id, Vector2 position)
         {
             Id = id;
-            PreviousPosition = _position = _newPosition = position;
+            PreviousPosition = Position = NewPosition = position;
         }
 
         public void INTERNAL_Reset()
         {
             Id = PointerId.Invalid;
             INTERNAL_ClearPressData();
-            _position = _newPosition = PreviousPosition = default;
-            Flags = 0;
+            Position = NewPosition = PreviousPosition = default;
+            IsReturned = false;
             Buttons = default;
             _overDataIsDirty = true;
         }
@@ -198,8 +164,8 @@ namespace TouchScript.Pointers
 
         internal void INTERNAL_UpdatePosition()
         {
-            PreviousPosition = _position;
-            _position = _newPosition;
+            PreviousPosition = Position;
+            Position = NewPosition;
         }
 
         internal void INTERNAL_Retain()

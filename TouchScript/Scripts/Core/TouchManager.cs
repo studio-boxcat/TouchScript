@@ -176,6 +176,13 @@ namespace TouchScript.Core
             UpdatePointers();
         }
 
+        void ForceUpdateWithoutInput()
+        {
+            foreach (var pointer in _pointers)
+                pointer.INTERNAL_FrameStarted();
+            UpdatePointers();
+        }
+
         #endregion
 
         #region Private functions

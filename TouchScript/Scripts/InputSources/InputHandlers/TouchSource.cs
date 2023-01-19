@@ -63,7 +63,7 @@ namespace TouchScript.InputSources.InputHandlers
                         {
                             if (touchState.Phase != TouchPhase.Canceled)
                             {
-                                touchState.Pointer.Position = t.position;
+                                touchState.Pointer.NewPosition = t.position;
                                 _pointerEventListener.UpdatePointer(touchState.Pointer);
                             }
                         }
@@ -167,7 +167,7 @@ namespace TouchScript.InputSources.InputHandlers
         private Pointer internalAddPointer(Vector2 position)
         {
             var pointer = _pointerPool.Get(position);
-            pointer.Buttons |= Pointer.PointerButtonState.ButtonDown | Pointer.PointerButtonState.ButtonPressed;
+            pointer.Buttons = Pointer.PointerButtonState.ButtonDown | Pointer.PointerButtonState.ButtonPressed;
             _pointerEventListener.AddPointer(pointer);
             _pointerEventListener.PressPointer(pointer);
             return pointer;
@@ -178,7 +178,7 @@ namespace TouchScript.InputSources.InputHandlers
             var newPointer = _pointerPool.Get(pointer.Position);
             newPointer.CopyFrom(pointer);
             pointer.Buttons |= Pointer.PointerButtonState.ButtonDown | Pointer.PointerButtonState.ButtonPressed;
-            newPointer.Flags |= Pointer.FLAG_RETURNED;
+            newPointer.IsReturned = true;
             _pointerEventListener.AddPointer(newPointer);
             _pointerEventListener.PressPointer(newPointer);
             return newPointer;

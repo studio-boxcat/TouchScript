@@ -4,7 +4,6 @@
 
 using System.Text;
 using TouchScript.Pointers;
-using TouchScript.Utils;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -23,11 +22,6 @@ namespace TouchScript.Behaviors.Cursors
         /// Should the value of <see cref="Pointer.Id"/> be shown on screen on the cursor.
         /// </summary>
         public bool ShowPointerId = true;
-
-        /// <summary>
-        /// Should the value of <see cref="Pointer.Flags"/> be shown on screen on the cursor.
-        /// </summary>
-        public bool ShowFlags = false;
 
         /// <summary>
         /// The link to UI.Text component.
@@ -75,12 +69,6 @@ namespace TouchScript.Behaviors.Cursors
                 str.Append("Id: ");
                 str.Append(pointer.Id);
             }
-            if (ShowFlags)
-            {
-                if (str.Length > 0) str.Append("\n");
-                str.Append("Flags: ");
-                BinaryUtils.ToBinaryString(pointer.Flags, str, 8);
-            }
         }
 
         /// <summary>
@@ -89,7 +77,7 @@ namespace TouchScript.Behaviors.Cursors
         /// <returns><c>True</c> if pointer text should be displayed; <c>false</c> otherwise.</returns>
         protected virtual bool textIsVisible()
         {
-            return ShowPointerId || ShowFlags;
+            return ShowPointerId;
         }
 
         /// <summary>
@@ -99,9 +87,7 @@ namespace TouchScript.Behaviors.Cursors
         /// <returns>Integer hash.</returns>
         protected virtual uint gethash(Pointer pointer)
         {
-            var hash = (uint) state;
-            if (ShowFlags) hash += pointer.Flags << 3;
-            return hash;
+            return (uint) state;
         }
 
         /// <inheritdoc />
