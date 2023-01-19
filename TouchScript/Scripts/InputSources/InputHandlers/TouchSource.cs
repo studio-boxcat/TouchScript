@@ -36,7 +36,6 @@ namespace TouchScript.InputSources.InputHandlers
 
         #region Public methods
 
-        /// <inheritdoc />
         public bool UpdateInput()
         {
             for (var i = 0; i < Input.touchCount; ++i)
@@ -131,6 +130,7 @@ namespace TouchScript.InputSources.InputHandlers
                     break;
                 }
             }
+
             if (fingerId > -1)
             {
                 internalCancelPointer(pointer);
@@ -138,6 +138,7 @@ namespace TouchScript.InputSources.InputHandlers
                 else _systemToInternalId[fingerId] = new TouchState(pointer, TouchPhase.Canceled);
                 return true;
             }
+
             return false;
         }
 
@@ -173,11 +174,10 @@ namespace TouchScript.InputSources.InputHandlers
             return pointer;
         }
 
-        private Pointer internalReturnPointer(Pointer pointer)
+        private Pointer internalReturnPointer(Pointer oldPointer)
         {
-            var newPointer = _pointerPool.Get(pointer.Position);
-            newPointer.CopyFrom(pointer);
-            pointer.Pressing = true;
+            var newPointer = _pointerPool.Get(oldPointer.Position);
+            newPointer.CopyFrom(oldPointer);
             newPointer.IsReturned = true;
             _pointerEventListener.AddPointer(newPointer);
             _pointerEventListener.PressPointer(newPointer);

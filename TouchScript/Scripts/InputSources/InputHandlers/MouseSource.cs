@@ -27,13 +27,6 @@ namespace TouchScript.InputSources.InputHandlers
         /// <summary>
         /// Initializes a new instance of the <see cref="MouseSource" /> class.
         /// </summary>
-        /// <param name="input">An input source to init new pointers with.</param>
-        /// <param name="addPointer">A function called when a new pointer is detected.</param>
-        /// <param name="updatePointer">A function called when a pointer is moved or its parameter is updated.</param>
-        /// <param name="pressPointer">A function called when a pointer touches the surface.</param>
-        /// <param name="releasePointer">A function called when a pointer is lifted off.</param>
-        /// <param name="removePointer">A function called when a pointer is removed.</param>
-        /// <param name="cancelPointer">A function called when a pointer is cancelled.</param>
         public MouseSource(IPointerEventListener pointerEventListener)
         {
             _pointerPool = new PointerPool(this);
@@ -54,7 +47,6 @@ namespace TouchScript.InputSources.InputHandlers
             }
         }
 
-        /// <inheritdoc />
         public bool UpdateInput()
         {
             // 마우스가 있었다가 사라진 상황.
@@ -101,6 +93,8 @@ namespace TouchScript.InputSources.InputHandlers
         public bool CancelPointer([NotNull] Pointer pointer, bool shouldReturn)
         {
             Assert.AreEqual(_mousePointer, pointer);
+
+            // 우선 Pointer 를 Cancel 함.
             _pointerEventListener.CancelPointer(pointer);
 
             // shouldReturn 이 false 일 경우, 단순히 포인터를 삭제하면 끝남.
@@ -117,10 +111,10 @@ namespace TouchScript.InputSources.InputHandlers
             if (newPointer.Pressing)
                 _pointerEventListener.PressPointer(newPointer);
 
-            // 새로운 포인터로 스왑. 이전 포인터는 IsReturned 처리를 함.
-            var oldPointer = _mousePointer;
-            oldPointer.IsReturned = true;
+            // 새로운 포인터로 스왑.
             _mousePointer = newPointer;
+            // 이전 포인터는 IsReturned 처리를 함.
+            pointer.IsReturned = true;
             return true;
         }
 
@@ -146,7 +140,7 @@ namespace TouchScript.InputSources.InputHandlers
 
         #region Private functions
 
-        (bool MousePressing, bool MouseUp) GetMouseButtons()
+        static (bool MousePressing, bool MouseUp) GetMouseButtons()
         {
             if (Input.GetMouseButtonUp(0))
                 return (true, true);
