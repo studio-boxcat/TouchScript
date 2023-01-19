@@ -65,8 +65,7 @@ namespace TouchScript.Behaviors.Cursors
             if (ShowButtons)
             {
                 if (str.Length > 0) str.Append("\n");
-                str.Append("Buttons: ");
-                PointerUtils.PressedButtonsToString(pointer.Buttons, str);
+                str.Append("Buttons: ").Append(pointer.Button.Pressed);
             }
         }
 
@@ -81,7 +80,7 @@ namespace TouchScript.Behaviors.Cursors
         {
             var hash = base.gethash(pointer);
 
-            if (ShowButtons) hash += (uint) (pointer.Buttons & Pointer.PointerButtonState.ButtonPressed);
+            if (ShowButtons) hash += (pointer.Button.Pressed ? 1u : 0u);
 
             return hash;
         }

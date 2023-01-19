@@ -2,7 +2,6 @@
  * @author Valentin Simonov / http://va.lent.in/
  */
 
-using System.Text;
 using TouchScript.Hit;
 using TouchScript.Pointers;
 using UnityEngine;
@@ -42,25 +41,14 @@ namespace TouchScript.Utils
         }
 
         /// <summary>
-        /// Formats currently pressed buttons as a string.
-        /// </summary>
-        /// <param name="buttons">The buttons state.</param>
-        /// <param name="builder">The string builder to use.</param>
-        public static void PressedButtonsToString(Pointer.PointerButtonState buttons, StringBuilder builder)
-        {
-            if ((buttons & Pointer.PointerButtonState.ButtonPressed) != 0) builder.Append("1");
-            else builder.Append("_");
-        }
-
-        /// <summary>
         /// Adds pressed state to downed buttons.
         /// </summary>
         /// <param name="buttons">The buttons state.</param>
         /// <returns>Changed buttons state.</returns>
-        public static Pointer.PointerButtonState DownPressedButtons(Pointer.PointerButtonState buttons)
+        public static PointerButtonState DownPressedButtons(PointerButtonState buttons)
         {
-            if ((buttons & Pointer.PointerButtonState.ButtonPressed) != 0)
-                buttons |= Pointer.PointerButtonState.ButtonDown;
+            if (buttons.Pressed)
+                buttons.Down = true;
             return buttons;
         }
 
@@ -69,10 +57,10 @@ namespace TouchScript.Utils
         /// </summary>
         /// <param name="buttons">The buttons state.</param>
         /// <returns>Changed buttons state.</returns>
-        public static Pointer.PointerButtonState PressDownButtons(Pointer.PointerButtonState buttons)
+        public static PointerButtonState PressDownButtons(PointerButtonState buttons)
         {
-            if ((buttons & Pointer.PointerButtonState.ButtonDown) != 0)
-                buttons |= Pointer.PointerButtonState.ButtonPressed;
+            if (buttons.Down)
+                buttons.Pressed = true;
             return buttons;
         }
 
@@ -81,10 +69,9 @@ namespace TouchScript.Utils
         /// </summary>
         /// <param name="buttons">The buttons state.</param>
         /// <returns>Changed buttons state.</returns>
-        public static Pointer.PointerButtonState UpPressedButtons(Pointer.PointerButtonState buttons)
+        public static PointerButtonState UpPressedButtons(PointerButtonState buttons)
         {
-            return (buttons & Pointer.PointerButtonState.ButtonPressed) != 0
-                ? Pointer.PointerButtonState.ButtonUp : default;
+            return new PointerButtonState {Up = buttons.Pressed};
         }
     }
 }

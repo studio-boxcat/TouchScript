@@ -7,6 +7,7 @@ using JetBrains.Annotations;
 using TouchScript.Pointers;
 using TouchScript.Utils;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 namespace TouchScript.InputSources.InputHandlers
 {
@@ -110,7 +111,7 @@ namespace TouchScript.InputSources.InputHandlers
 
             if (mousePointer == null) return false;
 
-            var buttons = state == State.MouseAndFake ? fakeMousePointer.Buttons : mousePointer.Buttons;
+            var buttons = state == State.MouseAndFake ? fakeMousePointer.Button : mousePointer.Button;
             var newButtons = getMouseButtons();
             var scroll = Input.mouseScrollDelta;
             if (!Mathf.Approximately(scroll.sqrMagnitude, 0.0f))
@@ -128,8 +129,9 @@ namespace TouchScript.InputSources.InputHandlers
                 switch (state)
                 {
                     case State.Mouse:
-                        if (Input.GetKeyDown(KeyCode.LeftAlt) && !Input.GetKeyUp(KeyCode.LeftAlt)
-                                                              && ((newButtons & Pointer.PointerButtonState.ButtonPressed) == 0))
+                        if (Input.GetKeyDown(KeyCode.LeftAlt)
+                            && !Input.GetKeyUp(KeyCode.LeftAlt)
+                            && newButtons.Released)
                         {
                             stateWaitingForFake();
                         }
@@ -141,7 +143,7 @@ namespace TouchScript.InputSources.InputHandlers
                     case State.WaitingForFake:
                         if (Input.GetKey(KeyCode.LeftAlt))
                         {
-                            if ((newButtons & Pointer.PointerButtonState.ButtonDown) != 0)
+                            if (newButtons.Down)
                             {
                                 // A button is down while holding Alt
                                 fakeMousePointer = internalAddPointer(pos, newButtons);
@@ -166,21 +168,21 @@ namespace TouchScript.InputSources.InputHandlers
                                 fakeMousePointer.NewPosition = pos;
                                 _pointerEventListener.UpdatePointer(fakeMousePointer);
                             }
-                            if ((newButtons & Pointer.PointerButtonState.ButtonPressed) == 0)
+                            if (newButtons.Released)
                             {
                                 // All buttons are released, Alt is still holding
                                 stateStationaryFake();
                             }
                             else if (buttons != newButtons)
                             {
-                                fakeMousePointer.Buttons = newButtons;
+                                fakeMousePointer.Button = newButtons;
                                 _pointerEventListener.UpdatePointer(fakeMousePointer);
                             }
                         }
                         break;
                     case State.StationaryFake:
                         if (buttons != newButtons) updateButtons(buttons, newButtons);
-                        if ((newButtons & Pointer.PointerButtonState.ButtonPressed) != 0)
+                        if (newButtons.Pressed)
                         {
                             if (mousePointPos != pos)
                             {
@@ -264,34 +266,36 @@ namespace TouchScript.InputSources.InputHandlers
 
         #region Private functions
 
-        private Pointer.PointerButtonState getMouseButtons()
+        private PointerButtonState getMouseButtons()
         {
-            Pointer.PointerButtonState buttons = default;
+            PointerButtonState buttons = default;
 
-            if (Input.GetMouseButton(0)) buttons |= Pointer.PointerButtonState.ButtonPressed;
-            if (Input.GetMouseButtonDown(0)) buttons |= Pointer.PointerButtonState.ButtonDown;
-            if (Input.GetMouseButtonUp(0)) buttons |= Pointer.PointerButtonState.ButtonUp;
+            if (Input.GetMouseButton(0)) buttons.Pressed = true;
+            if (Input.GetMouseButtonDown(0)) buttons.Down = true;
+            if (Input.GetMouseButtonUp(0)) buttons.Up = true;
 
             return buttons;
         }
 
-        private void updateButtons(Pointer.PointerButtonState oldButtons, Pointer.PointerButtonState newButtons)
+        private void updateButtons(PointerButtonState oldButtons, PointerButtonState newButtons)
         {
+            Assert.AreNotEqual(oldButtons, newButtons);
+
             // pressed something
             if (oldButtons == default)
             {
                 // pressed and released this frame
-                if ((newButtons & Pointer.PointerButtonState.ButtonPressed) == 0)
+                if (newButtons.Released)
                 {
                     // Add pressed buttons for processing
-                    mousePointer.Buttons = PointerUtils.PressDownButtons(newButtons);
+                    mousePointer.Button = PointerUtils.PressDownButtons(newButtons);
                     _pointerEventListener.PressPointer(mousePointer);
                     internalReleaseMousePointer();
                 }
                 // pressed this frame
                 else
                 {
-                    mousePointer.Buttons = newButtons;
+                    mousePointer.Button = newButtons;
                     _pointerEventListener.PressPointer(mousePointer);
                 }
             }
@@ -299,15 +303,15 @@ namespace TouchScript.InputSources.InputHandlers
             else
             {
                 // released this frame
-                if ((newButtons & Pointer.PointerButtonState.ButtonPressed) == 0)
+                if (newButtons.Released)
                 {
-                    mousePointer.Buttons = newButtons;
+                    mousePointer.Button = newButtons;
                     internalReleaseMousePointer();
                 }
                 // button state changed this frame
                 else
                 {
-                    mousePointer.Buttons = newButtons;
+                    mousePointer.Button = newButtons;
                     _pointerEventListener.UpdatePointer(mousePointer);
                 }
             }
@@ -318,7 +322,7 @@ namespace TouchScript.InputSources.InputHandlers
             if (!Input.GetKey(KeyCode.LeftAlt))
             {
                 // Alt is released, need to kill the fake touch
-                fakeMousePointer.Buttons = PointerUtils.UpPressedButtons(fakeMousePointer.Buttons); // Convert current pressed buttons to UP
+                fakeMousePointer.Button = PointerUtils.UpPressedButtons(fakeMousePointer.Button); // Convert current pressed buttons to UP
                 _pointerEventListener.ReleasePointer(fakeMousePointer);
                 _pointerEventListener.RemovePointer(fakeMousePointer);
                 fakeMousePointer = null; // Will be returned to the pool by INTERNAL_DiscardPointer
@@ -328,10 +332,10 @@ namespace TouchScript.InputSources.InputHandlers
         }
 
         [NotNull]
-        private Pointer internalAddPointer(Vector2 position, Pointer.PointerButtonState buttons = default)
+        private Pointer internalAddPointer(Vector2 position, PointerButtonState buttons = default)
         {
             var pointer = _pointerPool.Get(position);
-            pointer.Buttons = buttons;
+            pointer.Button = buttons;
             _pointerEventListener.AddPointer(pointer);
             _pointerEventListener.UpdatePointer(pointer);
             return pointer;
@@ -349,10 +353,10 @@ namespace TouchScript.InputSources.InputHandlers
             newPointer.CopyFrom(pointer);
             mousePointer.IsReturned = true;
             _pointerEventListener.AddPointer(newPointer);
-            if ((newPointer.Buttons & Pointer.PointerButtonState.ButtonPressed) != 0)
+            if (newPointer.Button.Pressed)
             {
                 // Adding down state this frame
-                newPointer.Buttons = PointerUtils.DownPressedButtons(newPointer.Buttons);
+                newPointer.Button = PointerUtils.DownPressedButtons(newPointer.Button);
                 _pointerEventListener.PressPointer(newPointer);
             }
             return newPointer;

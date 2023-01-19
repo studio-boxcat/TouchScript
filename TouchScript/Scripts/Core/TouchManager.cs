@@ -134,7 +134,7 @@ namespace TouchScript.Core
         void IPointerEventListener.ReleasePointer(Pointer pointer)
         {
             var id = pointer.Id;
-            pointer.Buttons &= ~Pointer.PointerButtonState.ButtonPressed;
+            pointer.Button.Pressed = false;
 
             if (IdToPointerWithAddedPointers(id, out _) == false)
                 return;

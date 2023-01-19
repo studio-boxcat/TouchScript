@@ -212,7 +212,7 @@ namespace TouchScript.Layers.UI
                     var over = pointer.GetOverData();
 
                     // Don't update the pointer if it is pressed not over an UI element
-                    if ((pointer.Buttons & Pointer.PointerButtonState.ButtonPressed) > 0)
+                    if (pointer.Button.Pressed)
                     {
                         var press = pointer.GetPressData();
                         if (press.IsNotUI()) continue;

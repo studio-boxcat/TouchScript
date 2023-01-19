@@ -20,25 +20,10 @@ namespace TouchScript.Pointers
     /// </summary>
     public sealed class Pointer : IEquatable<Pointer>
     {
-        #region Constants
-
-        /// <summary>
-        /// The state of buttons for a pointer. Combines 3 types of button events: Pressed (holding a button), Down (just pressed this frame) and Up (released this frame).
-        /// </summary>
-        [Flags]
-        public enum PointerButtonState : byte
-        {
-            ButtonPressed = 1 << 0,
-            ButtonDown = 1 << 1,
-            ButtonUp = 1 << 2
-        }
-
-        #endregion
-
         #region Public properties
 
         public PointerId Id { get; private set; }
-        public PointerButtonState Buttons;
+        public PointerButtonState Button;
         [NotNull]
         public readonly IInputSource InputSource;
         public Vector2 Position { get; private set; }
@@ -85,7 +70,7 @@ namespace TouchScript.Pointers
         /// <param name="target">The target pointer to copy values from.</param>
         public void CopyFrom(Pointer target)
         {
-            Buttons = target.Buttons;
+            Button = target.Button;
             Position = target.Position;
             NewPosition = target.NewPosition;
             PreviousPosition = target.PreviousPosition;
@@ -115,8 +100,7 @@ namespace TouchScript.Pointers
             _sb.Length = 0;
             _sb.Append("(Pointer id: ");
             _sb.Append(Id);
-            _sb.Append(", buttons: ");
-            PointerUtils.PressedButtonsToString(Buttons, _sb);
+            _sb.Append(", buttons: ").Append(Button.Pressed);
             _sb.Append(", isReturned: ").Append(IsReturned);
             _sb.Append(", position: ").Append(Position.ToString());
             _sb.Append(")");
@@ -152,13 +136,13 @@ namespace TouchScript.Pointers
             INTERNAL_ClearPressData();
             Position = NewPosition = PreviousPosition = default;
             IsReturned = false;
-            Buttons = default;
+            Button = default;
             _overDataIsDirty = true;
         }
 
         internal void INTERNAL_FrameStarted()
         {
-            Buttons &= ~(PointerButtonState.ButtonDown | PointerButtonState.ButtonUp);
+            Button.UnsetAction();
             _overDataIsDirty = true;
         }
 
