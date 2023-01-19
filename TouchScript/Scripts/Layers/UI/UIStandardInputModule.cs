@@ -15,6 +15,7 @@ namespace TouchScript.Layers.UI
         class UIStandardInputModule
         {
             protected TouchScriptInputModule input;
+            EventSystem eventSystem => input.eventSystem;
 
             public UIStandardInputModule(TouchScriptInputModule input)
             {
@@ -23,7 +24,7 @@ namespace TouchScript.Layers.UI
 
             #region From PointerInputModule
 
-            private Dictionary<int, PointerEventData> m_PointerData = new Dictionary<int, PointerEventData>(10);
+            protected Dictionary<int, PointerEventData> m_PointerData = new Dictionary<int, PointerEventData>();
 
             public bool IsPointerOverGameObject(int pointerId)
             {
@@ -33,18 +34,23 @@ namespace TouchScript.Layers.UI
                 return false;
             }
 
-            protected bool GetPointerData(int id, out PointerEventData pointerEvent, bool create)
+            protected bool GetPointerData(int id, out PointerEventData data, bool create)
             {
-                if (!m_PointerData.TryGetValue(id, out pointerEvent) && create)
+                if (!m_PointerData.TryGetValue(id, out data) && create)
                 {
-                    pointerEvent = new PointerEventData()
+                    data = new PointerEventData()
                     {
                         pointerId = id,
                     };
-                    m_PointerData.Add(id, pointerEvent);
+                    m_PointerData.Add(id, data);
                     return true;
                 }
                 return false;
+            }
+
+            protected void RemovePointerData(PointerEventData data)
+            {
+                m_PointerData.Remove(data.pointerId);
             }
 
             protected void DeselectIfSelectionChanged(GameObject currentOverGo, BaseEventData pointerEvent)
@@ -53,14 +59,15 @@ namespace TouchScript.Layers.UI
                 var selectHandlerGO = ExecuteEvents.GetEventHandler<ISelectHandler>(currentOverGo);
                 // if we have clicked something new, deselect the old thing
                 // leave 'selection handling' up to the press event though.
-                if (selectHandlerGO != input.eventSystem.currentSelectedGameObject)
-                    input.eventSystem.SetSelectedGameObject(null, pointerEvent);
+                if (selectHandlerGO != eventSystem.currentSelectedGameObject)
+                    eventSystem.SetSelectedGameObject(null, pointerEvent);
             }
 
             protected PointerEventData GetLastPointerEventData(int id)
             {
-                GetPointerData(id, out var pointerEvent, false);
-                return pointerEvent;
+                PointerEventData data;
+                GetPointerData(id, out data, false);
+                return data;
             }
 
             private static bool ShouldStartDrag(Vector2 pressPos, Vector2 currentPos, float threshold, bool useDragThreshold)
@@ -71,42 +78,45 @@ namespace TouchScript.Layers.UI
                 return (pressPos - currentPos).sqrMagnitude >= threshold * threshold;
             }
 
-            private bool SendUpdateEventToSelectedObject()
-            {
-                if (input.eventSystem.currentSelectedGameObject == null)
-                    return false;
-
-                var pointerEvent = input.GetBaseEventData();
-                ExecuteEvents.Execute(input.eventSystem.currentSelectedGameObject, pointerEvent, ExecuteEvents.updateSelectedHandler);
-                return pointerEvent.used;
-            }
-
             #endregion
 
-            #region From StandardInputModule
+            #region From StandaloneInputModule
+
+            protected bool SendUpdateEventToSelectedObject()
+            {
+                if (eventSystem.currentSelectedGameObject == null)
+                    return false;
+
+                var data = GetBaseEventData();
+                ExecuteEvents.Execute(eventSystem.currentSelectedGameObject, data, ExecuteEvents.updateSelectedHandler);
+                return data.used;
+            }
 
             public void Process()
             {
-                bool usedEvent = SendUpdateEventToSelectedObject();
+                // if (!eventSystem.isFocused && ShouldIgnoreEventsOnNoFocus())
+                //     return;
+
+                SendUpdateEventToSelectedObject();
 
                 // touch needs to take precedence because of the mouse emulation layer
-                //                if (!ProcessTouchEvents() && Input.mousePresent)
-                //                    ProcessMouseEvent();
+                // if (!ProcessTouchEvents() && input.mousePresent)
+                //     ProcessMouseEvent();
             }
 
             #endregion
 
             #region Changed
 
-            protected void RemovePointerData(int id)
-            {
-                m_PointerData.Remove(id);
-            }
+            BaseEventData GetBaseEventData() => input.GetBaseEventData();
+
+            void HandlePointerExitAndEnter(PointerEventData currentPointerData, GameObject newEnterTarget)
+                => input.HandlePointerExitAndEnter(currentPointerData, newEnterTarget);
 
             private static void ConvertRaycast(RaycastHitUI old, ref RaycastResult current)
             {
-                current.module = old.Raycaster;
                 current.gameObject = old.Target == null ? null : old.Target.gameObject;
+                current.module = old.Raycaster;
                 current.depth = old.Depth;
                 current.index = old.GraphicIndex;
                 current.sortingLayer = old.SortingLayer;
@@ -117,6 +127,7 @@ namespace TouchScript.Layers.UI
 
             #region Event processors
 
+            // XXX: PointerInputModule.GetTouchPointerEventData() 을 변형함.
             public virtual void ProcessAdded(List<Pointer> pointers)
             {
                 var raycast = new RaycastResult();
@@ -134,6 +145,7 @@ namespace TouchScript.Layers.UI
 
                     pointerEvent.position = pointer.Position;
                     pointerEvent.delta = Vector2.zero;
+                    pointerEvent.button = PointerEventData.InputButton.Left;
                     ConvertRaycast(over.RaycastHitUI, ref raycast);
                     raycast.screenPosition = pointerEvent.position;
                     pointerEvent.pointerCurrentRaycast = raycast;
@@ -156,8 +168,7 @@ namespace TouchScript.Layers.UI
                         if (press.IsNotUI()) continue;
                     }
 
-                    PointerEventData pointerEvent;
-                    GetPointerData((int) pointer.Id, out pointerEvent, true);
+                    GetPointerData((int) pointer.Id, out var pointerEvent, true);
 
                     // If not over an UI element this and previous frame, don't process further.
                     // Need to check the previous hover state to properly process leaving a UI element.
@@ -167,8 +178,6 @@ namespace TouchScript.Layers.UI
                     }
 
                     pointerEvent.Reset();
-                    var target = over.Target;
-                    var currentOverGo = target == null ? null : target.gameObject;
 
                     pointerEvent.position = pointer.Position;
                     pointerEvent.delta = pointer.Position - pointer.PreviousPosition;
@@ -176,42 +185,50 @@ namespace TouchScript.Layers.UI
                     raycast.screenPosition = pointerEvent.position;
                     pointerEvent.pointerCurrentRaycast = raycast;
 
-                    input.HandlePointerExitAndEnter(pointerEvent, currentOverGo);
-
-                    bool moving = pointerEvent.IsPointerMoving();
-
-                    if (moving && pointerEvent.pointerDrag != null
-                               && !pointerEvent.dragging
-                               && ShouldStartDrag(pointerEvent.pressPosition, pointerEvent.position, input.eventSystem.pixelDragThreshold, pointerEvent.useDragThreshold))
-                    {
-                        ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.beginDragHandler);
-                        pointerEvent.dragging = true;
-                    }
-
-                    // Drag notification
-                    if (pointerEvent.dragging && moving && pointerEvent.pointerDrag != null)
-                    {
-                        // Before doing drag we should cancel any pointer down state
-                        // And clear selection!
-                        if (pointerEvent.pointerPress != pointerEvent.pointerDrag)
-                        {
-                            ExecuteEvents.Execute(pointerEvent.pointerPress, pointerEvent, ExecuteEvents.pointerUpHandler);
-
-                            pointerEvent.eligibleForClick = false;
-                            pointerEvent.pointerPress = null;
-                        }
-                        ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.dragHandler);
-                    }
-
-                    if (!Mathf.Approximately(pointer.ScrollDelta.sqrMagnitude, 0.0f))
-                    {
-                        pointerEvent.scrollDelta = pointer.ScrollDelta;
-                        var scrollHandler = ExecuteEvents.GetEventHandler<IScrollHandler>(currentOverGo);
-                        ExecuteEvents.ExecuteHierarchy(scrollHandler, pointerEvent, ExecuteEvents.scrollHandler);
-                    }
+                    ProcessMove(pointerEvent);
+                    ProcessDrag(pointerEvent);
                 }
             }
 
+            // XXX: PointerInputModule.ProcessMove() 를 변형함.
+            protected virtual void ProcessMove(PointerEventData pointerEvent)
+            {
+                var targetGO = (Cursor.lockState == CursorLockMode.Locked ? null : pointerEvent.pointerCurrentRaycast.gameObject);
+                HandlePointerExitAndEnter(pointerEvent, targetGO);
+            }
+
+            // XXX: PointerInputModule.ProcessDrag() 를 변형함.
+            protected virtual void ProcessDrag(PointerEventData pointerEvent)
+            {
+                if (!pointerEvent.IsPointerMoving() ||
+                    Cursor.lockState == CursorLockMode.Locked ||
+                    pointerEvent.pointerDrag == null)
+                    return;
+
+                if (!pointerEvent.dragging
+                    && ShouldStartDrag(pointerEvent.pressPosition, pointerEvent.position, eventSystem.pixelDragThreshold, pointerEvent.useDragThreshold))
+                {
+                    ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.beginDragHandler);
+                    pointerEvent.dragging = true;
+                }
+
+                // Drag notification
+                if (pointerEvent.dragging)
+                {
+                    // Before doing drag we should cancel any pointer down state
+                    // And clear selection!
+                    if (pointerEvent.pointerPress != pointerEvent.pointerDrag)
+                    {
+                        ExecuteEvents.Execute(pointerEvent.pointerPress, pointerEvent, ExecuteEvents.pointerUpHandler);
+
+                        pointerEvent.eligibleForClick = false;
+                        pointerEvent.pointerPress = null;
+                    }
+                    ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.dragHandler);
+                }
+            }
+
+            // XXX: StandaloneInputModule.ProcessTouchPress() 를 변형함.
             public virtual void ProcessPressed(List<Pointer> pointers)
             {
                 foreach (var pointer in pointers)
@@ -219,9 +236,7 @@ namespace TouchScript.Layers.UI
                     var over = pointer.GetOverData();
                     // Don't update the pointer if it is not over an UI element
                     if (over.IsNotUI()) continue;
-
-                    PointerEventData pointerEvent;
-                    GetPointerData((int) pointer.Id, out pointerEvent, true);
+                    GetPointerData((int) pointer.Id, out var pointerEvent, true);
                     var target = over.Target;
                     var currentOverGo = target == null ? null : target.gameObject;
 
@@ -229,8 +244,8 @@ namespace TouchScript.Layers.UI
                     pointerEvent.delta = Vector2.zero;
                     pointerEvent.dragging = false;
                     pointerEvent.useDragThreshold = true;
-                    pointerEvent.position = pointer.Position;
-                    pointerEvent.pressPosition = pointer.Position;
+                    pointerEvent.position = pointer.Position; // XXX: Changed
+                    pointerEvent.pressPosition = pointerEvent.position;
                     pointerEvent.pointerPressRaycast = pointerEvent.pointerCurrentRaycast;
 
                     DeselectIfSelectionChanged(currentOverGo, pointerEvent);
@@ -238,7 +253,7 @@ namespace TouchScript.Layers.UI
                     if (pointerEvent.pointerEnter != currentOverGo)
                     {
                         // send a pointer enter to the touched element if it isn't the one to select...
-                        input.HandlePointerExitAndEnter(pointerEvent, currentOverGo);
+                        HandlePointerExitAndEnter(pointerEvent, currentOverGo);
                         pointerEvent.pointerEnter = currentOverGo;
                     }
 
@@ -247,13 +262,16 @@ namespace TouchScript.Layers.UI
                     // handler to be what would receive a click.
                     var newPressed = ExecuteEvents.ExecuteHierarchy(currentOverGo, pointerEvent, ExecuteEvents.pointerDownHandler);
 
+                    var newClick = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+
                     // didnt find a press handler... search for a click handler
                     if (newPressed == null)
-                        newPressed = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+                        newPressed = newClick;
 
                     // Debug.Log("Pressed: " + newPressed);
 
                     pointerEvent.pointerPress = newPressed;
+                    pointerEvent.pointerClick = newClick;
 
                     // Save the drag handler as well
                     pointerEvent.pointerDrag = ExecuteEvents.GetEventHandler<IDragHandler>(currentOverGo);
@@ -263,6 +281,7 @@ namespace TouchScript.Layers.UI
                 }
             }
 
+            // XXX: StandaloneInputModule.ProcessTouchPress() 를 변형함.
             public virtual void ProcessReleased(List<Pointer> pointers)
             {
                 foreach (var pointer in pointers)
@@ -270,26 +289,34 @@ namespace TouchScript.Layers.UI
                     var press = pointer.GetPressData();
                     // Don't update the pointer if it is was not pressed over an UI element
                     if (press.IsNotUI()) continue;
-
                     var over = pointer.GetOverData();
-
                     GetPointerData((int) pointer.Id, out var pointerEvent, true);
                     var target = over.Target;
                     var currentOverGo = target == null ? null : target.gameObject;
 
+
+                    // Debug.Log("Executing pressup on: " + pointer.pointerPress);
                     ExecuteEvents.Execute(pointerEvent.pointerPress, pointerEvent, ExecuteEvents.pointerUpHandler);
-                    var pointerUpHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
-                    if (pointerEvent.pointerPress == pointerUpHandler && pointerEvent.eligibleForClick)
+
+                    // Debug.Log("KeyCode: " + pointer.eventData.keyCode);
+
+                    // see if we mouse up on the same element that we clicked on...
+                    var pointerClickHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+
+                    // PointerClick and Drop events
+                    if (pointerEvent.pointerClick == pointerClickHandler && pointerEvent.eligibleForClick)
                     {
-                        ExecuteEvents.Execute(pointerEvent.pointerPress, pointerEvent, ExecuteEvents.pointerClickHandler);
+                        ExecuteEvents.Execute(pointerEvent.pointerClick, pointerEvent, ExecuteEvents.pointerClickHandler);
                     }
-                    else if (pointerEvent.pointerDrag != null && pointerEvent.dragging)
+
+                    if (pointerEvent.pointerDrag != null && pointerEvent.dragging)
                     {
                         ExecuteEvents.ExecuteHierarchy(currentOverGo, pointerEvent, ExecuteEvents.dropHandler);
                     }
 
                     pointerEvent.eligibleForClick = false;
                     pointerEvent.pointerPress = null;
+                    pointerEvent.pointerClick = null;
 
                     if (pointerEvent.pointerDrag != null && pointerEvent.dragging)
                         ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.endDragHandler);
@@ -302,26 +329,27 @@ namespace TouchScript.Layers.UI
                     pointerEvent.pointerEnter = null;
 
                     // redo pointer enter / exit to refresh state
-                    // so that if we moused over somethign that ignored it before
+                    // so that if we moused over something that ignored it before
                     // due to having pressed on something else
                     // it now gets it.
                     if (currentOverGo != pointerEvent.pointerEnter)
                     {
-                        input.HandlePointerExitAndEnter(pointerEvent, null);
-                        input.HandlePointerExitAndEnter(pointerEvent, currentOverGo);
+                        HandlePointerExitAndEnter(pointerEvent, null);
+                        HandlePointerExitAndEnter(pointerEvent, currentOverGo);
                     }
                 }
             }
 
+            // XXX: StandaloneInputModule.ProcessTouchPress() 를 변형함.
             public virtual void ProcessCancelled(List<Pointer> pointers)
             {
                 foreach (var pointer in pointers)
                 {
                     var over = pointer.GetOverData();
-
                     GetPointerData((int) pointer.Id, out var pointerEvent, true);
                     var target = over.Target;
                     var currentOverGo = target == null ? null : target.gameObject;
+
 
                     ExecuteEvents.Execute(pointerEvent.pointerPress, pointerEvent, ExecuteEvents.pointerUpHandler);
 
@@ -332,6 +360,7 @@ namespace TouchScript.Layers.UI
 
                     pointerEvent.eligibleForClick = false;
                     pointerEvent.pointerPress = null;
+                    pointerEvent.pointerClick = null;
 
                     if (pointerEvent.pointerDrag != null && pointerEvent.dragging)
                         ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.endDragHandler);
@@ -352,11 +381,10 @@ namespace TouchScript.Layers.UI
                     var over = pointer.GetOverData();
                     // Don't update the pointer if it is not over an UI element
                     if (over.IsNotUI()) continue;
-
                     GetPointerData((int) pointer.Id, out var pointerEvent, true);
 
                     if (pointerEvent.pointerEnter) ExecuteEvents.ExecuteHierarchy(pointerEvent.pointerEnter, pointerEvent, ExecuteEvents.pointerExitHandler);
-                    RemovePointerData((int) pointer.Id);
+                    RemovePointerData(pointerEvent);
                 }
             }
 
