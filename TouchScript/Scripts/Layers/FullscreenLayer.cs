@@ -26,7 +26,7 @@ namespace TouchScript.Layers
         {
             if (base.Hit(screenPosition, out hit) != HitResult.Hit) return HitResult.Miss;
 
-            hit = new HitData(transform, this, default);
+            hit = new HitData(transform, this, default, default);
             return HitResult.Hit;
         }
     }

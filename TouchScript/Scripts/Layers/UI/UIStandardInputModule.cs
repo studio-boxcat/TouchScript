@@ -113,14 +113,11 @@ namespace TouchScript.Layers.UI
             void HandlePointerExitAndEnter(PointerEventData currentPointerData, GameObject newEnterTarget)
                 => input.HandlePointerExitAndEnter(currentPointerData, newEnterTarget);
 
-            private static void ConvertRaycast(RaycastHitUI old, ref RaycastResult current)
+            private static void ConvertRaycast(HitData old, ref RaycastResult current)
             {
                 current.gameObject = old.Target == null ? null : old.Target.gameObject;
-                current.module = old.Raycaster;
-                current.depth = old.Depth;
-                current.index = old.GraphicIndex;
-                current.sortingLayer = old.SortingLayer;
-                current.sortingOrder = old.SortingOrder;
+                current.gameObject = old.Target == null ? null : old.Target.gameObject;
+                current.module = old.GraphicRaycaster;
             }
 
             #endregion
@@ -146,7 +143,7 @@ namespace TouchScript.Layers.UI
                     pointerEvent.position = pointer.Position;
                     pointerEvent.delta = Vector2.zero;
                     pointerEvent.button = PointerEventData.InputButton.Left;
-                    ConvertRaycast(over.RaycastHitUI, ref raycast);
+                    ConvertRaycast(over, ref raycast);
                     raycast.screenPosition = pointerEvent.position;
                     pointerEvent.pointerCurrentRaycast = raycast;
 
@@ -181,7 +178,7 @@ namespace TouchScript.Layers.UI
 
                     pointerEvent.position = pointer.Position;
                     pointerEvent.delta = pointer.Position - pointer.PreviousPosition;
-                    ConvertRaycast(over.RaycastHitUI, ref raycast);
+                    ConvertRaycast(over, ref raycast);
                     raycast.screenPosition = pointerEvent.position;
                     pointerEvent.pointerCurrentRaycast = raycast;
 

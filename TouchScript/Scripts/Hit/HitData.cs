@@ -4,6 +4,7 @@
 
 using TouchScript.Layers;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace TouchScript.Hit
 {
@@ -14,15 +15,17 @@ namespace TouchScript.Hit
     {
         public readonly Transform Target;
         public readonly TouchLayer Layer;
-        public readonly RaycastHitUI RaycastHitUI;
+        public readonly Graphic Graphic;
+        public readonly GraphicRaycaster GraphicRaycaster;
 
-        public HitData(Transform target, TouchLayer layer, RaycastHitUI raycastHitUI)
+        public HitData(Transform target, TouchLayer layer, Graphic graphic, GraphicRaycaster graphicRaycaster)
         {
             Target = target;
             Layer = layer;
-            RaycastHitUI = raycastHitUI;
+            Graphic = graphic;
+            GraphicRaycaster = graphicRaycaster;
         }
 
-        public bool IsNotUI() => RaycastHitUI.Target is null;
+        public bool IsNotUI() => Graphic is null;
     }
 }
