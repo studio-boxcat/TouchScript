@@ -23,6 +23,11 @@ namespace TouchScript.Layers
     /// </remarks>
     public abstract class TouchLayer : MonoBehaviour
     {
+        [SerializeField]
+        int _priority;
+
+        public int Priority => _priority;
+
         #region Public methods
 
         /// <summary>
