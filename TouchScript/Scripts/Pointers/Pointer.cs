@@ -22,8 +22,7 @@ namespace TouchScript.Pointers
 
         public PointerId Id { get; private set; }
         public bool Pressing;
-        [NotNull]
-        public readonly IInputSource InputSource;
+        public IInputSource InputSource { get; private set; }
         public Vector2 Position { get; private set; }
         public Vector2 NewPosition;
         public Vector2 PreviousPosition { get; private set; }
@@ -69,7 +68,6 @@ namespace TouchScript.Pointers
             Position = target.Position;
             NewPosition = target.NewPosition;
             PreviousPosition = target.PreviousPosition;
-            IsReturned = target.IsReturned;
         }
 
         public override bool Equals(object other) => Equals(other as Pointer);
@@ -91,9 +89,8 @@ namespace TouchScript.Pointers
         /// <summary>
         /// Initializes a new instance of the <see cref="Pointer"/> class.
         /// </summary>
-        public Pointer(IInputSource input)
+        public Pointer()
         {
-            InputSource = input;
             INTERNAL_Reset();
         }
 
@@ -101,9 +98,10 @@ namespace TouchScript.Pointers
 
         #region Internal methods
 
-        public void INTERNAL_Init(PointerId id, Vector2 position)
+        public void INTERNAL_Init(PointerId id, IInputSource inputSource, Vector2 position)
         {
             Id = id;
+            InputSource = inputSource;
             PreviousPosition = Position = NewPosition = position;
         }
 
@@ -111,6 +109,7 @@ namespace TouchScript.Pointers
         {
             Id = PointerId.Invalid;
             INTERNAL_ClearPressData();
+            InputSource = null;
             Position = NewPosition = PreviousPosition = default;
             IsReturned = false;
             Pressing = false;

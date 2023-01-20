@@ -72,10 +72,10 @@ namespace TouchScript.Core
                 _gestureCache.Clear();
             };
 
-            _touchManager.PointersUpdated += updateUpdated;
-            _touchManager.PointersPressed += updatePressed;
-            _touchManager.PointersReleased += updateReleased;
-            _touchManager.PointersCancelled += updateCancelled;
+            _touchManager.PointerUpdated += updateUpdated;
+            _touchManager.PointerPressed += updatePressed;
+            _touchManager.PointerReleased += updateReleased;
+            _touchManager.PointerCancelled += updateCancelled;
         }
 
         #endregion
@@ -153,13 +153,12 @@ namespace TouchScript.Core
 
         #region Private functions
 
-        private void updatePressed(List<Pointer> pointers)
+        private void updatePressed(Pointer pointer)
         {
             _pointersOnTarget.EnsureCleared();
             _gestureToPointers.EnsureCleared();
 
             // Arrange pointers by target.
-            foreach (var pointer in pointers)
             {
                 var target = pointer.GetPressData().Target;
                 if (target != null)
@@ -226,10 +225,10 @@ namespace TouchScript.Core
             _gestureToPointers.Clear();
         }
 
-        private void updateUpdated(List<Pointer> pointers)
+        private void updateUpdated(Pointer pointers)
         {
             _gestureToPointers.EnsureCleared();
-            _gestureToPointers.AddRange(pointers, _pointerToGestures);
+            _gestureToPointers.Add(pointers, _pointerToGestures);
             foreach (var (gesture, list) in _gestureToPointers)
             {
                 if (gestureIsActive(gesture))
@@ -239,10 +238,10 @@ namespace TouchScript.Core
             _gestureToPointers.Clear();
         }
 
-        private void updateReleased(List<Pointer> pointers)
+        private void updateReleased(Pointer pointers)
         {
             _gestureToPointers.EnsureCleared();
-            _gestureToPointers.AddRange(pointers, _pointerToGestures);
+            _gestureToPointers.Add(pointers, _pointerToGestures);
             foreach (var (gesture, list) in _gestureToPointers)
             {
                 if (gestureIsActive(gesture))
@@ -253,17 +252,17 @@ namespace TouchScript.Core
             _gestureToPointers.Clear();
         }
 
-        private void updateCancelled(List<Pointer> pointers)
+        private void updateCancelled(Pointer pointer)
         {
             _gestureToPointers.EnsureCleared();
-            _gestureToPointers.AddRange(pointers, _pointerToGestures);
+            _gestureToPointers.Add(pointer, _pointerToGestures);
             foreach (var (gesture, list) in _gestureToPointers)
             {
                 if (gestureIsActive(gesture))
                     gesture.INTERNAL_PointersCancelled(list);
             }
 
-            _pointerToGestures.RemovePointers(pointers);
+            _pointerToGestures.RemovePointers(pointer);
             _gestureToPointers.Clear();
         }
 
@@ -387,25 +386,22 @@ namespace TouchScript.Core
                 _pointerBuffer.Clear();
             }
 
-            public void AddRange(List<Pointer> pointers, PointerToGestures pointerToGestures)
+            public void Add(Pointer pointer, PointerToGestures pointerToGestures)
             {
-                foreach (var pointer in pointers)
+                if (!pointerToGestures.TryGetValue(pointer.Id, out var gestures))
+                    return;
+
+                foreach (var gesture in gestures)
                 {
-                    if (!pointerToGestures.TryGetValue(pointer.Id, out var gestures))
-                        continue;
-
-                    foreach (var gesture in gestures)
+                    if (!_dict.TryGetValue(gesture, out var list))
                     {
-                        if (!_dict.TryGetValue(gesture, out var list))
-                        {
-                            list = _pointerListPool.Get();
-                            _dict.Add(gesture, list);
-                            _list.Add((gesture, list));
-                        }
-
-                        Assert.IsFalse(list.Contains(pointer));
-                        list.Add(pointer);
+                        list = _pointerListPool.Get();
+                        _dict.Add(gesture, list);
+                        _list.Add((gesture, list));
                     }
+
+                    Assert.IsFalse(list.Contains(pointer));
+                    list.Add(pointer);
                 }
             }
 
@@ -461,17 +457,14 @@ namespace TouchScript.Core
                 }
             }
 
-            public void RemovePointers(List<Pointer> pointers)
+            public void RemovePointers(Pointer pointer)
             {
-                foreach (var pointer in pointers)
-                {
-                    Assert.IsTrue(pointer.Id.IsValid());
+                Assert.IsTrue(pointer.Id.IsValid());
 
-                    if (_dict.TryGetValue(pointer.Id, out var list))
-                    {
-                        _dict.Remove(pointer.Id);
-                        _gestureListPool.Release(list);
-                    }
+                if (_dict.TryGetValue(pointer.Id, out var list))
+                {
+                    _dict.Remove(pointer.Id);
+                    _gestureListPool.Release(list);
                 }
             }
 

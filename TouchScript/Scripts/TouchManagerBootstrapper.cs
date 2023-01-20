@@ -17,6 +17,7 @@ namespace TouchScript
             Assert.IsNull(TouchManager.Instance);
             Assert.IsNull(GestureManager.Instance);
 
+            Input.simulateMouseWithTouches = false;
             TouchManager.Instance = _touchManager;
             GestureManager.Instance = _gestureManager;
         }

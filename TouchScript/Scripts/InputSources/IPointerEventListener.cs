@@ -1,15 +1,41 @@
-using JetBrains.Annotations;
-using TouchScript.Pointers;
+using System.Diagnostics;
+using UnityEngine.Assertions;
 
 namespace TouchScript.InputSources
 {
-    public interface IPointerEventListener
+    public struct PointerChange
     {
-        void AddPointer([NotNull] Pointer pointer);
-        void UpdatePointer([NotNull] Pointer pointer);
-        void PressPointer([NotNull] Pointer pointer);
-        void ReleasePointer([NotNull] Pointer pointer);
-        void RemovePointer([NotNull] Pointer pointer);
-        void CancelPointer([NotNull] Pointer pointer);
+        public bool Added;
+        public bool Updated;
+        public bool Pressed;
+        public bool Released;
+        public bool Removed;
+        public bool Cancelled;
+
+        public static PointerChange MergeWithCheck(PointerChange a, PointerChange b)
+        {
+            AssertCollision(a, b);
+
+            return new PointerChange
+            {
+                Added = a.Added || b.Added,
+                Updated = a.Updated || b.Updated,
+                Pressed = a.Pressed || b.Pressed,
+                Released = a.Released || b.Released,
+                Removed = a.Removed || b.Removed,
+                Cancelled = a.Cancelled || b.Cancelled,
+            };
+        }
+
+        [Conditional("DEBUG")]
+        public static void AssertCollision(PointerChange a, PointerChange b)
+        {
+            Assert.IsFalse(a.Added && b.Added);
+            Assert.IsFalse(a.Updated && b.Updated);
+            Assert.IsFalse(a.Pressed && b.Pressed);
+            Assert.IsFalse(a.Released && b.Released);
+            Assert.IsFalse(a.Removed && b.Removed);
+            Assert.IsFalse(a.Cancelled && b.Cancelled);
+        }
     }
 }

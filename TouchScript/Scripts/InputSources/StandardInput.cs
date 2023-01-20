@@ -2,11 +2,9 @@
  * @author Valentin Simonov / http://va.lent.in/
  */
 
-using JetBrains.Annotations;
-using Sirenix.OdinInspector;
-using TouchScript.Core;
+using System.Collections.Generic;
 using TouchScript.InputSources.InputHandlers;
-using UnityEngine;
+using TouchScript.Pointers;
 
 namespace TouchScript.InputSources
 {
@@ -14,46 +12,41 @@ namespace TouchScript.InputSources
     /// Processes standard input events (mouse, pointer, pen) on all platforms.
     /// Initializes proper inputs automatically. Replaces old Mobile and Mouse inputs.
     /// </summary>
-    [AddComponentMenu("TouchScript/Input Sources/Standard Input")]
-    [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_InputSources_StandardInput.htm")]
-    public sealed class StandardInput : MonoBehaviour
+    public sealed class StandardInput
     {
-        #region Private variables
+        readonly PointerContainer _pointerContainer;
+        public readonly TouchInputSource TouchInputSource;
+        public readonly MouseInputSource MouseInputSource;
+        public readonly FakeInputSource FakeInputSource;
 
-        [SerializeField, Required, ChildGameObjectsOnly]
-        TouchManager _touchManager;
-        [NotNull] MouseSource _mouseSource;
-        [NotNull] TouchSource _touchSource;
-
-        #endregion
-
-        #region Public methods
-
-        /// <inheritdoc />
-        public bool UpdateInput()
+        public StandardInput()
         {
-            var handled = false;
-
-            handled = _touchSource.UpdateInput();
-
-            if (handled) _mouseSource.CancelMousePointer();
-            else handled = _mouseSource.UpdateInput();
-
-            return handled;
+            _pointerContainer = new PointerContainer(4);
+            TouchInputSource = new TouchInputSource(_pointerContainer);
+            MouseInputSource = new MouseInputSource(_pointerContainer);
+            FakeInputSource = new FakeInputSource(_pointerContainer);
         }
 
-        #endregion
-
-        #region Private functions
-
-        void Awake()
+        public List<Pointer> GetPointers()
         {
-            Input.simulateMouseWithTouches = false;
-
-            _mouseSource = new MouseSource(_touchManager);
-            _touchSource = new TouchSource(_touchManager);
+            return _pointerContainer.Pointers;
         }
 
-        #endregion
+        public void UpdateInput(PointerChanges changes)
+        {
+            var handled = TouchInputSource.UpdateInput(changes);
+
+            if (handled) MouseInputSource.CancelMousePointer(changes);
+            else MouseInputSource.UpdateInput(changes);
+
+            FakeInputSource.UpdateInput(changes);
+        }
+
+        public void CancelAllPointers(PointerChanges changes)
+        {
+            TouchInputSource.CancelAllPointers(changes);
+            MouseInputSource.CancelAllPointers(changes);
+            FakeInputSource.CancelAllPointers(changes);
+        }
     }
 }

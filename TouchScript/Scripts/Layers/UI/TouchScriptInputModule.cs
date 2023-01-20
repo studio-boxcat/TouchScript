@@ -33,12 +33,12 @@ namespace TouchScript.Layers.UI
             base.Awake();
 
             ui = new UIStandardInputModule(this);
-            _touchManager.PointersAdded += ui.ProcessAdded;
-            _touchManager.PointersUpdated += ui.ProcessUpdated;
-            _touchManager.PointersPressed += ui.ProcessPressed;
-            _touchManager.PointersReleased += ui.ProcessReleased;
-            _touchManager.PointersRemoved += ui.ProcessRemoved;
-            _touchManager.PointersCancelled += ui.ProcessCancelled;
+            _touchManager.PointerAdded += ui.ProcessAdded;
+            _touchManager.PointerUpdated += ui.ProcessUpdated;
+            _touchManager.PointerPressed += ui.ProcessPressed;
+            _touchManager.PointerReleased += ui.ProcessReleased;
+            _touchManager.PointerRemoved += ui.ProcessRemoved;
+            _touchManager.PointerCancelled += ui.ProcessCancelled;
         }
 
         public override void Process()

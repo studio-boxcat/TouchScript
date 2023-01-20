@@ -120,60 +120,53 @@ namespace TouchScript.Layers.UI
             #region Event processors
 
             // XXX: PointerInputModule.GetTouchPointerEventData() 을 변형함.
-            public virtual void ProcessAdded(List<Pointer> pointers)
+            public virtual void ProcessAdded(Pointer pointer)
             {
-                foreach (var pointer in pointers)
-                {
-                    var over = pointer.GetOverData();
+                var over = pointer.GetOverData();
+                // Don't update the pointer if it is not over an UI element
+                if (over.IsNotUI()) return;
 
-                    // Don't update the pointer if it is not over an UI element
-                    if (over.IsNotUI()) continue;
+                GetPointerData((int) pointer.Id, out var pointerEvent, true);
+                pointerEvent.Reset();
+                var target = over.Target;
+                var currentOverGo = target == null ? null : target.gameObject;
 
-                    GetPointerData((int) pointer.Id, out var pointerEvent, true);
-                    pointerEvent.Reset();
-                    var target = over.Target;
-                    var currentOverGo = target == null ? null : target.gameObject;
+                pointerEvent.position = pointer.Position;
+                pointerEvent.delta = Vector2.zero;
+                pointerEvent.button = PointerEventData.InputButton.Left;
+                pointerEvent.pointerCurrentRaycast = ConvertRaycastResult(over, pointerEvent.position);
 
-                    pointerEvent.position = pointer.Position;
-                    pointerEvent.delta = Vector2.zero;
-                    pointerEvent.button = PointerEventData.InputButton.Left;
-                    pointerEvent.pointerCurrentRaycast = ConvertRaycastResult(over, pointerEvent.position);
-
-                    input.HandlePointerExitAndEnter(pointerEvent, currentOverGo);
-                }
+                input.HandlePointerExitAndEnter(pointerEvent, currentOverGo);
             }
 
-            public virtual void ProcessUpdated(List<Pointer> pointers)
+            public virtual void ProcessUpdated(Pointer pointer)
             {
-                foreach (var pointer in pointers)
+                var over = pointer.GetOverData();
+
+                // Don't update the pointer if it is pressed not over an UI element
+                if (pointer.Pressing)
                 {
-                    var over = pointer.GetOverData();
-
-                    // Don't update the pointer if it is pressed not over an UI element
-                    if (pointer.Pressing)
-                    {
-                        var press = pointer.GetPressData();
-                        if (press.IsNotUI()) continue;
-                    }
-
-                    GetPointerData((int) pointer.Id, out var pointerEvent, true);
-
-                    // If not over an UI element this and previous frame, don't process further.
-                    // Need to check the previous hover state to properly process leaving a UI element.
-                    if (over.IsNotUI())
-                    {
-                        if (pointerEvent.hovered.Count == 0) continue;
-                    }
-
-                    pointerEvent.Reset();
-
-                    pointerEvent.position = pointer.Position;
-                    pointerEvent.delta = pointer.Position - pointer.PreviousPosition;
-                    pointerEvent.pointerCurrentRaycast = ConvertRaycastResult(over, pointerEvent.position);
-
-                    ProcessMove(pointerEvent);
-                    ProcessDrag(pointerEvent);
+                    var press = pointer.GetPressData();
+                    if (press.IsNotUI()) return;
                 }
+
+                GetPointerData((int) pointer.Id, out var pointerEvent, true);
+
+                // If not over an UI element this and previous frame, don't process further.
+                // Need to check the previous hover state to properly process leaving a UI element.
+                if (over.IsNotUI())
+                {
+                    if (pointerEvent.hovered.Count == 0) return;
+                }
+
+                pointerEvent.Reset();
+
+                pointerEvent.position = pointer.Position;
+                pointerEvent.delta = pointer.Position - pointer.PreviousPosition;
+                pointerEvent.pointerCurrentRaycast = ConvertRaycastResult(over, pointerEvent.position);
+
+                ProcessMove(pointerEvent);
+                ProcessDrag(pointerEvent);
             }
 
             [MustUseReturnValue]
@@ -225,165 +218,153 @@ namespace TouchScript.Layers.UI
             }
 
             // XXX: StandaloneInputModule.ProcessTouchPress() 를 변형함.
-            public virtual void ProcessPressed(List<Pointer> pointers)
+            public virtual void ProcessPressed(Pointer pointer)
             {
-                foreach (var pointer in pointers)
+                var over = pointer.GetOverData();
+                // Don't update the pointer if it is not over an UI element
+                if (over.IsNotUI()) return;
+                GetPointerData((int) pointer.Id, out var pointerEvent, true);
+                Assert.IsTrue(pointerEvent.pointerCurrentRaycast.isValid);
+                var target = over.Target;
+                var currentOverGo = target == null ? null : target.gameObject;
+
+                pointerEvent.eligibleForClick = true;
+                pointerEvent.delta = Vector2.zero;
+                pointerEvent.dragging = false;
+                pointerEvent.useDragThreshold = true;
+                pointerEvent.position = pointer.Position; // XXX: Changed
+                pointerEvent.pressPosition = pointerEvent.position;
+                pointerEvent.pointerPressRaycast = pointerEvent.pointerCurrentRaycast;
+
+                DeselectIfSelectionChanged(currentOverGo, pointerEvent);
+
+                if (pointerEvent.pointerEnter != currentOverGo)
                 {
-                    var over = pointer.GetOverData();
-                    // Don't update the pointer if it is not over an UI element
-                    if (over.IsNotUI()) continue;
-                    GetPointerData((int) pointer.Id, out var pointerEvent, true);
-                    Assert.IsTrue(pointerEvent.pointerCurrentRaycast.isValid);
-                    var target = over.Target;
-                    var currentOverGo = target == null ? null : target.gameObject;
+                    // send a pointer enter to the touched element if it isn't the one to select...
+                    HandlePointerExitAndEnter(pointerEvent, currentOverGo);
+                    pointerEvent.pointerEnter = currentOverGo;
+                }
 
-                    pointerEvent.eligibleForClick = true;
-                    pointerEvent.delta = Vector2.zero;
-                    pointerEvent.dragging = false;
-                    pointerEvent.useDragThreshold = true;
-                    pointerEvent.position = pointer.Position; // XXX: Changed
-                    pointerEvent.pressPosition = pointerEvent.position;
-                    pointerEvent.pointerPressRaycast = pointerEvent.pointerCurrentRaycast;
+                // search for the control that will receive the press
+                // if we can't find a press handler set the press
+                // handler to be what would receive a click.
+                var newPressed = ExecuteEvents.ExecuteHierarchy(currentOverGo, pointerEvent, ExecuteEvents.pointerDownHandler);
 
-                    DeselectIfSelectionChanged(currentOverGo, pointerEvent);
+                var newClick = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
 
-                    if (pointerEvent.pointerEnter != currentOverGo)
-                    {
-                        // send a pointer enter to the touched element if it isn't the one to select...
-                        HandlePointerExitAndEnter(pointerEvent, currentOverGo);
-                        pointerEvent.pointerEnter = currentOverGo;
-                    }
+                // didnt find a press handler... search for a click handler
+                if (newPressed == null)
+                    newPressed = newClick;
 
-                    // search for the control that will receive the press
-                    // if we can't find a press handler set the press
-                    // handler to be what would receive a click.
-                    var newPressed = ExecuteEvents.ExecuteHierarchy(currentOverGo, pointerEvent, ExecuteEvents.pointerDownHandler);
+                // Debug.Log("Pressed: " + newPressed);
 
-                    var newClick = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+                pointerEvent.pointerPress = newPressed;
+                pointerEvent.pointerClick = newClick;
 
-                    // didnt find a press handler... search for a click handler
-                    if (newPressed == null)
-                        newPressed = newClick;
+                // Save the drag handler as well
+                pointerEvent.pointerDrag = ExecuteEvents.GetEventHandler<IDragHandler>(currentOverGo);
 
-                    // Debug.Log("Pressed: " + newPressed);
+                if (pointerEvent.pointerDrag != null)
+                    ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.initializePotentialDrag);
+            }
 
-                    pointerEvent.pointerPress = newPressed;
-                    pointerEvent.pointerClick = newClick;
+            // XXX: StandaloneInputModule.ProcessTouchPress() 를 변형함.
+            public virtual void ProcessReleased(Pointer pointer)
+            {
+                var press = pointer.GetPressData();
+                // Don't update the pointer if it is was not pressed over an UI element
+                if (press.IsNotUI()) return;
+                var over = pointer.GetOverData();
+                GetPointerData((int) pointer.Id, out var pointerEvent, true);
+                Assert.IsTrue(pointerEvent.pointerCurrentRaycast.isValid);
+                var target = over.Target;
+                var currentOverGo = target == null ? null : target.gameObject;
 
-                    // Save the drag handler as well
-                    pointerEvent.pointerDrag = ExecuteEvents.GetEventHandler<IDragHandler>(currentOverGo);
 
-                    if (pointerEvent.pointerDrag != null)
-                        ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.initializePotentialDrag);
+                // Debug.Log("Executing pressup on: " + pointer.pointerPress);
+                ExecuteEvents.Execute(pointerEvent.pointerPress, pointerEvent, ExecuteEvents.pointerUpHandler);
+
+                // Debug.Log("KeyCode: " + pointer.eventData.keyCode);
+
+                // see if we mouse up on the same element that we clicked on...
+                var pointerClickHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
+
+                // PointerClick and Drop events
+                if (pointerEvent.pointerClick == pointerClickHandler && pointerEvent.eligibleForClick)
+                {
+                    ExecuteEvents.Execute(pointerEvent.pointerClick, pointerEvent, ExecuteEvents.pointerClickHandler);
+                }
+
+                if (pointerEvent.pointerDrag != null && pointerEvent.dragging)
+                {
+                    ExecuteEvents.ExecuteHierarchy(currentOverGo, pointerEvent, ExecuteEvents.dropHandler);
+                }
+
+                pointerEvent.eligibleForClick = false;
+                pointerEvent.pointerPress = null;
+                pointerEvent.pointerClick = null;
+
+                if (pointerEvent.pointerDrag != null && pointerEvent.dragging)
+                    ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.endDragHandler);
+
+                pointerEvent.dragging = false;
+                pointerEvent.pointerDrag = null;
+
+                // send exit events as we need to simulate this on touch up on touch device
+                ExecuteEvents.ExecuteHierarchy(pointerEvent.pointerEnter, pointerEvent, ExecuteEvents.pointerExitHandler);
+                pointerEvent.pointerEnter = null;
+
+                // redo pointer enter / exit to refresh state
+                // so that if we moused over something that ignored it before
+                // due to having pressed on something else
+                // it now gets it.
+                if (currentOverGo != pointerEvent.pointerEnter)
+                {
+                    HandlePointerExitAndEnter(pointerEvent, null);
+                    HandlePointerExitAndEnter(pointerEvent, currentOverGo);
                 }
             }
 
             // XXX: StandaloneInputModule.ProcessTouchPress() 를 변형함.
-            public virtual void ProcessReleased(List<Pointer> pointers)
+            public virtual void ProcessCancelled(Pointer pointer)
             {
-                foreach (var pointer in pointers)
+                var over = pointer.GetOverData();
+                GetPointerData((int) pointer.Id, out var pointerEvent, true);
+                var target = over.Target;
+                var currentOverGo = target == null ? null : target.gameObject;
+
+
+                ExecuteEvents.Execute(pointerEvent.pointerPress, pointerEvent, ExecuteEvents.pointerUpHandler);
+
+                if (pointerEvent.pointerDrag != null && pointerEvent.dragging)
                 {
-                    var press = pointer.GetPressData();
-                    // Don't update the pointer if it is was not pressed over an UI element
-                    if (press.IsNotUI()) continue;
-                    var over = pointer.GetOverData();
-                    GetPointerData((int) pointer.Id, out var pointerEvent, true);
-                    Assert.IsTrue(pointerEvent.pointerCurrentRaycast.isValid);
-                    var target = over.Target;
-                    var currentOverGo = target == null ? null : target.gameObject;
-
-
-                    // Debug.Log("Executing pressup on: " + pointer.pointerPress);
-                    ExecuteEvents.Execute(pointerEvent.pointerPress, pointerEvent, ExecuteEvents.pointerUpHandler);
-
-                    // Debug.Log("KeyCode: " + pointer.eventData.keyCode);
-
-                    // see if we mouse up on the same element that we clicked on...
-                    var pointerClickHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
-
-                    // PointerClick and Drop events
-                    if (pointerEvent.pointerClick == pointerClickHandler && pointerEvent.eligibleForClick)
-                    {
-                        ExecuteEvents.Execute(pointerEvent.pointerClick, pointerEvent, ExecuteEvents.pointerClickHandler);
-                    }
-
-                    if (pointerEvent.pointerDrag != null && pointerEvent.dragging)
-                    {
-                        ExecuteEvents.ExecuteHierarchy(currentOverGo, pointerEvent, ExecuteEvents.dropHandler);
-                    }
-
-                    pointerEvent.eligibleForClick = false;
-                    pointerEvent.pointerPress = null;
-                    pointerEvent.pointerClick = null;
-
-                    if (pointerEvent.pointerDrag != null && pointerEvent.dragging)
-                        ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.endDragHandler);
-
-                    pointerEvent.dragging = false;
-                    pointerEvent.pointerDrag = null;
-
-                    // send exit events as we need to simulate this on touch up on touch device
-                    ExecuteEvents.ExecuteHierarchy(pointerEvent.pointerEnter, pointerEvent, ExecuteEvents.pointerExitHandler);
-                    pointerEvent.pointerEnter = null;
-
-                    // redo pointer enter / exit to refresh state
-                    // so that if we moused over something that ignored it before
-                    // due to having pressed on something else
-                    // it now gets it.
-                    if (currentOverGo != pointerEvent.pointerEnter)
-                    {
-                        HandlePointerExitAndEnter(pointerEvent, null);
-                        HandlePointerExitAndEnter(pointerEvent, currentOverGo);
-                    }
+                    ExecuteEvents.ExecuteHierarchy(currentOverGo, pointerEvent, ExecuteEvents.dropHandler);
                 }
+
+                pointerEvent.eligibleForClick = false;
+                pointerEvent.pointerPress = null;
+                pointerEvent.pointerClick = null;
+
+                if (pointerEvent.pointerDrag != null && pointerEvent.dragging)
+                    ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.endDragHandler);
+
+                pointerEvent.dragging = false;
+                pointerEvent.pointerDrag = null;
+
+                // send exit events as we need to simulate this on touch up on touch device
+                ExecuteEvents.ExecuteHierarchy(pointerEvent.pointerEnter, pointerEvent, ExecuteEvents.pointerExitHandler);
+                pointerEvent.pointerEnter = null;
             }
 
-            // XXX: StandaloneInputModule.ProcessTouchPress() 를 변형함.
-            public virtual void ProcessCancelled(List<Pointer> pointers)
+            public virtual void ProcessRemoved(Pointer pointer)
             {
-                foreach (var pointer in pointers)
-                {
-                    var over = pointer.GetOverData();
-                    GetPointerData((int) pointer.Id, out var pointerEvent, true);
-                    var target = over.Target;
-                    var currentOverGo = target == null ? null : target.gameObject;
+                var over = pointer.GetOverData();
+                // Don't update the pointer if it is not over an UI element
+                if (over.IsNotUI()) return;
+                GetPointerData((int) pointer.Id, out var pointerEvent, true);
 
-
-                    ExecuteEvents.Execute(pointerEvent.pointerPress, pointerEvent, ExecuteEvents.pointerUpHandler);
-
-                    if (pointerEvent.pointerDrag != null && pointerEvent.dragging)
-                    {
-                        ExecuteEvents.ExecuteHierarchy(currentOverGo, pointerEvent, ExecuteEvents.dropHandler);
-                    }
-
-                    pointerEvent.eligibleForClick = false;
-                    pointerEvent.pointerPress = null;
-                    pointerEvent.pointerClick = null;
-
-                    if (pointerEvent.pointerDrag != null && pointerEvent.dragging)
-                        ExecuteEvents.Execute(pointerEvent.pointerDrag, pointerEvent, ExecuteEvents.endDragHandler);
-
-                    pointerEvent.dragging = false;
-                    pointerEvent.pointerDrag = null;
-
-                    // send exit events as we need to simulate this on touch up on touch device
-                    ExecuteEvents.ExecuteHierarchy(pointerEvent.pointerEnter, pointerEvent, ExecuteEvents.pointerExitHandler);
-                    pointerEvent.pointerEnter = null;
-                }
-            }
-
-            public virtual void ProcessRemoved(List<Pointer> pointers)
-            {
-                foreach (var pointer in pointers)
-                {
-                    var over = pointer.GetOverData();
-                    // Don't update the pointer if it is not over an UI element
-                    if (over.IsNotUI()) continue;
-                    GetPointerData((int) pointer.Id, out var pointerEvent, true);
-
-                    if (pointerEvent.pointerEnter) ExecuteEvents.ExecuteHierarchy(pointerEvent.pointerEnter, pointerEvent, ExecuteEvents.pointerExitHandler);
-                    RemovePointerData(pointerEvent);
-                }
+                if (pointerEvent.pointerEnter) ExecuteEvents.ExecuteHierarchy(pointerEvent.pointerEnter, pointerEvent, ExecuteEvents.pointerExitHandler);
+                RemovePointerData(pointerEvent);
             }
 
             #endregion

@@ -612,7 +612,7 @@ namespace TouchScript.Gestures
             for (var i = 0; i < total; i++)
             {
                 var pointer = activePointers[i];
-                if (pointer.INTERNAL_Release() == 0 && cancel) touchManager.CancelPointer(pointer.Id, true);
+                if (pointer.INTERNAL_Release() == 0 && cancel) touchManager.CancelPointer(pointer, true);
             }
         }
 

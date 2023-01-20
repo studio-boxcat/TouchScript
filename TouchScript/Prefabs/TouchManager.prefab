@@ -9,8 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 400002}
-  - component: {fileID: 11400000}
-  - component: {fileID: 11478012}
+  - component: {fileID: 5116514108280472051}
   m_Layer: 0
   m_Name: TouchManager
   m_TagString: Untagged
@@ -33,7 +32,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &11400000
+--- !u!114 &5116514108280472051
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -42,34 +41,6 @@ MonoBehaviour:
   m_GameObject: {fileID: 100002}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0dd4c394fe06f4ea49e03aaa5e7a8190, type: 3}
+  m_Script: {fileID: 11500000, guid: d86d3f0426b2f4d0fbf2464eb80bb82d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  basicEditor: 1
-  displayDevice: {fileID: 0}
-  shouldCreateCameraLayer: 1
-  shouldCreateStandardInput: 1
-  layers: []
---- !u!114 &11478012
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 100002}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e276ccba4f7314d9988af19f9b3a611b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  basicEditor: 1
-  generalProps: 0
-  windowsProps: 0
-  webglProps: 0
-  windows8API: 0
-  windows7API: 0
-  webGLTouch: 1
-  windows8Mouse: 1
-  windows7Mouse: 1
-  universalWindowsMouse: 1
-  emulateSecondMousePointer: 1
