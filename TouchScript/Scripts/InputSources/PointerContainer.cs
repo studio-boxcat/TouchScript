@@ -26,9 +26,10 @@ namespace TouchScript.InputSources
             Assert.AreEqual(PointerId.Invalid, pointer.Id);
             pointer.INTERNAL_Init(IssuePointerId(), inputSource, pos);
 
-            var newPointer = pointer;
-            Pointers.Add(newPointer);
-            return newPointer;
+            Assert.IsFalse(Pointers.Contains(pointer));
+            Pointers.Add(pointer);
+
+            return pointer;
         }
 
         public void Destroy(Pointer pointer)

@@ -67,9 +67,12 @@ namespace TouchScript.InputSources.InputHandlers
 
         public void CancelPointer([NotNull] Pointer pointer, bool shouldReturn, PointerChanges changes)
         {
+            Assert.IsTrue(pointer.Id.IsValid());
+
             if (_mousePointer != pointer)
             {
                 Logger.Warning("알 수 없는 포인터입니다. 이전에 취소한 포인터일 수 있습니다: " + pointer.Id);
+                changes.Put_Cancel(pointer);
                 return;
             }
 
