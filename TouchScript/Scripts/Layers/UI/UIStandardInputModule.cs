@@ -3,6 +3,7 @@ using JetBrains.Annotations;
 using TouchScript.Hit;
 using TouchScript.Pointers;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
 
 namespace TouchScript.Layers.UI
@@ -136,7 +137,7 @@ namespace TouchScript.Layers.UI
                     pointerEvent.position = pointer.Position;
                     pointerEvent.delta = Vector2.zero;
                     pointerEvent.button = PointerEventData.InputButton.Left;
-                    pointerEvent.pointerCurrentRaycast = UpdateRaycastResult(pointerEvent.pointerCurrentRaycast, over, pointerEvent.position);
+                    pointerEvent.pointerCurrentRaycast = ConvertRaycastResult(over, pointerEvent.position);
 
                     input.HandlePointerExitAndEnter(pointerEvent, currentOverGo);
                 }
@@ -168,7 +169,7 @@ namespace TouchScript.Layers.UI
 
                     pointerEvent.position = pointer.Position;
                     pointerEvent.delta = pointer.Position - pointer.PreviousPosition;
-                    pointerEvent.pointerCurrentRaycast = UpdateRaycastResult(pointerEvent.pointerCurrentRaycast, over, pointerEvent.position);
+                    pointerEvent.pointerCurrentRaycast = ConvertRaycastResult(over, pointerEvent.position);
 
                     ProcessMove(pointerEvent);
                     ProcessDrag(pointerEvent);
@@ -176,22 +177,13 @@ namespace TouchScript.Layers.UI
             }
 
             [MustUseReturnValue]
-            static RaycastResult UpdateRaycastResult(RaycastResult raycastResult, HitData hitData, Vector2 screenPosition)
+            static RaycastResult ConvertRaycastResult(HitData hitData, Vector2 screenPosition)
             {
-                if (hitData.Graphic is not null)
-                {
-                    raycastResult.gameObject = hitData.Graphic.gameObject;
-                    raycastResult.graphic = hitData.Graphic;
-                }
-                else
-                {
-                    raycastResult.gameObject = null;
-                    raycastResult.graphic = null;
-                }
-
-                raycastResult.screenPosition = screenPosition;
-
-                return raycastResult;
+                // TODO: displayIndex 대응이 필요함.
+                const int displayIndex = default;
+                return hitData.Graphic is not null
+                    ? new RaycastResult(hitData.Graphic, hitData.GraphicRaycaster, displayIndex, screenPosition)
+                    : new RaycastResult(null, hitData.GraphicRaycaster, displayIndex, screenPosition);
             }
 
             // XXX: PointerInputModule.ProcessMove() 를 변형함.
@@ -241,6 +233,7 @@ namespace TouchScript.Layers.UI
                     // Don't update the pointer if it is not over an UI element
                     if (over.IsNotUI()) continue;
                     GetPointerData((int) pointer.Id, out var pointerEvent, true);
+                    Assert.IsTrue(pointerEvent.pointerCurrentRaycast.isValid);
                     var target = over.Target;
                     var currentOverGo = target == null ? null : target.gameObject;
 
@@ -295,6 +288,7 @@ namespace TouchScript.Layers.UI
                     if (press.IsNotUI()) continue;
                     var over = pointer.GetOverData();
                     GetPointerData((int) pointer.Id, out var pointerEvent, true);
+                    Assert.IsTrue(pointerEvent.pointerCurrentRaycast.isValid);
                     var target = over.Target;
                     var currentOverGo = target == null ? null : target.gameObject;
 
