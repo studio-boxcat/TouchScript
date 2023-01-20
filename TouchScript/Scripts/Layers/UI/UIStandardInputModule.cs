@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using JetBrains.Annotations;
 using TouchScript.Hit;
 using TouchScript.Pointers;
 using UnityEngine;
@@ -113,13 +114,6 @@ namespace TouchScript.Layers.UI
             void HandlePointerExitAndEnter(PointerEventData currentPointerData, GameObject newEnterTarget)
                 => input.HandlePointerExitAndEnter(currentPointerData, newEnterTarget);
 
-            private static void ConvertRaycast(HitData old, ref RaycastResult current)
-            {
-                current.gameObject = old.Target == null ? null : old.Target.gameObject;
-                current.gameObject = old.Target == null ? null : old.Target.gameObject;
-                current.module = old.GraphicRaycaster;
-            }
-
             #endregion
 
             #region Event processors
@@ -127,7 +121,6 @@ namespace TouchScript.Layers.UI
             // XXX: PointerInputModule.GetTouchPointerEventData() 을 변형함.
             public virtual void ProcessAdded(List<Pointer> pointers)
             {
-                var raycast = new RaycastResult();
                 foreach (var pointer in pointers)
                 {
                     var over = pointer.GetOverData();
@@ -143,9 +136,7 @@ namespace TouchScript.Layers.UI
                     pointerEvent.position = pointer.Position;
                     pointerEvent.delta = Vector2.zero;
                     pointerEvent.button = PointerEventData.InputButton.Left;
-                    ConvertRaycast(over, ref raycast);
-                    raycast.screenPosition = pointerEvent.position;
-                    pointerEvent.pointerCurrentRaycast = raycast;
+                    pointerEvent.pointerCurrentRaycast = UpdateRaycastResult(pointerEvent.pointerCurrentRaycast, over, pointerEvent.position);
 
                     input.HandlePointerExitAndEnter(pointerEvent, currentOverGo);
                 }
@@ -153,7 +144,6 @@ namespace TouchScript.Layers.UI
 
             public virtual void ProcessUpdated(List<Pointer> pointers)
             {
-                var raycast = new RaycastResult();
                 foreach (var pointer in pointers)
                 {
                     var over = pointer.GetOverData();
@@ -178,13 +168,30 @@ namespace TouchScript.Layers.UI
 
                     pointerEvent.position = pointer.Position;
                     pointerEvent.delta = pointer.Position - pointer.PreviousPosition;
-                    ConvertRaycast(over, ref raycast);
-                    raycast.screenPosition = pointerEvent.position;
-                    pointerEvent.pointerCurrentRaycast = raycast;
+                    pointerEvent.pointerCurrentRaycast = UpdateRaycastResult(pointerEvent.pointerCurrentRaycast, over, pointerEvent.position);
 
                     ProcessMove(pointerEvent);
                     ProcessDrag(pointerEvent);
                 }
+            }
+
+            [MustUseReturnValue]
+            static RaycastResult UpdateRaycastResult(RaycastResult raycastResult, HitData hitData, Vector2 screenPosition)
+            {
+                if (hitData.Graphic is not null)
+                {
+                    raycastResult.gameObject = hitData.Graphic.gameObject;
+                    raycastResult.graphic = hitData.Graphic;
+                }
+                else
+                {
+                    raycastResult.gameObject = null;
+                    raycastResult.graphic = null;
+                }
+
+                raycastResult.screenPosition = screenPosition;
+
+                return raycastResult;
             }
 
             // XXX: PointerInputModule.ProcessMove() 를 변형함.
