@@ -2,9 +2,7 @@
  * @author Valentin Simonov / http://va.lent.in/
  */
 
-using System.Collections.Generic;
 using TouchScript.InputSources.InputHandlers;
-using TouchScript.Pointers;
 
 namespace TouchScript.InputSources
 {
@@ -12,24 +10,17 @@ namespace TouchScript.InputSources
     /// Processes standard input events (mouse, pointer, pen) on all platforms.
     /// Initializes proper inputs automatically. Replaces old Mobile and Mouse inputs.
     /// </summary>
-    public sealed class StandardInput
+    public readonly struct StandardInput
     {
-        readonly PointerContainer _pointerContainer;
         public readonly TouchInputSource TouchInputSource;
         public readonly MouseInputSource MouseInputSource;
         public readonly FakeInputSource FakeInputSource;
 
-        public StandardInput()
+        public StandardInput(PointerContainer pointerContainer)
         {
-            _pointerContainer = new PointerContainer(4);
-            TouchInputSource = new TouchInputSource(_pointerContainer);
-            MouseInputSource = new MouseInputSource(_pointerContainer);
-            FakeInputSource = new FakeInputSource(_pointerContainer);
-        }
-
-        public List<Pointer> GetPointers()
-        {
-            return _pointerContainer.Pointers;
+            TouchInputSource = new TouchInputSource(pointerContainer);
+            MouseInputSource = new MouseInputSource(pointerContainer);
+            FakeInputSource = new FakeInputSource(pointerContainer);
         }
 
         public void UpdateInput(PointerChanges changes)

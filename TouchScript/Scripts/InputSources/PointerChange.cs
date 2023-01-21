@@ -12,6 +12,18 @@ namespace TouchScript.InputSources
         public bool Removed;
         public bool Cancelled;
 
+        public override string ToString()
+        {
+            var str = "";
+            if (Added) str += "Added,";
+            if (Updated) str += "Updated,";
+            if (Pressed) str += "Pressed,";
+            if (Released) str += "Released,";
+            if (Removed) str += "Removed,";
+            if (Cancelled) str += "Cancelled,";
+            return str;
+        }
+
         public static PointerChange MergeWithCheck(PointerChange a, PointerChange b)
         {
             AssertCollision(a, b);
@@ -28,7 +40,7 @@ namespace TouchScript.InputSources
         }
 
         [Conditional("DEBUG")]
-        public static void AssertCollision(PointerChange a, PointerChange b)
+        static void AssertCollision(PointerChange a, PointerChange b)
         {
             Assert.IsFalse(a.Added && b.Added);
             Assert.IsFalse(a.Updated && b.Updated);

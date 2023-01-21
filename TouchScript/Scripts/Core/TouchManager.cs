@@ -6,11 +6,13 @@ using System;
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using TouchScript.InputSources;
+using TouchScript.InputSources.InputHandlers;
 using TouchScript.Layers.UI;
 using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
+using Logger = TouchScript.Utils.Logger;
 
 namespace TouchScript.Core
 {
@@ -18,12 +20,14 @@ namespace TouchScript.Core
     {
         public static TouchManager Instance;
 
-        public readonly StandardInput Input = new();
-
         [SerializeField, Required, ChildGameObjectsOnly]
         TouchScriptInputModule _uiInputModule;
 
+        readonly PointerContainer _pointerContainer = new(4);
         readonly PointerChanges _changes = new(10);
+        StandardInput _input;
+
+        readonly Logger _logger = new(nameof(TouchManager));
 
         public event Action FrameStarted;
         public event Action FrameFinished;
@@ -34,28 +38,34 @@ namespace TouchScript.Core
         public event Action<Pointer> PointerRemoved;
         public event Action<Pointer> PointerCancelled;
 
+        void Awake()
+        {
+            _input = new StandardInput(_pointerContainer);
+        }
+
         void Update()
         {
-            foreach (var pointer in Input.GetPointers())
+            foreach (var pointer in _pointerContainer.Pointers.Values)
                 pointer.INTERNAL_FrameStarted();
-            Input.UpdateInput(_changes);
+            _input.UpdateInput(_changes);
             UpdatePointers();
         }
 
-        readonly List<KeyValuePair<Pointer, PointerChange>> _tmpChanges = new();
+        readonly List<(Pointer, PointerChange)> _tmpChanges = new();
 
         void UpdatePointers()
         {
-            _tmpChanges.Clear();
-
             FrameStarted?.InvokeHandleExceptions();
 
-            foreach (var pointer in Input.GetPointers())
+            var pointers = _pointerContainer.Pointers;
+            foreach (var pointer in pointers.Values)
                 pointer.INTERNAL_UpdatePosition();
 
-            _changes.Flush(_tmpChanges);
+            _tmpChanges.Clear();
+            _changes.Flush(_pointerContainer, _tmpChanges);
 
-            _uiInputModule.ProcessTouchEvents(_tmpChanges);
+            foreach (var (pointer, change) in _tmpChanges)
+                _uiInputModule.ProcessTouchEvents(pointer, change);
 
             foreach (var (pointer, change) in _tmpChanges)
             {
@@ -64,6 +74,7 @@ namespace TouchScript.Core
                 // 포인터가 취소된 경우, 취소만을 업데이트하고 나머지는 무시.
                 if (change.Cancelled)
                 {
+                    _logger.Info("Cancelled: " + pointer.Id);
                     PointerCancelled?.InvokeHandleExceptions(pointer);
                     pointer.InputSource.INTERNAL_DiscardPointer(pointer);
                     continue;
@@ -94,6 +105,7 @@ namespace TouchScript.Core
 
                 if (change.Removed)
                 {
+                    _logger.Info("Removed: " + pointer.Id);
                     PointerRemoved?.InvokeHandleExceptions(pointer);
                     pointer.InputSource.INTERNAL_DiscardPointer(pointer);
                 }
@@ -109,7 +121,9 @@ namespace TouchScript.Core
 
         public void CancelAllPointers()
         {
-            Input.CancelAllPointers(_changes);
+            _input.CancelAllPointers(_changes);
         }
+
+        public FakeInputSource GetFakeInputSource() => _input.FakeInputSource;
     }
 }

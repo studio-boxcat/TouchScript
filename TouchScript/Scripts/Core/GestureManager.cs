@@ -33,6 +33,8 @@ namespace TouchScript.Core
         [SerializeField, Required, ChildGameObjectsOnly]
         TouchManager _touchManager;
 
+        static readonly Logger _logger = new(nameof(GestureManager));
+
         // Upcoming changes
         readonly List<Gesture> _gesturesToReset = new(4);
         readonly PointerToGestures _pointerToGestures = new(4);
@@ -419,7 +421,7 @@ namespace TouchScript.Core
             {
                 if (_list.Count > 0)
                 {
-                    Logger.Error("_gesturesToPointers 가 초기화되지 않은 상태입니다.");
+                    _logger.Error("_gesturesToPointers 가 초기화되지 않은 상태입니다.");
                     Clear();
                 }
             }
@@ -518,7 +520,7 @@ namespace TouchScript.Core
             {
                 if (_list.Count > 0)
                 {
-                    Logger.Error("_gesturesToPointers 가 초기화되지 않은 상태입니다.");
+                    _logger.Error("_gesturesToPointers 가 초기화되지 않은 상태입니다.");
                     Clear();
                 }
             }

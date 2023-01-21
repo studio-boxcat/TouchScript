@@ -3,17 +3,30 @@ using Debug = UnityEngine.Debug;
 
 namespace TouchScript.Utils
 {
-    public static class Logger
+    public readonly struct Logger
     {
-        [Conditional("DEBUG")]
-        public static void Warning(string message)
+        readonly string _tag;
+
+        public Logger(string tag)
         {
-            Debug.LogWarning(message);
+            _tag = tag;
         }
 
-        public static void Error(string message)
+        [Conditional("DEBUG")]
+        public void Info(string message)
         {
-            Debug.LogError(message);
+            Debug.Log($"[TS:{_tag}] {message}");
+        }
+
+        [Conditional("DEBUG")]
+        public void Warning(string message)
+        {
+            Debug.LogWarning($"[TS:{_tag}] {message}");
+        }
+
+        public void Error(string message)
+        {
+            Debug.LogError($"[TS:{_tag}] {message}");
         }
     }
 }

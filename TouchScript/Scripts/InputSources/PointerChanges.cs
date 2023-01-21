@@ -1,61 +1,93 @@
 using System.Collections.Generic;
+using System.Linq;
 using TouchScript.Pointers;
+using TouchScript.Utils;
 using UnityEngine.Assertions;
 
 namespace TouchScript.InputSources
 {
     public readonly struct PointerChanges
     {
-        readonly Dictionary<Pointer, PointerChange> _changes;
+        readonly Dictionary<PointerId, PointerChange> _changes;
+        static readonly Logger _logger = new(nameof(PointerChanges));
 
         public PointerChanges(int capacity)
         {
-            _changes = new Dictionary<Pointer, PointerChange>(capacity);
+            _changes = new Dictionary<PointerId, PointerChange>(capacity);
         }
 
-        public void Flush(List<KeyValuePair<Pointer, PointerChange>> changes)
+        public void Flush(PointerContainer pointers, List<(Pointer, PointerChange)> changes)
         {
-            changes.AddRange(_changes);
+            Assert.AreEqual(0, changes.Count);
+
+            foreach (var (pointerId, pointer) in pointers.Pointers)
+            {
+                Assert.AreEqual(pointerId, pointer.Id);
+                if (_changes.TryGetValue(pointerId, out var change))
+                    changes.Add((pointer, change));
+            }
+
+#if DEBUG
+            if (_changes.Count != changes.Count)
+            {
+                foreach (var (pointerId, change) in _changes)
+                {
+                    if (changes.Any(x => x.Item1.Id == pointerId))
+                        continue;
+
+                    _logger.Error($"삭제된 포인터의 변경사항이 발견되었습니다: {pointerId}, {change}");
+                }
+            }
+#endif
+
             _changes.Clear();
         }
 
-        public void Put(Pointer pointer, PointerChange change)
+        public void Put(PointerId pointerId, PointerChange change)
         {
-            if (_changes.TryGetValue(pointer, out var oldChange))
+            Assert.IsTrue(pointerId.IsValid());
+
+            if (_changes.TryGetValue(pointerId, out var oldChange))
             {
-                _changes[pointer] = PointerChange.MergeWithCheck(change, oldChange);
+                _changes[pointerId] = PointerChange.MergeWithCheck(change, oldChange);
             }
             else
             {
-                _changes[pointer] = change;
+                _changes[pointerId] = change;
             }
         }
 
-        public void Put_AddAndPress(Pointer pointer)
+        public void Put_AddAndPress(PointerId pointerId)
         {
-            if (_changes.TryGetValue(pointer, out var change) == false)
+            Assert.IsTrue(pointerId.IsValid());
+
+            if (_changes.TryGetValue(pointerId, out var change) == false)
                 change = default;
             Assert.IsFalse(change.Added);
             Assert.IsFalse(change.Pressed);
             change.Added = true;
             change.Pressed = true;
-            _changes[pointer] = change;
+            _changes[pointerId] = change;
         }
 
-        public void Put_ReleaseAndRemove(Pointer pointer)
+        public void Put_ReleaseAndRemove(PointerId pointerId)
         {
-            if (_changes.TryGetValue(pointer, out var change) == false)
+            Assert.IsTrue(pointerId.IsValid());
+
+            if (_changes.TryGetValue(pointerId, out var change) == false)
                 change = default;
             Assert.IsFalse(change.Released);
             Assert.IsFalse(change.Removed);
             change.Released = true;
             change.Removed = true;
-            _changes[pointer] = change;
+            _changes[pointerId] = change;
         }
 
-        public void Put_SingleFrameTap(Pointer pointer)
+        public void Put_SingleFrameTap(PointerId pointerId)
         {
-            if (_changes.TryGetValue(pointer, out var change) == false)
+            Assert.IsTrue(pointerId.IsValid());
+
+            if (_changes.TryGetValue(pointerId, out var change) == false)
                 change = default;
             Assert.IsFalse(change.Added);
             Assert.IsFalse(change.Pressed);
@@ -65,25 +97,29 @@ namespace TouchScript.InputSources
             change.Pressed = true;
             change.Released = true;
             change.Removed = true;
-            _changes[pointer] = change;
+            _changes[pointerId] = change;
         }
 
-        public void Put_Update(Pointer pointer)
+        public void Put_Update(PointerId pointerId)
         {
-            if (_changes.TryGetValue(pointer, out var change) == false)
+            Assert.IsTrue(pointerId.IsValid());
+
+            if (_changes.TryGetValue(pointerId, out var change) == false)
                 change = default;
             Assert.IsFalse(change.Updated);
             change.Updated = true;
-            _changes[pointer] = change;
+            _changes[pointerId] = change;
         }
 
-        public void Put_Cancel(Pointer pointer)
+        public void Put_Cancel(PointerId pointerId)
         {
-            if (_changes.TryGetValue(pointer, out var change) == false)
+            Assert.IsTrue(pointerId.IsValid());
+
+            if (_changes.TryGetValue(pointerId, out var change) == false)
                 change = default;
             Assert.IsFalse(change.Cancelled);
             change.Cancelled = true;
-            _changes[pointer] = change;
+            _changes[pointerId] = change;
         }
     }
 }

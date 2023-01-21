@@ -3,7 +3,6 @@
  */
 
 using System;
-using JetBrains.Annotations;
 using TouchScript.Core;
 using TouchScript.Hit;
 using TouchScript.InputSources;

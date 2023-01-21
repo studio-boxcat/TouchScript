@@ -16,6 +16,7 @@ namespace TouchScript.InputSources.InputHandlers
     public class MouseInputSource : IInputSource
     {
         readonly PointerContainer _pointerContainer;
+        static readonly Logger _logger = new(nameof(MouseInputSource));
 
         Pointer _mousePointer;
 
@@ -38,7 +39,8 @@ namespace TouchScript.InputSources.InputHandlers
                 change.Added = true;
             }
 
-            Assert.IsTrue(_mousePointer.Id.IsValid());
+            var pointerId = _mousePointer.Id;
+            Assert.IsTrue(pointerId.IsValid());
             Assert.IsFalse(_mousePointer.IsReturned);
 
             if (pos != _mousePointer.Position)
@@ -57,23 +59,24 @@ namespace TouchScript.InputSources.InputHandlers
                 change.Released = true;
             }
 
-            changes.Put(_mousePointer, change);
+            changes.Put(pointerId, change);
             return true;
         }
 
         public void CancelPointer([NotNull] Pointer pointer, bool shouldReturn, PointerChanges changes)
         {
-            Assert.IsTrue(pointer.Id.IsValid());
+            var pointerId = pointer.Id;
+            Assert.IsTrue(pointerId.IsValid());
 
-            if (_mousePointer != pointer)
+            if (ReferenceEquals(_mousePointer, pointer) == false)
             {
-                Logger.Warning("알 수 없는 포인터입니다. 이전에 취소한 포인터일 수 있습니다: " + pointer.Id);
-                changes.Put_Cancel(pointer);
+                _logger.Warning("알 수 없는 포인터입니다. 이전에 취소한 포인터일 수 있습니다: " + pointerId);
+                changes.Put_Cancel(pointerId);
                 return;
             }
 
             // 우선 Pointer 를 Cancel 함.
-            changes.Put_Cancel(_mousePointer);
+            changes.Put_Cancel(pointerId);
             _mousePointer = null;
 
             if (shouldReturn == false)
@@ -84,7 +87,7 @@ namespace TouchScript.InputSources.InputHandlers
             newPointer.CopyFrom(pointer);
             var change = new PointerChange {Added = true};
             if (pointer.Pressing) change.Pressed = true;
-            changes.Put(newPointer, change);
+            changes.Put(newPointer.Id, change);
 
             // 새로운 포인터로 스왑.
             _mousePointer = newPointer;
@@ -99,7 +102,7 @@ namespace TouchScript.InputSources.InputHandlers
         public void CancelMousePointer(PointerChanges changes)
         {
             if (_mousePointer == null) return;
-            changes.Put_Cancel(_mousePointer);
+            changes.Put_Cancel(_mousePointer.Id);
             _mousePointer = null;
         }
 
@@ -107,6 +110,7 @@ namespace TouchScript.InputSources.InputHandlers
 
         void IInputSource.INTERNAL_DiscardPointer([NotNull] Pointer pointer)
         {
+            _logger.Info("Discard: " + pointer.Id);
             Assert.IsTrue(pointer.Id.IsValid());
 
             if (_mousePointer == pointer)

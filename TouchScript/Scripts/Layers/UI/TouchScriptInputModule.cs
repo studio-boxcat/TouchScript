@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using TouchScript.InputSources;
 using TouchScript.Pointers;
 using UnityEngine;
+using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
 
 namespace TouchScript.Layers.UI
@@ -30,6 +31,8 @@ namespace TouchScript.Layers.UI
                     pointerId = id,
                 };
                 m_PointerData.Add(id, data);
+                // m_PointerData 가 일정이상 쌓이면 버그로 취급.
+                Assert.IsTrue(m_PointerData.Count < 8);
                 return true;
             }
             return false;
@@ -162,22 +165,29 @@ namespace TouchScript.Layers.UI
             //     ProcessMouseEvent();
         }
 
-        public void ProcessTouchEvents(List<KeyValuePair<Pointer, PointerChange>> changes)
+        public void ProcessTouchEvents(Pointer p, PointerChange change)
         {
-            foreach (var (p, change) in changes)
+            Assert.IsTrue(p.Id.IsValid());
+
+            if (change.Cancelled)
             {
-                var pointer = GetTouchPointerEventData(p, change);
-
-                ProcessTouchPress(pointer, change.Pressed, change.Released);
-
-                if (!change.Released)
-                {
-                    ProcessMove(pointer);
-                    ProcessDrag(pointer);
-                }
-                else
-                    RemovePointerData(pointer);
+                m_PointerData.Remove((int) p.Id);
+                return;
             }
+
+            var pointer = GetTouchPointerEventData(p, change);
+
+            ProcessTouchPress(pointer, change.Pressed, change.Released);
+
+            if (!change.Released)
+            {
+                ProcessMove(pointer);
+                ProcessDrag(pointer);
+            }
+            else
+                RemovePointerData(pointer);
+
+            Assert.IsTrue(p.Id.IsValid());
         }
 
         void ProcessTouchPress(PointerEventData pointerEvent, bool pressed, bool released)
