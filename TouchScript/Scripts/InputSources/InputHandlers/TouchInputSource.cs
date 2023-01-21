@@ -109,6 +109,7 @@ namespace TouchScript.InputSources.InputHandlers
             var newPointer = _pointerContainer.Create(pos, this);
             var touchState = new TouchState(newPointer, ended);
             _states[fingerId] = touchState;
+            Assert.IsTrue(_states.Count < 20);
             return newPointer;
         }
 
