@@ -95,13 +95,22 @@ namespace TouchScript.InputSources.InputHandlers
                 _pointer.IsReturned = true;
         }
 
-        public void INTERNAL_DiscardPointer(Pointer pointer)
+        public void INTERNAL_DiscardPointer(Pointer pointer, bool cancelled)
         {
             _logger.Info("Discard: " + pointer.Id);
             Assert.IsTrue(pointer.Id.IsValid());
 
-            if (_pointer == pointer)
-                _pointer = null;
+            if (cancelled)
+            {
+                Assert.AreNotEqual(_pointer, pointer);
+            }
+            else
+            {
+                Assert.AreEqual(_pointer, pointer);
+                if (_pointer == pointer)
+                    _pointer = null;
+            }
+
             _pointerContainer.Destroy(pointer);
         }
 

@@ -114,13 +114,22 @@ namespace TouchScript.InputSources.InputHandlers
 
         public void CancelAllPointers(PointerChanges changes) => CancelMousePointer(changes);
 
-        void IInputSource.INTERNAL_DiscardPointer([NotNull] Pointer pointer)
+        void IInputSource.INTERNAL_DiscardPointer(Pointer pointer, bool cancelled)
         {
             _logger.Info("Discard: " + pointer.Id);
             Assert.IsTrue(pointer.Id.IsValid());
 
-            if (_mousePointer == pointer)
-                _mousePointer = null;
+            if (cancelled)
+            {
+                Assert.AreNotEqual(_mousePointer, pointer);
+            }
+            else
+            {
+                Assert.AreEqual(_mousePointer, pointer);
+                if (_mousePointer == pointer)
+                    _mousePointer = null;
+            }
+
             _pointerContainer.Destroy(pointer);
         }
 

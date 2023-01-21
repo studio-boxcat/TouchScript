@@ -121,7 +121,7 @@ namespace TouchScript.Core
                     Assert.IsTrue(pointer.Id.IsValid());
                     _logger.Info("Removed: " + pointer.Id);
                     PointerRemoved?.InvokeHandleExceptions(pointer);
-                    pointer.InputSource.INTERNAL_DiscardPointer(pointer);
+                    pointer.InputSource.INTERNAL_DiscardPointer(pointer, false);
                 }
 
                 if (change.Cancelled)
@@ -129,7 +129,7 @@ namespace TouchScript.Core
                     Assert.IsTrue(pointer.Id.IsValid());
                     _logger.Info("Cancelled: " + pointer.Id);
                     PointerCancelled?.InvokeHandleExceptions(pointer);
-                    pointer.InputSource.INTERNAL_DiscardPointer(pointer);
+                    pointer.InputSource.INTERNAL_DiscardPointer(pointer, true);
                 }
             }
 

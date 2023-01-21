@@ -2,6 +2,7 @@
  * @author Valentin Simonov / http://va.lent.in/
  */
 
+using JetBrains.Annotations;
 using TouchScript.Pointers;
 
 namespace TouchScript.InputSources
@@ -28,6 +29,6 @@ namespace TouchScript.InputSources
         /// DO NOT CALL THIS METHOD DIRECTLY FROM YOUR CODE!
         /// </summary>
         /// <param name="pointer">The pointer.</param>
-        void INTERNAL_DiscardPointer(Pointer pointer);
+        void INTERNAL_DiscardPointer([NotNull] Pointer pointer, bool cancelled);
     }
 }

@@ -5,7 +5,6 @@
 
 using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -19,7 +18,7 @@ namespace TouchScript.InputSources.InputHandlers
     public class TouchInputSource : IInputSource
     {
         readonly PointerContainer _pointerContainer;
-        readonly Dictionary<int, TouchState> _states = new(10);
+        readonly Dictionary<int, Pointer> _pointers = new(10);
         static readonly Logger _logger = new(nameof(TouchInputSource));
 
         public TouchInputSource(PointerContainer pointerContainer)
@@ -32,12 +31,31 @@ namespace TouchScript.InputSources.InputHandlers
             for (var i = 0; i < Input.touchCount; ++i)
             {
                 var t = Input.GetTouch(i);
-                var fingerId = t.fingerId;
                 var phase = t.phase;
+                if (phase == TouchPhase.Stationary)
+                    continue;
+
+                var fingerId = t.fingerId;
                 var pos = t.position;
 
-                // 없다가 생긴 경우.
-                if (_states.TryGetValue(t.fingerId, out var touchState) == false)
+                // 터치를 새롭게 시작하는 경우.
+                if (phase == TouchPhase.Began)
+                {
+                    // 이미 포인터가 존재했다면 포인터 제거.
+                    if (_pointers.TryGetValue(fingerId, out var oldPointer) && oldPointer != null)
+                        changes.Put_ReleaseAndRemove(oldPointer.Id);
+
+                    // 새롭게 터치를 생성함.
+                    var newPointer = CreatePointer(fingerId, pos);
+                    changes.Put_AddAndPress(newPointer.Id);
+                    _pointers[fingerId] = newPointer;
+                    continue;
+                }
+
+                // 이하 있던 터치를 업데이트하는 경우.
+
+                // fingerId 에 대응하는 Pointer 가 없는 경우.
+                if (_pointers.TryGetValue(fingerId, out var pointer) == false)
                 {
                     // 없다가 생긴게 취소된 상태라면 무시함.
                     if (phase == TouchPhase.Canceled)
@@ -45,60 +63,41 @@ namespace TouchScript.InputSources.InputHandlers
 
                     if (phase != TouchPhase.Ended)
                     {
-                        var newPointer = CreatePointer(fingerId, pos, false);
+                        var newPointer = CreatePointer(fingerId, pos);
                         changes.Put_AddAndPress(newPointer.Id);
+                        _pointers[fingerId] = newPointer;
                     }
                     // 이미 Ended 라면, SingleFrameTap 으로 취급.
                     else
                     {
-                        var newPointer = CreatePointer(fingerId, pos, true);
+                        var newPointer = CreatePointer(fingerId, pos);
                         changes.Put_SingleFrameTap(newPointer.Id);
+                        _pointers[fingerId] = null;
                     }
 
                     continue;
                 }
 
-                // 이전에 있던 포인터를 업데이트하는 경우.
-                var pointer = touchState.Pointer;
+                // fingerId 에 대응하는 Pointer 가 있는 경우.
+                // 이미 끝난 터치는 무시.
+                if (pointer == null) continue;
+
                 var pointerId = pointer.Id;
-                var ended = touchState.Ended;
                 switch (phase)
                 {
-                    case TouchPhase.Began:
-                    {
-                        if (!ended)
-                            changes.Put_ReleaseAndRemove(pointerId);
-
-                        var newPointer = CreatePointer(fingerId, pos, false);
-                        changes.Put_AddAndPress(newPointer.Id);
-                        break;
-                    }
                     case TouchPhase.Moved:
-                    {
-                        if (!ended)
-                        {
-                            pointer.NewPosition = pos;
-                            changes.Put_Update(pointerId);
-                        }
+                        pointer.NewPosition = pos;
+                        changes.Put_Update(pointerId);
                         break;
-                    }
                     // NOTE: Unity touch on Windows reports Cancelled as Ended
                     // when a touch goes out of display boundary
                     case TouchPhase.Ended:
-                        if (!ended)
-                        {
-                            changes.Put_ReleaseAndRemove(pointerId);
-                            _states[fingerId] = new TouchState(pointer, true);
-                        }
+                        changes.Put_ReleaseAndRemove(pointerId);
+                        _pointers[fingerId] = null;
                         break;
                     case TouchPhase.Canceled:
-                        if (!ended)
-                        {
-                            changes.Put_Cancel(pointerId);
-                            _states.Remove(fingerId);
-                        }
-                        break;
-                    case TouchPhase.Stationary:
+                        changes.Put_Cancel(pointerId);
+                        _pointers[fingerId] = null;
                         break;
                     default:
                         throw new ArgumentOutOfRangeException();
@@ -108,14 +107,10 @@ namespace TouchScript.InputSources.InputHandlers
             return Input.touchCount > 0;
         }
 
-        Pointer CreatePointer(int fingerId, Vector2 pos, bool ended)
+        Pointer CreatePointer(int fingerId, Vector2 pos)
         {
-            _logger.Info($"CreatePointer: {fingerId}, {ended}");
-            var newPointer = _pointerContainer.Create(pos, this);
-            var touchState = new TouchState(newPointer, ended);
-            _states[fingerId] = touchState;
-            Assert.IsTrue(_states.Count < 20);
-            return newPointer;
+            _logger.Info($"CreatePointer: {fingerId}");
+            return _pointerContainer.Create(pos, this);
         }
 
         public void CancelPointer(Pointer pointer, bool shouldReturn, PointerChanges changes)
@@ -124,13 +119,11 @@ namespace TouchScript.InputSources.InputHandlers
             Assert.IsTrue(pointerId.IsValid());
 
             var fingerId = int.MaxValue;
-            var ended = false;
-            foreach (var touchState in _states)
+            foreach (var (curFingerId, curPointer) in _pointers)
             {
-                if (touchState.Value.Pointer != pointer)
+                if (curPointer == null || curPointer != pointer)
                     continue;
-                fingerId = touchState.Key;
-                ended = touchState.Value.Ended;
+                fingerId = curFingerId;
                 break;
             }
 
@@ -141,63 +134,47 @@ namespace TouchScript.InputSources.InputHandlers
             }
 
             changes.Put_Cancel(pointerId);
-            _states.Remove(fingerId);
 
-            // 이미 끝난 터치의 경우, Return 을 해도 의미가 없다.
-            if (ended) return;
-
-            // 끝난 터치가 아니고 리턴해야하는 경우.
             if (shouldReturn)
             {
-                var newPointer = CreatePointer(fingerId, default, false);
+                var newPointer = CreatePointer(fingerId, default);
                 newPointer.CopyFrom(pointer);
                 var change = new PointerChange {Added = true};
                 if (pointer.Pressing) change.Pressed = true;
                 newPointer.IsReturned = true;
                 changes.Put(newPointer.Id, change);
+                _pointers[fingerId] = newPointer;
+            }
+            else
+            {
+                _pointers[fingerId] = null;
             }
         }
+
+        static readonly List<int> _fingerIdBuf = new();
 
         public void CancelAllPointers(PointerChanges changes)
         {
-            foreach (var (pointer, _) in _states.Values)
+            Assert.AreEqual(0, _fingerIdBuf.Count);
+            _fingerIdBuf.AddRange(_pointers.Keys);
+
+            foreach (var fingerId in _fingerIdBuf)
+            {
+                var pointer = _pointers[fingerId];
+                if (pointer == null) continue;
                 changes.Put_Cancel(pointer.Id);
-            _states.Clear();
+                _pointers[fingerId] = null;
+            }
+
+            _fingerIdBuf.Clear();
         }
 
-        public void INTERNAL_DiscardPointer([NotNull] Pointer pointer)
+        void IInputSource.INTERNAL_DiscardPointer(Pointer pointer, bool cancelled)
         {
             var pointerId = pointer.Id;
             _logger.Info("Discard: " + pointerId);
-
-            foreach (var (fingerId, touchState) in _states)
-            {
-                if (touchState.Pointer.Id == pointerId)
-                {
-                    _states.Remove(fingerId);
-                    break;
-                }
-            }
-
+            Assert.IsFalse(_pointers.ContainsValue(pointer));
             _pointerContainer.Destroy(pointer);
-        }
-
-        readonly struct TouchState
-        {
-            public readonly Pointer Pointer;
-            public readonly bool Ended;
-
-            public TouchState(Pointer pointer, bool ended)
-            {
-                Pointer = pointer;
-                Ended = ended;
-            }
-
-            public void Deconstruct(out Pointer pointer, out bool ended)
-            {
-                pointer = Pointer;
-                ended = Ended;
-            }
         }
     }
 }
