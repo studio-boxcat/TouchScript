@@ -30,6 +30,12 @@ namespace TouchScript.InputSources.InputHandlers
 
         public bool UpdateInput(PointerChanges changes)
         {
+            if (Input.mousePresent == false)
+            {
+                CancelMousePointer(changes);
+                return false;
+            }
+
             var pos = (Vector2) Input.mousePosition;
             PointerChange change = default;
 

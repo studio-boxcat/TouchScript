@@ -65,19 +65,23 @@ namespace TouchScript.InputSources.InputHandlers
                 switch (phase)
                 {
                     case TouchPhase.Began:
+                    {
                         if (!ended)
                             changes.Put_ReleaseAndRemove(pointerId);
 
                         var newPointer = CreatePointer(fingerId, pos, false);
                         changes.Put_AddAndPress(newPointer.Id);
                         break;
+                    }
                     case TouchPhase.Moved:
+                    {
                         if (!ended)
                         {
                             pointer.NewPosition = pos;
                             changes.Put_Update(pointerId);
                         }
                         break;
+                    }
                     // NOTE: Unity touch on Windows reports Cancelled as Ended
                     // when a touch goes out of display boundary
                     case TouchPhase.Ended:
@@ -106,6 +110,7 @@ namespace TouchScript.InputSources.InputHandlers
 
         Pointer CreatePointer(int fingerId, Vector2 pos, bool ended)
         {
+            _logger.Info($"CreatePointer: {fingerId}, {ended}");
             var newPointer = _pointerContainer.Create(pos, this);
             var touchState = new TouchState(newPointer, ended);
             _states[fingerId] = touchState;
