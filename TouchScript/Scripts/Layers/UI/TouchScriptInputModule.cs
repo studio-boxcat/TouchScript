@@ -169,12 +169,6 @@ namespace TouchScript.Layers.UI
         {
             Assert.IsTrue(p.Id.IsValid());
 
-            if (change.Cancelled)
-            {
-                m_PointerData.Remove((int) p.Id);
-                return;
-            }
-
             var pointer = GetTouchPointerEventData(p, change);
 
             ProcessTouchPress(pointer, change.Pressed, change.Released);

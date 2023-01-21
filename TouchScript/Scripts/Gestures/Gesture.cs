@@ -274,7 +274,6 @@ namespace TouchScript.Gestures
 
         #region Unity methods
 
-        /// <inheritdoc />
         protected virtual void Awake()
         {
             cachedTransform = transform;

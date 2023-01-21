@@ -15,21 +15,21 @@ namespace TouchScript.Layers
         /// <summary>
         /// Camera used for projection.
         /// </summary>
-        readonly Camera camera;
+        readonly Camera _camera;
 
         public ProjectionParams(Camera camera)
         {
-            this.camera = camera;
+            _camera = camera;
         }
 
         public Vector3 ProjectTo(Vector2 screenPosition, Plane projectionPlane)
         {
-            return ProjectionUtils.CameraToPlaneProjection(screenPosition, camera, projectionPlane);
+            return ProjectionUtils.CameraToPlaneProjection(screenPosition, _camera, projectionPlane);
         }
 
         public Vector2 ProjectFrom(Vector3 worldPosition)
         {
-            return camera.WorldToScreenPoint(worldPosition);
+            return _camera.WorldToScreenPoint(worldPosition);
         }
     }
 }

@@ -24,8 +24,6 @@ namespace TouchScript.Layers
 
         public override HitResult Hit(Vector2 screenPosition, out HitData hit)
         {
-            if (base.Hit(screenPosition, out hit) != HitResult.Hit) return HitResult.Miss;
-
             hit = new HitData(transform, this, default, default, screenPosition);
             return HitResult.Hit;
         }

@@ -13,7 +13,6 @@ namespace TouchScript.Core
     public static class LayerManager
     {
         static readonly List<TouchLayer> _layers = new(10);
-
         static readonly Dictionary<TouchLayer, int> _layerInternalOrder = new();
         static int _nextOrder;
         static bool _sorted = true;
@@ -38,10 +37,18 @@ namespace TouchScript.Core
 
         public static bool GetHitTarget(Vector2 screenPosition, out HitData hit)
         {
+            // XXX: 터치를 막고있는 경우, Raycast 를 무조건 실패시킴.
+            if (TouchManager.Instance.enabled == false)
+            {
+                hit = default;
+                return false;
+            }
+
             EnsureSorted();
 
             foreach (var layer in _layers)
             {
+                Assert.IsTrue(layer.isActiveAndEnabled);
                 var hitResult = layer.Hit(screenPosition, out hit);
                 if (hitResult == HitResult.Hit) return true;
             }

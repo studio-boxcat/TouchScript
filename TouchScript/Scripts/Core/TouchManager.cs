@@ -61,24 +61,37 @@ namespace TouchScript.Core
             foreach (var pointer in pointers.Values)
                 pointer.INTERNAL_UpdatePosition();
 
+            // 변경사항 모으기.
             _tmpChanges.Clear();
             _changes.Flush(_pointerContainer, _tmpChanges);
 
+            // 변경사항 전처리.
+            for (var i = 0; i < _tmpChanges.Count; i++)
+            {
+                var (pointer, change) = _tmpChanges[i];
+
+                if (change.Released == false)
+                {
+                    // Released 추가설정 조건. (AND)
+                    // 1) 눌려있었거나 눌릴 예정이면서,
+                    // 2) 포인터가 제거 혹은 취소되었다.
+                    var shouldRelease = (pointer.Pressing || change.Pressed) && (change.Removed || change.Cancelled);
+                    if (shouldRelease)
+                    {
+                        change.Released = true;
+                        _tmpChanges[i] = (pointer, change);
+                    }
+                }
+            }
+
+            // UI 먼저 업데이트.
             foreach (var (pointer, change) in _tmpChanges)
                 _uiInputModule.ProcessTouchEvents(pointer, change);
 
+            // 제스쳐 등 업데이트.
             foreach (var (pointer, change) in _tmpChanges)
             {
                 Assert.IsTrue(pointer.Id.IsValid());
-
-                // 포인터가 취소된 경우, 취소만을 업데이트하고 나머지는 무시.
-                if (change.Cancelled)
-                {
-                    _logger.Info("Cancelled: " + pointer.Id);
-                    PointerCancelled?.InvokeHandleExceptions(pointer);
-                    pointer.InputSource.INTERNAL_DiscardPointer(pointer);
-                    continue;
-                }
 
                 if (change.Added)
                     PointerAdded?.InvokeHandleExceptions(pointer);
@@ -107,6 +120,13 @@ namespace TouchScript.Core
                 {
                     _logger.Info("Removed: " + pointer.Id);
                     PointerRemoved?.InvokeHandleExceptions(pointer);
+                    pointer.InputSource.INTERNAL_DiscardPointer(pointer);
+                }
+
+                if (change.Cancelled)
+                {
+                    _logger.Info("Cancelled: " + pointer.Id);
+                    PointerCancelled?.InvokeHandleExceptions(pointer);
                     pointer.InputSource.INTERNAL_DiscardPointer(pointer);
                 }
             }

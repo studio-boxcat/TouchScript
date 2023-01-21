@@ -29,9 +29,6 @@ namespace TouchScript.Layers
         /// <inheritdoc />
         public override HitResult Hit(Vector2 screenPosition, out HitData hit)
         {
-            if (base.Hit(screenPosition, out hit) != HitResult.Hit)
-                return HitResult.Miss;
-
             if (QuickRaycast.Raycast(screenPosition, _camera, out var raycastResult))
             {
                 hit = new HitData(raycastResult.graphic.transform, this, raycastResult.graphic, raycastResult.module,screenPosition);
