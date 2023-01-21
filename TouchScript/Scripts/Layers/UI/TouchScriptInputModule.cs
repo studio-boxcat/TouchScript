@@ -8,6 +8,7 @@ using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
+using Logger = TouchScript.Utils.Logger;
 
 namespace TouchScript.Layers.UI
 {
@@ -16,6 +17,8 @@ namespace TouchScript.Layers.UI
     /// </summary>
     sealed class TouchScriptInputModule : BaseInputModule
     {
+        readonly Logger _logger = new(nameof(TouchScriptInputModule));
+
         public override bool ShouldActivateModule() => true;
 
         #region From PointerInputModule
@@ -26,6 +29,7 @@ namespace TouchScript.Layers.UI
         {
             if (!m_PointerData.TryGetValue(id, out data) && create)
             {
+                _logger.Info("AddPointerData: " + id);
                 data = new PointerEventData()
                 {
                     pointerId = id,
@@ -40,6 +44,7 @@ namespace TouchScript.Layers.UI
 
         void RemovePointerData(PointerEventData data)
         {
+            _logger.Info("RemovePointerData: " + data.pointerId);
             m_PointerData.Remove(data.pointerId);
         }
 

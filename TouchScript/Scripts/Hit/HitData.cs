@@ -27,8 +27,5 @@ namespace TouchScript.Hit
             GraphicRaycaster = graphicRaycaster;
             ScreenPosition = screenPosition;
         }
-
-        public bool IsUI() => Graphic is not null;
-        public bool IsNotUI() => Graphic is null;
     }
 }

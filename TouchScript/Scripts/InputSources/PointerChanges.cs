@@ -46,6 +46,7 @@ namespace TouchScript.InputSources
         public void Put(PointerId pointerId, PointerChange change)
         {
             Assert.IsTrue(pointerId.IsValid());
+            Assert.IsFalse(change.Cancelled);
 
             if (_changes.TryGetValue(pointerId, out var oldChange))
             {
@@ -65,6 +66,7 @@ namespace TouchScript.InputSources
                 change = default;
             Assert.IsFalse(change.Added);
             Assert.IsFalse(change.Pressed);
+            Assert.IsFalse(change.Cancelled);
             change.Added = true;
             change.Pressed = true;
             _changes[pointerId] = change;
@@ -78,6 +80,7 @@ namespace TouchScript.InputSources
                 change = default;
             Assert.IsFalse(change.Released);
             Assert.IsFalse(change.Removed);
+            Assert.IsFalse(change.Cancelled);
             change.Released = true;
             change.Removed = true;
             _changes[pointerId] = change;
@@ -93,6 +96,7 @@ namespace TouchScript.InputSources
             Assert.IsFalse(change.Pressed);
             Assert.IsFalse(change.Released);
             Assert.IsFalse(change.Removed);
+            Assert.IsFalse(change.Cancelled);
             change.Added = true;
             change.Pressed = true;
             change.Released = true;
@@ -107,6 +111,7 @@ namespace TouchScript.InputSources
             if (_changes.TryGetValue(pointerId, out var change) == false)
                 change = default;
             Assert.IsFalse(change.Updated);
+            Assert.IsFalse(change.Cancelled);
             change.Updated = true;
             _changes[pointerId] = change;
         }
@@ -118,6 +123,7 @@ namespace TouchScript.InputSources
             if (_changes.TryGetValue(pointerId, out var change) == false)
                 change = default;
             Assert.IsFalse(change.Cancelled);
+            Assert.IsFalse(change.Removed);
             change.Cancelled = true;
             _changes[pointerId] = change;
         }
