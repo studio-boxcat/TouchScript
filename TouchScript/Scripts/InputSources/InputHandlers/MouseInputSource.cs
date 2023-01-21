@@ -49,14 +49,10 @@ namespace TouchScript.InputSources.InputHandlers
 
             var (mousePressing, mouseUp) = GetMouseButtons();
             if (mousePressing && _mousePointer.Pressing == false)
-            {
-                _mousePointer.Pressing = true;
                 change.Pressed = true;
-            }
 
-            if (mouseUp)
+            if (mouseUp && (_mousePointer.Pressing || change.Pressed))
             {
-                _mousePointer.Pressing = false;
                 _mousePointer.IsReturned = false;
                 change.Released = true;
             }
@@ -87,7 +83,7 @@ namespace TouchScript.InputSources.InputHandlers
             var newPointer = _pointerContainer.Create(pointer.Position, this);
             newPointer.CopyFrom(pointer);
             var change = new PointerChange {Added = true};
-            if (newPointer.Pressing) change.Pressed = true;
+            if (pointer.Pressing) change.Pressed = true;
             changes.Put(newPointer, change);
 
             // 새로운 포인터로 스왑.

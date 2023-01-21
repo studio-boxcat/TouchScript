@@ -64,7 +64,6 @@ namespace TouchScript.Pointers
         /// <param name="target">The target pointer to copy values from.</param>
         public void CopyFrom(Pointer target)
         {
-            Pressing = target.Pressing;
             Position = target.Position;
             NewPosition = target.NewPosition;
             PreviousPosition = target.PreviousPosition;

@@ -17,15 +17,18 @@ namespace TouchScript.Hit
         public readonly TouchLayer Layer;
         public readonly Graphic Graphic;
         public readonly GraphicRaycaster GraphicRaycaster;
+        public readonly Vector2 ScreenPosition;
 
-        public HitData(Transform target, TouchLayer layer, Graphic graphic, GraphicRaycaster graphicRaycaster)
+        public HitData(Transform target, TouchLayer layer, Graphic graphic, GraphicRaycaster graphicRaycaster, Vector2 screenPosition)
         {
             Target = target;
             Layer = layer;
             Graphic = graphic;
             GraphicRaycaster = graphicRaycaster;
+            ScreenPosition = screenPosition;
         }
 
+        public bool IsUI() => Graphic is not null;
         public bool IsNotUI() => Graphic is null;
     }
 }

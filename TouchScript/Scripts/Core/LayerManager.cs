@@ -38,17 +38,7 @@ namespace TouchScript.Core
 
         public static bool GetHitTarget(Vector2 screenPosition, out HitData hit)
         {
-            if (_sorted == false)
-            {
-                _layers.Sort((a, b) =>
-                {
-                    return a.Priority != b.Priority
-                        ? a.Priority.CompareTo(b.Priority)
-                        : _layerInternalOrder[a].CompareTo(_layerInternalOrder[b]);
-                });
-
-                _sorted = true;
-            }
+            EnsureSorted();
 
             foreach (var layer in _layers)
             {
@@ -56,8 +46,22 @@ namespace TouchScript.Core
                 if (hitResult == HitResult.Hit) return true;
             }
 
-            hit = default;
+            hit = new HitData(null, null, null, null, screenPosition);
             return false;
+        }
+
+        static void EnsureSorted()
+        {
+            if (_sorted) return;
+
+            _layers.Sort((a, b) =>
+            {
+                return a.Priority != b.Priority
+                    ? a.Priority.CompareTo(b.Priority)
+                    : _layerInternalOrder[a].CompareTo(_layerInternalOrder[b]);
+            });
+
+            _sorted = true;
         }
     }
 }

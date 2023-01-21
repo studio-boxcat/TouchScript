@@ -63,10 +63,7 @@ namespace TouchScript.InputSources.InputHandlers
                 {
                     case TouchPhase.Began:
                         if (!ended)
-                        {
-                            pointer.Pressing = false;
                             changes.Put_ReleaseAndRemove(pointer);
-                        }
 
                         var newPointer = CreatePointer(fingerId, pos, false);
                         changes.Put_AddAndPress(newPointer);
@@ -83,7 +80,6 @@ namespace TouchScript.InputSources.InputHandlers
                     case TouchPhase.Ended:
                         if (!ended)
                         {
-                            pointer.Pressing = false;
                             changes.Put_ReleaseAndRemove(pointer);
                             _states[fingerId] = new TouchState(pointer, true);
                         }
@@ -108,7 +104,6 @@ namespace TouchScript.InputSources.InputHandlers
         Pointer CreatePointer(int fingerId, Vector2 pos, bool ended)
         {
             var newPointer = _pointerContainer.Create(pos, this);
-            newPointer.Pressing = true;
             var touchState = new TouchState(newPointer, ended);
             _states[fingerId] = touchState;
             return newPointer;
@@ -144,8 +139,10 @@ namespace TouchScript.InputSources.InputHandlers
             {
                 var newPointer = CreatePointer(fingerId, default, false);
                 newPointer.CopyFrom(pointer);
+                var change = new PointerChange {Added = true};
+                if (pointer.Pressing) change.Pressed = true;
                 newPointer.IsReturned = true;
-                changes.Put_AddAndPress(newPointer);
+                changes.Put(newPointer, change);
             }
         }
 

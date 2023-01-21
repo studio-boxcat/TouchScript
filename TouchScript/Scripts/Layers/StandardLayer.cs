@@ -34,7 +34,7 @@ namespace TouchScript.Layers
 
             if (QuickRaycast.Raycast(screenPosition, _camera, out var raycastResult))
             {
-                hit = new HitData(raycastResult.graphic.transform, this, raycastResult.graphic, raycastResult.module);
+                hit = new HitData(raycastResult.graphic.transform, this, raycastResult.graphic, raycastResult.module,screenPosition);
                 return HitResult.Hit;
             }
             else

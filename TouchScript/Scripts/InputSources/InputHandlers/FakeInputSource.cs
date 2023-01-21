@@ -24,10 +24,7 @@ namespace TouchScript.InputSources.InputHandlers
             if (_release)
             {
                 if (_pointer != null)
-                {
-                    _pointer.Pressing = false;
                     changes.Put_ReleaseAndRemove(_pointer);
-                }
 
                 _release = false;
             }
@@ -36,7 +33,6 @@ namespace TouchScript.InputSources.InputHandlers
                 if (_pointer == null)
                 {
                     _pointer = _pointers.Create(_pointPos.Value, this);
-                    _pointer.Pressing = true;
                     changes.Put_AddAndPress(_pointer);
                 }
                 else
@@ -85,7 +81,7 @@ namespace TouchScript.InputSources.InputHandlers
             var newPointer = _pointers.Create(pointer.Position, this);
             newPointer.CopyFrom(pointer);
             var change = new PointerChange {Added = true};
-            if (newPointer.Pressing) change.Pressed = true;
+            if (pointer.Pressing) change.Pressed = true;
             changes.Put(newPointer, change);
 
             // 새로운 포인터로 스왑.

@@ -4,7 +4,9 @@
 
 using System;
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using TouchScript.InputSources;
+using TouchScript.Layers.UI;
 using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
@@ -12,14 +14,14 @@ using UnityEngine.Assertions;
 
 namespace TouchScript.Core
 {
-    /// <summary>
-    /// Default implementation of <see cref="ITouchManager"/>.
-    /// </summary>
     public sealed class TouchManager : MonoBehaviour
     {
         public static TouchManager Instance;
 
         public readonly StandardInput Input = new();
+
+        [SerializeField, Required, ChildGameObjectsOnly]
+        TouchScriptInputModule _uiInputModule;
 
         readonly PointerChanges _changes = new(10);
 
@@ -32,7 +34,7 @@ namespace TouchScript.Core
         public event Action<Pointer> PointerRemoved;
         public event Action<Pointer> PointerCancelled;
 
-        private void Update()
+        void Update()
         {
             foreach (var pointer in Input.GetPointers())
                 pointer.INTERNAL_FrameStarted();
@@ -52,6 +54,9 @@ namespace TouchScript.Core
                 pointer.INTERNAL_UpdatePosition();
 
             _changes.Flush(_tmpChanges);
+
+            _uiInputModule.ProcessTouchEvents(_tmpChanges);
+
             foreach (var (pointer, change) in _tmpChanges)
             {
                 Assert.IsTrue(pointer.Id.IsValid());
@@ -72,6 +77,8 @@ namespace TouchScript.Core
 
                 if (change.Pressed)
                 {
+                    Assert.IsFalse(pointer.Pressing);
+                    pointer.Pressing = true;
                     var hit = pointer.GetOverData();
                     pointer.INTERNAL_SetPressData(hit);
                     PointerPressed?.InvokeHandleExceptions(pointer);
@@ -79,6 +86,8 @@ namespace TouchScript.Core
 
                 if (change.Released)
                 {
+                    Assert.IsTrue(pointer.Pressing);
+                    pointer.Pressing = false;
                     PointerReleased?.InvokeHandleExceptions(pointer);
                     pointer.INTERNAL_ClearPressData();
                 }
