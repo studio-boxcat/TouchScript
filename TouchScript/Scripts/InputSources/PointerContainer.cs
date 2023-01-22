@@ -15,6 +15,7 @@ namespace TouchScript.InputSources
         static readonly Logger _logger = new(nameof(PointerContainer));
 
         public readonly Dictionary<PointerId, Pointer> Pointers;
+
         readonly Stack<Pointer> _pool;
 
         public PointerContainer(int capacity)
@@ -22,6 +23,8 @@ namespace TouchScript.InputSources
             Pointers = new Dictionary<PointerId, Pointer>(capacity);
             _pool = new Stack<Pointer>();
         }
+
+        public bool Empty() => Pointers.Count == 0;
 
         public Pointer Create(Vector2 pos, IInputSource inputSource)
         {

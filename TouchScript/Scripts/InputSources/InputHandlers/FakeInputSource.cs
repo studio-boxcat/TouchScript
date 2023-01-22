@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using TouchScript.Core;
 using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -10,117 +12,116 @@ namespace TouchScript.InputSources.InputHandlers
         readonly PointerContainer _pointerContainer;
         static readonly Logger _logger = new(nameof(FakeInputSource));
 
-        Pointer _pointer;
-        Vector2? _pointPos;
-        bool _release;
+        readonly Dictionary<PointerId, Pointer> _pointers = new();
+        readonly Dictionary<PointerId, PointerChange> _upComingChanges = new();
 
         public FakeInputSource(PointerContainer pointerContainer)
         {
             _pointerContainer = pointerContainer;
         }
 
-        public void UpdateInput(PointerChanges changes)
+        public void Deactivate(PointerChanges changes)
         {
-            Assert.IsTrue(_pointer == null || _pointer.Id.IsValid());
-            Assert.IsFalse(_pointPos.HasValue && _release);
+            _logger.Info(nameof(Deactivate));
 
-            if (_release)
+            foreach (var (pointerId, pointer) in _pointers)
             {
-                if (_pointer != null)
-                    changes.Put_ReleaseAndRemove(_pointer.Id);
-
-                _release = false;
+                Assert.AreEqual(pointerId, pointer.Id);
+                changes.Put_Cancel(pointerId);
             }
-            else if (_pointPos.HasValue)
-            {
-                if (_pointer == null)
-                {
-                    _pointer = _pointerContainer.Create(_pointPos.Value, this);
-                    changes.Put_AddAndPress(_pointer.Id);
-                }
-                else
-                {
-                    _pointer.NewPosition = _pointPos.Value;
-                    changes.Put_Update(_pointer.Id);
-                }
 
-                _pointPos = null;
-            }
+            _pointers.Clear();
+            _upComingChanges.Clear();
         }
 
-        public void Point(Vector2 pos)
+        public bool UpdateInput(PointerChanges changes)
         {
-            Assert.IsFalse(_pointPos.HasValue);
-            Assert.IsFalse(_release);
-            _pointPos = pos;
-        }
-
-        public void Release()
-        {
-            Assert.IsFalse(_pointPos.HasValue);
-            Assert.IsFalse(_release);
-            _release = true;
+            foreach (var (pointerId, change) in _upComingChanges)
+                changes.Put(pointerId, change);
+            _upComingChanges.Clear();
+            return _pointers.Count > 0;
         }
 
         public void CancelPointer(Pointer pointer, bool shouldReturn, PointerChanges changes)
         {
             var pointerId = pointer.Id;
             Assert.AreNotEqual(PointerId.Invalid, pointerId);
-            Assert.AreEqual(_pointer, pointer);
+            Assert.AreEqual(_pointers[pointerId], pointer);
 
-            if (ReferenceEquals(_pointer, pointer) == false)
-            {
-                _logger.Warning("알 수 없는 포인터입니다. 이전에 취소한 포인터일 수 있습니다: " + pointerId);
-                return;
-            }
-
-            // 우선 Pointer 를 Cancel 함.
+            _pointers.Remove(pointerId);
+            _upComingChanges.Remove(pointerId);
             changes.Put_Cancel(pointerId);
-            _pointer = null;
 
-            if (shouldReturn == false)
-                return;
+            if (shouldReturn)
+            {
+                var newPointer = _pointerContainer.Create(pointer.Position, this);
+                newPointer.CopyPositions(pointer);
+                // XXX: 자동으로 Cancelled 까지 연결되지 않으면 leak 이 발생.
+                var change = new PointerChange {Added = true, Cancelled = true};
+                if (newPointer.Pressing) change.Pressed = true;
+                newPointer.IsReturned = true;
 
-            // 새로운 포인터를 생성.
-            var newPointer = _pointerContainer.Create(pointer.Position, this);
-            newPointer.CopyFrom(pointer);
-            var change = new PointerChange {Added = true};
-            if (pointer.Pressing) change.Pressed = true;
-            changes.Put(newPointer.Id, change);
-
-            // 새로운 포인터로 스왑.
-            _pointer = newPointer;
-            // 누르고 있었을 경우에만 IsReturned 로 처리함.
-            if (_pointer.Pressing)
-                _pointer.IsReturned = true;
+                _pointers.Add(newPointer.Id, newPointer);
+                changes.Put(newPointer.Id, change);
+            }
         }
 
         public void INTERNAL_DiscardPointer(Pointer pointer, bool cancelled)
         {
             _logger.Info("Discard: " + pointer.Id);
             Assert.IsTrue(pointer.Id.IsValid());
-
-            if (cancelled)
-            {
-                Assert.AreNotEqual(_pointer, pointer);
-            }
-            else
-            {
-                Assert.AreEqual(_pointer, pointer);
-                if (_pointer == pointer)
-                    _pointer = null;
-            }
-
+            Assert.IsFalse(_pointers.ContainsKey(pointer.Id));
+            Assert.IsFalse(_upComingChanges.ContainsKey(pointer.Id));
             _pointerContainer.Destroy(pointer);
         }
 
-        public void CancelAllPointers(PointerChanges changes)
+        public bool IsPointerValid(PointerId pointerId)
         {
-            _logger.Info("CancelAllPointers");
+            return _pointers.ContainsKey(pointerId);
+        }
 
-            if (_pointer == null) return;
-            changes.Put_Cancel(_pointer.Id);
-            _pointer = null;
+        public void Click(Vector2 pos)
+        {
+            if (TouchManager.Instance.enabled == false)
+                return;
+
+            var pointer = _pointerContainer.Create(pos, this);
+            var change = new PointerChange {Added = true, Pressed = true, Released = true, Removed = true};
+            _upComingChanges.Add(pointer.Id, change);
+        }
+
+        public PointerId Press(Vector2 pos)
+        {
+            if (TouchManager.Instance.enabled == false)
+                return PointerId.Invalid;
+
+            var pointer = _pointerContainer.Create(pos, this);
+            _pointers.Add(pointer.Id, pointer);
+            _upComingChanges.Add(pointer.Id, new PointerChange {Added = true});
+            return pointer.Id;
+        }
+
+        public void Point(PointerId pointerId, Vector2 pos)
+        {
+            Assert.IsTrue(TouchManager.Instance.enabled);
+
+            var pointer = _pointers[pointerId];
+            pointer.NewPosition = pos;
+            var change = _upComingChanges.GetValueOrDefault(pointerId);
+            change.Updated = true;
+            _upComingChanges.Add(pointer.Id, change);
+        }
+
+        public void Release(PointerId pointerId)
+        {
+            Assert.IsTrue(TouchManager.Instance.enabled);
+            Assert.IsTrue(_pointers.ContainsKey(pointerId));
+
+            var change = _upComingChanges.GetValueOrDefault(pointerId);
+            Assert.IsFalse(change.Released);
+            change.Released = true;
+            _pointers.Remove(pointerId);
+            _upComingChanges.Add(pointerId, change);
         }
     }
 }

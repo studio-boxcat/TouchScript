@@ -33,11 +33,11 @@ namespace TouchScript.InputSources
             FakeInputSource.UpdateInput(changes);
         }
 
-        public void CancelAllPointers(PointerChanges changes)
+        public void Deactivate(PointerChanges changes)
         {
-            TouchInputSource.CancelAllPointers(changes);
-            MouseInputSource.CancelAllPointers(changes);
-            FakeInputSource.CancelAllPointers(changes);
+            TouchInputSource.Deactivate(changes);
+            MouseInputSource.Deactivate(changes);
+            FakeInputSource.Deactivate(changes);
         }
     }
 }

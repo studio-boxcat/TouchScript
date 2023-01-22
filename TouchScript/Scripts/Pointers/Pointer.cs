@@ -61,7 +61,7 @@ namespace TouchScript.Pointers
         /// Copies values from the target.
         /// </summary>
         /// <param name="target">The target pointer to copy values from.</param>
-        public void CopyFrom(Pointer target)
+        public void CopyPositions(Pointer target)
         {
             Position = target.Position;
             NewPosition = target.NewPosition;
@@ -114,7 +114,7 @@ namespace TouchScript.Pointers
             _overDataIsDirty = true;
         }
 
-        internal void INTERNAL_FrameStarted()
+        internal void SetOverDataDirty()
         {
             _overDataIsDirty = true;
         }

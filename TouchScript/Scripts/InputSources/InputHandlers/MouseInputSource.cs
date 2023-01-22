@@ -28,6 +28,12 @@ namespace TouchScript.InputSources.InputHandlers
             _pointerContainer = pointerContainer;
         }
 
+        public void Deactivate(PointerChanges changes)
+        {
+            _logger.Info(nameof(Deactivate));
+            CancelMousePointer(changes);
+        }
+
         public bool UpdateInput(PointerChanges changes)
         {
             if (Input.mousePresent == false)
@@ -90,7 +96,7 @@ namespace TouchScript.InputSources.InputHandlers
 
             // 새로운 포인터를 생성.
             var newPointer = _pointerContainer.Create(pointer.Position, this);
-            newPointer.CopyFrom(pointer);
+            newPointer.CopyPositions(pointer);
             var change = new PointerChange {Added = true};
             if (pointer.Pressing) change.Pressed = true;
             changes.Put(newPointer.Id, change);
@@ -111,8 +117,6 @@ namespace TouchScript.InputSources.InputHandlers
             changes.Put_Cancel(_mousePointer.Id);
             _mousePointer = null;
         }
-
-        public void CancelAllPointers(PointerChanges changes) => CancelMousePointer(changes);
 
         void IInputSource.INTERNAL_DiscardPointer(Pointer pointer, bool cancelled)
         {

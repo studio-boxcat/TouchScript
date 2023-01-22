@@ -26,6 +26,24 @@ namespace TouchScript.InputSources.InputHandlers
             _pointerContainer = pointerContainer;
         }
 
+        static readonly List<int> _fingerIdBuf = new();
+
+        public void Deactivate(PointerChanges changes)
+        {
+            Assert.AreEqual(0, _fingerIdBuf.Count);
+            _fingerIdBuf.AddRange(_pointers.Keys);
+
+            foreach (var fingerId in _fingerIdBuf)
+            {
+                var pointer = _pointers[fingerId];
+                if (pointer == null) continue;
+                changes.Put_Cancel(pointer.Id);
+                _pointers[fingerId] = null;
+            }
+
+            _fingerIdBuf.Clear();
+        }
+
         public bool UpdateInput(PointerChanges changes)
         {
             for (var i = 0; i < Input.touchCount; ++i)
@@ -138,7 +156,7 @@ namespace TouchScript.InputSources.InputHandlers
             if (shouldReturn)
             {
                 var newPointer = CreatePointer(fingerId, default);
-                newPointer.CopyFrom(pointer);
+                newPointer.CopyPositions(pointer);
                 var change = new PointerChange {Added = true};
                 if (pointer.Pressing) change.Pressed = true;
                 newPointer.IsReturned = true;
@@ -149,24 +167,6 @@ namespace TouchScript.InputSources.InputHandlers
             {
                 _pointers[fingerId] = null;
             }
-        }
-
-        static readonly List<int> _fingerIdBuf = new();
-
-        public void CancelAllPointers(PointerChanges changes)
-        {
-            Assert.AreEqual(0, _fingerIdBuf.Count);
-            _fingerIdBuf.AddRange(_pointers.Keys);
-
-            foreach (var fingerId in _fingerIdBuf)
-            {
-                var pointer = _pointers[fingerId];
-                if (pointer == null) continue;
-                changes.Put_Cancel(pointer.Id);
-                _pointers[fingerId] = null;
-            }
-
-            _fingerIdBuf.Clear();
         }
 
         void IInputSource.INTERNAL_DiscardPointer(Pointer pointer, bool cancelled)

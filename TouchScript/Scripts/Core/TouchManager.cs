@@ -43,24 +43,67 @@ namespace TouchScript.Core
             _input = new StandardInput(_pointerContainer);
         }
 
+        bool _isUpdating = false;
+
         void Update()
         {
-            foreach (var pointer in _pointerContainer.Pointers.Values)
-                pointer.INTERNAL_FrameStarted();
+            Assert.IsFalse(_isUpdating);
+            _isUpdating = true;
+
+            var pointers = _pointerContainer.Pointers.Values;
+            foreach (var pointer in pointers)
+                pointer.SetOverDataDirty();
+
             _input.UpdateInput(_changes);
-            UpdatePointers();
+
+            FrameStarted?.InvokeHandleExceptions();
+
+            foreach (var pointer in pointers)
+                pointer.INTERNAL_UpdatePosition();
+
+            CommitChanges();
+
+            FrameFinished?.InvokeHandleExceptions();
+
+            // 만약 업데이트 도중에 TouchManager 가 비활성화되었다면, 즉시 쌓인 변경사항을 반영함.
+            if (enabled == false)
+            {
+                _logger.Info("비활성화가 감지되었습니다. 즉시 변경사항을 반영합니다.");
+                CommitChanges();
+                Assert.IsTrue(_pointerContainer.Empty());
+                Assert.IsTrue(_changes.Empty());
+            }
+
+            _isUpdating = false;
+        }
+
+        public void Activate()
+        {
+            _logger.Info(nameof(Activate));
+
+            Assert.IsTrue(_pointerContainer.Empty());
+            Assert.IsTrue(_changes.Empty());
+            enabled = true;
+        }
+
+        public void Deactivate()
+        {
+            _logger.Info(nameof(Deactivate));
+
+            _input.Deactivate(_changes);
+            if (_isUpdating == false)
+            {
+                CommitChanges();
+                Assert.IsTrue(_pointerContainer.Empty());
+                Assert.IsTrue(_changes.Empty());
+            }
+            enabled = false;
         }
 
         readonly List<(Pointer, PointerChange)> _tmpChanges = new();
 
-        void UpdatePointers()
+        void CommitChanges()
         {
-            FrameStarted?.InvokeHandleExceptions();
-
-            var pointers = _pointerContainer.Pointers;
-            foreach (var pointer in pointers.Values)
-                pointer.INTERNAL_UpdatePosition();
-
             // 변경사항 모으기.
             _tmpChanges.Clear();
             _changes.Flush(_pointerContainer, _tmpChanges);
@@ -94,7 +137,10 @@ namespace TouchScript.Core
                 Assert.IsTrue(pointer.Id.IsValid());
 
                 if (change.Added)
+                {
+                    _logger.Info("Added: " + pointer.Id);
                     PointerAdded?.InvokeHandleExceptions(pointer);
+                }
 
                 if (change.Updated)
                     PointerUpdated?.InvokeHandleExceptions(pointer);
@@ -102,6 +148,7 @@ namespace TouchScript.Core
                 if (change.Pressed)
                 {
                     Assert.IsFalse(pointer.Pressing);
+                    _logger.Info("Pressed: " + pointer.Id);
                     pointer.Pressing = true;
                     var hit = pointer.GetOverData();
                     pointer.INTERNAL_SetPressData(hit);
@@ -111,6 +158,7 @@ namespace TouchScript.Core
                 if (change.Released)
                 {
                     Assert.IsTrue(pointer.Pressing);
+                    _logger.Info("Released: " + pointer.Id);
                     pointer.Pressing = false;
                     PointerReleased?.InvokeHandleExceptions(pointer);
                     pointer.INTERNAL_ClearPressData();
@@ -132,18 +180,11 @@ namespace TouchScript.Core
                     pointer.InputSource.INTERNAL_DiscardPointer(pointer, true);
                 }
             }
-
-            FrameFinished?.InvokeHandleExceptions();
         }
 
         public void CancelPointer(Pointer pointer, bool shouldReturn)
         {
             pointer.InputSource.CancelPointer(pointer, shouldReturn, _changes);
-        }
-
-        public void CancelAllPointers()
-        {
-            _input.CancelAllPointers(_changes);
         }
 
         public FakeInputSource GetFakeInputSource() => _input.FakeInputSource;

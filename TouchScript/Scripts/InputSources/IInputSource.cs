@@ -16,6 +16,10 @@ namespace TouchScript.InputSources
     /// </remarks>
     public interface IInputSource
     {
+        void Deactivate(PointerChanges changes);
+
+        bool UpdateInput(PointerChanges changes);
+
         /// <summary>
         /// Cancels the pointer.
         /// </summary>

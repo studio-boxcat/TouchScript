@@ -1,7 +1,5 @@
 using System.Collections.Generic;
-using System.Linq;
 using TouchScript.Pointers;
-using TouchScript.Utils;
 using UnityEngine.Assertions;
 
 namespace TouchScript.InputSources
@@ -9,12 +7,13 @@ namespace TouchScript.InputSources
     public readonly struct PointerChanges
     {
         readonly Dictionary<PointerId, PointerChange> _changes;
-        static readonly Logger _logger = new(nameof(PointerChanges));
 
         public PointerChanges(int capacity)
         {
             _changes = new Dictionary<PointerId, PointerChange>(capacity);
         }
+
+        public bool Empty() => _changes.Count == 0;
 
         public void Flush(PointerContainer pointers, List<(Pointer, PointerChange)> changes)
         {
@@ -26,19 +25,6 @@ namespace TouchScript.InputSources
                 if (_changes.TryGetValue(pointerId, out var change))
                     changes.Add((pointer, change));
             }
-
-#if DEBUG
-            if (_changes.Count != changes.Count)
-            {
-                foreach (var (pointerId, change) in _changes)
-                {
-                    if (changes.Any(x => x.Item1.Id == pointerId))
-                        continue;
-
-                    _logger.Error($"삭제된 포인터의 변경사항이 발견되었습니다: {pointerId}, {change}");
-                }
-            }
-#endif
 
             _changes.Clear();
         }
