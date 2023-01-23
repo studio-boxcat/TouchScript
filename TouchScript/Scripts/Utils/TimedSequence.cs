@@ -2,7 +2,6 @@
  * @author Valentin Simonov / http://va.lent.in/
  */
 
-using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -24,24 +23,6 @@ namespace TouchScript.Utils
             timestamps.Add(time);
         }
 
-        public void Clear()
-        {
-            points.Clear();
-            timestamps.Clear();
-        }
-
-        public IList<T> FindElementsLaterThan(float time)
-        {
-            var list = new List<T>();
-            for (var i = points.Count - 1; i >= 0; i--)
-            {
-                if (timestamps[i] > time) list.Add(points[i]);
-                else break;
-            }
-            list.Reverse();
-            return list;
-        }
-
         public IList<T> FindElementsLaterThan(float time, out float lastTime)
         {
             var list = new List<T>();
@@ -55,21 +36,6 @@ namespace TouchScript.Utils
             if (i < points.Count - 1) lastTime = timestamps[i + 1];
             else lastTime = time;
 
-            return list;
-        }
-
-        public IList<T> FindElementsLaterThan(float time, Predicate<T> predicate)
-        {
-            var list = new List<T>();
-            for (var i = points.Count - 1; i >= 0; i--)
-            {
-                if (timestamps[i] > time)
-                {
-                    if (predicate(points[i])) list.Add(points[i]);
-                }
-                else break;
-            }
-            list.Reverse();
             return list;
         }
     }

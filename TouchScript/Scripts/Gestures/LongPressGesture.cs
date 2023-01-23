@@ -6,7 +6,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TouchScript.Devices.Display;
-using TouchScript.Utils.Attributes;
 using TouchScript.Pointers;
 using TouchScript.Utils;
 using UnityEngine;
@@ -49,7 +48,6 @@ namespace TouchScript.Gestures
         private float timeToPress = 1;
 
         [SerializeField]
-        [NullToggle(NullFloatValue = float.PositiveInfinity)]
         private float distanceLimit = float.PositiveInfinity;
 
         private float distanceLimitInPixelsSquared;

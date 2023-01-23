@@ -207,7 +207,7 @@ MonoBehaviour:
     m_NumColorKeys: 4
     m_NumAlphaKeys: 8
   Name: Mouse Pressed
-  Resolution: 256
+  Resolution: 32
 --- !u!114 &114695260886518812
 MonoBehaviour:
   m_ObjectHideFlags: 0

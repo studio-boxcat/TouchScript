@@ -6,7 +6,6 @@ using TouchScript.Core;
 using TouchScript.Gestures;
 using TouchScript.Gestures.TransformGestures;
 using TouchScript.Gestures.TransformGestures.Base;
-using TouchScript.Utils.Attributes;
 using UnityEngine;
 
 namespace TouchScript.Behaviors
@@ -54,7 +53,6 @@ namespace TouchScript.Behaviors
         #region Private variables
 
         [SerializeField]
-        [ToggleLeft]
         private bool enableSmoothing = false;
 
         [SerializeField]
@@ -70,7 +68,6 @@ namespace TouchScript.Behaviors
         private float scaleThreshold = 0.01f;
 
         [SerializeField]
-        [ToggleLeft]
         private bool allowChangingFromOutside = false;
 
         private TransformerState state;

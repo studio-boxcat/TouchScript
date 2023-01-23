@@ -81,15 +81,6 @@ namespace TouchScript.Gestures.TransformGestures
             get { return transformPlane; }
         }
 
-        /// <summary>
-        /// Gets delta position in local coordinates.
-        /// </summary>
-        /// <value>Delta position between this frame and the last frame in local coordinates.</value>
-        public Vector3 LocalDeltaPosition
-        {
-            get { return TransformUtils.GlobalToLocalVector(cachedTransform, DeltaPosition); }
-        }
-
         #endregion
 
         #region Private variables

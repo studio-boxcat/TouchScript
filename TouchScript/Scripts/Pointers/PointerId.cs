@@ -1,6 +1,6 @@
 namespace TouchScript.Pointers
 {
-    public enum PointerId : int
+    public enum PointerId
     {
         Invalid = -1,
     }
