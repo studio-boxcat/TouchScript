@@ -14,13 +14,14 @@ namespace TouchScript.InputSources
 
         public override string ToString()
         {
-            var str = "";
-            if (Added) str += "Added,";
-            if (Updated) str += "Updated,";
-            if (Pressed) str += "Pressed,";
-            if (Released) str += "Released,";
-            if (Removed) str += "Removed,";
-            if (Cancelled) str += "Cancelled,";
+            var str = "(";
+            if (Added) str += "Added|";
+            if (Updated) str += "Updated|";
+            if (Pressed) str += "Pressed|";
+            if (Released) str += "Released|";
+            if (Removed) str += "Removed|";
+            if (Cancelled) str += "Cancelled|";
+            str += ")";
             return str;
         }
 

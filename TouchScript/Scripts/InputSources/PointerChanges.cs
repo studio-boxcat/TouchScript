@@ -13,6 +13,11 @@ namespace TouchScript.InputSources
             _changes = new Dictionary<PointerId, PointerChange>(capacity);
         }
 
+        public override string ToString()
+        {
+            return "[" + string.Join(",", _changes) + "]";
+        }
+
         public bool Empty() => _changes.Count == 0;
 
         public void Flush(PointerContainer pointers, List<(Pointer, PointerChange)> changes)

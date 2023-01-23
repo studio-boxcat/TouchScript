@@ -81,10 +81,10 @@ namespace TouchScript.Core
         {
             _logger.Info(nameof(Activate));
 
-            // XXX: Update 도중 Deactivate 가 감지되어, Activate 를 호출하는 경우,
-            // 아직 _pointerContainer 에 Pointer 가 남아있는 상태에서 TouchManager 가 활성화됨.
-            // Assert.IsTrue(_pointerContainer.Empty());
-            Assert.IsTrue(_changes.Empty());
+            // XXX: Update 에서 이벤트 전파 도중에 Deactivate 후 Activate 가 호출되는 경우.
+            // 아직 Cancelled 가 commit 되지 않아, _pointerContainer 및 _changes 에 남은 원소가 생기게 됨.
+            Assert.IsTrue(_isUpdating || _pointerContainer.Empty());
+            Assert.IsTrue(_isUpdating || _changes.Empty(), _changes.ToString());
             enabled = true;
         }
 
