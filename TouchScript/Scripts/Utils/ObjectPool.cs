@@ -33,15 +33,6 @@ namespace TouchScript.Utils
             Name = name;
         }
 
-        public void WarmUp(int count)
-        {
-            for (var i = 0; i < count; i++)
-            {
-                var element = onNew();
-                stack.Push(element);
-            }
-        }
-
         public T Get()
         {
             T element;

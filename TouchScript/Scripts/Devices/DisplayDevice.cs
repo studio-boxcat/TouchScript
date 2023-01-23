@@ -16,7 +16,6 @@ namespace TouchScript.Devices.Display
         /// </summary>
         public const float CM_TO_INCH = 0.393700787f;
 
-        /// <inheritdoc />
         static DisplayDevice()
         {
             DPI = Screen.dpi;
