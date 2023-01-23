@@ -70,6 +70,9 @@ namespace TouchScript.InputSources
 
             pointer.INTERNAL_Reset();
             _pool.Push(pointer);
+
+            // XXX: 너무 pool 에 원소가 많아지면 버그로 간주.
+            Assert.IsTrue(_pool.Count < 64);
         }
     }
 }
