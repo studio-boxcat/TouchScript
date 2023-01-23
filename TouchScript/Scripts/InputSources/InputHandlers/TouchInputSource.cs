@@ -136,6 +136,8 @@ namespace TouchScript.InputSources.InputHandlers
             var pointerId = pointer.Id;
             Assert.IsTrue(pointerId.IsValid());
 
+            // pointer 에 대응되는 fingerId 를 탐색.
+            // 탐색에 성공하면, Removed 도 Cancelled 도 요청되지 않았다는 것.
             var fingerId = int.MaxValue;
             foreach (var (curFingerId, curPointer) in _pointers)
             {
@@ -157,10 +159,8 @@ namespace TouchScript.InputSources.InputHandlers
             {
                 var newPointer = CreatePointer(fingerId, default);
                 newPointer.CopyPositions(pointer);
-                var change = new PointerChange {Added = true};
-                if (pointer.Pressing) change.Pressed = true;
                 newPointer.IsReturned = true;
-                changes.Put(newPointer.Id, change);
+                changes.Put_AddAndPress(newPointer.Id);
                 _pointers[fingerId] = newPointer;
             }
             else

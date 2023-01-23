@@ -78,7 +78,7 @@ namespace TouchScript.Pointers
 
         public override int GetHashCode() => (int) Id;
 
-        public override string ToString() => ((int) Id).ToString();
+        public override string ToString() => $"{((int) Id).ToString()} ({InputSource?.GetType().Name ?? "null"})";
 
         #endregion
 

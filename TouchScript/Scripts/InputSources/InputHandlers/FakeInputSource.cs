@@ -58,7 +58,7 @@ namespace TouchScript.InputSources.InputHandlers
                 newPointer.CopyPositions(pointer);
                 // XXX: 자동으로 Cancelled 까지 연결되지 않으면 leak 이 발생.
                 var change = new PointerChange {Added = true, Cancelled = true};
-                if (newPointer.Pressing) change.Pressed = true;
+                if (pointer.Pressing) change.Pressed = true;
                 newPointer.IsReturned = true;
 
                 _pointers.Add(newPointer.Id, newPointer);
@@ -96,32 +96,40 @@ namespace TouchScript.InputSources.InputHandlers
                 return PointerId.Invalid;
 
             var pointer = _pointerContainer.Create(pos, this);
-            _pointers.Add(pointer.Id, pointer);
-            _upComingChanges.Add(pointer.Id, new PointerChange {Added = true});
+            var pointerId = pointer.Id;
+            _logger.Info(nameof(Press) + ": " + pointerId);
+            _pointers.Add(pointerId, pointer);
+            _upComingChanges.Add(pointerId, new PointerChange {Added = true, Pressed = true});
             return pointer.Id;
         }
 
         public void Point(PointerId pointerId, Vector2 pos)
         {
+            _logger.Info(nameof(Point) + ": " + pointerId);
             Assert.IsTrue(TouchManager.Instance.enabled);
 
             var pointer = _pointers[pointerId];
             pointer.NewPosition = pos;
             var change = _upComingChanges.GetValueOrDefault(pointerId);
             change.Updated = true;
-            _upComingChanges.Add(pointer.Id, change);
+            _upComingChanges[pointer.Id] = change;
         }
 
         public void Release(PointerId pointerId)
         {
+            _logger.Info(nameof(Release) + ": " + pointerId);
             Assert.IsTrue(TouchManager.Instance.enabled);
             Assert.IsTrue(_pointers.ContainsKey(pointerId));
 
             var change = _upComingChanges.GetValueOrDefault(pointerId);
             Assert.IsFalse(change.Released);
+            Assert.IsFalse(change.Removed);
+            Assert.IsTrue(_pointers[pointerId].Pressing || change.Pressed);
+
             change.Released = true;
+            change.Removed = true;
             _pointers.Remove(pointerId);
-            _upComingChanges.Add(pointerId, change);
+            _upComingChanges[pointerId] = change;
         }
     }
 }
