@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using TouchScript.Core;
 using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
@@ -24,18 +25,25 @@ namespace TouchScript.InputSources
             _pool = new Stack<Pointer>();
         }
 
+        public override string ToString()
+        {
+            return $"PointerContainer→{string.Join(",", Pointers.Keys)}";
+        }
+
         public bool Empty() => Pointers.Count == 0;
 
         public Pointer Create(Vector2 pos, IInputSource inputSource)
         {
+            Assert.IsTrue(TouchManager.Instance.enabled);
+
             var pointerId = IssuePointerId();
             if (_pool.TryPop(out var pointer))
             {
-                _logger.Info($"{nameof(Create)}: {pointerId} (Pool)");
+                _logger.Info($"{nameof(Create)}: {pointerId} ({inputSource.GetType().Name}) (From Pool)");
             }
             else
             {
-                _logger.Info($"{nameof(Create)}: {pointerId}");
+                _logger.Info($"{nameof(Create)}: {pointerId} ({inputSource.GetType().Name})");
                 pointer = new Pointer();
             }
 

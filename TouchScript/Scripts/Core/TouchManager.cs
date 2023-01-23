@@ -94,7 +94,7 @@ namespace TouchScript.Core
             if (_isUpdating == false)
             {
                 CommitChanges();
-                Assert.IsTrue(_pointerContainer.Empty());
+                Assert.IsTrue(_pointerContainer.Empty(), _pointerContainer.ToString());
                 Assert.IsTrue(_changes.Empty());
             }
             enabled = false;

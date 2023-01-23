@@ -24,11 +24,18 @@ namespace TouchScript.InputSources.InputHandlers
         {
             _logger.Info(nameof(Deactivate));
 
+            // XXX: _pointers 로 관리되는 포인터는 모두 Removed 도 Cancelled 도 아닌 살아있는 포인터들.
+            // 모두 Cancel 처리한다.
             foreach (var (pointerId, pointer) in _pointers)
             {
                 Assert.AreEqual(pointerId, pointer.Id);
                 changes.Put_Cancel(pointerId);
             }
+
+            // XXX: 가지고 있는 변경사항들을 모두 changes 에 넣어줌.
+            // Click 과 같이 Added 와 동시에 Removed 를 설정하는 경우, _pointers 에 등록되지 않아 누락될 수 있다.
+            foreach (var (pointerId, change) in _upComingChanges)
+                changes.Put(pointerId, change);
 
             _pointers.Clear();
             _upComingChanges.Clear();
@@ -86,6 +93,7 @@ namespace TouchScript.InputSources.InputHandlers
                 return;
 
             var pointer = _pointerContainer.Create(pos, this);
+            _logger.Info(nameof(Click) + ": " + pointer.Id);
             var change = new PointerChange {Added = true, Pressed = true, Released = true, Removed = true};
             _upComingChanges.Add(pointer.Id, change);
         }
