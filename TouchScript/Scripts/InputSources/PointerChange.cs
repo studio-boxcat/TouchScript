@@ -24,6 +24,11 @@ namespace TouchScript.InputSources
             return str;
         }
 
+        public bool CancelledOnly()
+        {
+            return !Added && !Updated && !Pressed && !Released && !Removed && Cancelled;
+        }
+
         public static PointerChange MergeWithCheck(PointerChange a, PointerChange b)
         {
             AssertCollision(a, b);

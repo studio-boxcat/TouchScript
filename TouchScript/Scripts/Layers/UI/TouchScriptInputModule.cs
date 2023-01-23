@@ -25,21 +25,19 @@ namespace TouchScript.Layers.UI
 
         Dictionary<int, PointerEventData> m_PointerData = new Dictionary<int, PointerEventData>();
 
-        bool GetPointerData(int id, out PointerEventData data, bool create)
+        PointerEventData AddPointerData(int id)
         {
-            if (!m_PointerData.TryGetValue(id, out data) && create)
-            {
-                _logger.Info("AddPointerData: " + id);
-                data = new PointerEventData()
-                {
-                    pointerId = id,
-                };
-                m_PointerData.Add(id, data);
-                // m_PointerData 가 일정이상 쌓이면 버그로 취급.
-                Assert.IsTrue(m_PointerData.Count < 8);
-                return true;
-            }
-            return false;
+            _logger.Info("AddPointerData: " + id);
+            var data = new PointerEventData {pointerId = id};
+            m_PointerData.Add(id, data);
+            // m_PointerData 가 일정이상 쌓이면 버그로 취급.
+            Assert.IsTrue(m_PointerData.Count < 8);
+            return data;
+        }
+
+        PointerEventData GetPointerData(int id)
+        {
+            return m_PointerData[id];
         }
 
         void RemovePointerData(PointerEventData data)
@@ -50,12 +48,15 @@ namespace TouchScript.Layers.UI
 
         PointerEventData GetTouchPointerEventData(Pointer p, PointerChange change)
         {
-            PointerEventData pointerData;
-            var created = GetPointerData((int) p.Id, out pointerData, true);
+            // XXX: CancelledOnly 면서 포인터가 없어서 생성해야하는 상황은 호출되어서는 안 됨.
+            Assert.IsFalse(change.CancelledOnly() && !m_PointerData.ContainsKey((int) p.Id));
+
+            var id = (int) p.Id;
+            var pointerData = change.Added ? AddPointerData(id) : GetPointerData(id);
 
             pointerData.Reset();
 
-            if (created)
+            if (change.Added)
                 pointerData.position = p.Position;
 
             if (change.Pressed)
@@ -83,13 +84,6 @@ namespace TouchScript.Layers.UI
             // pointerData.radiusVariance = Vector2.one * input.radiusVariance;
 
             return pointerData;
-        }
-
-        PointerEventData GetLastPointerEventData(int id)
-        {
-            PointerEventData data;
-            GetPointerData(id, out data, false);
-            return data;
         }
 
         static bool ShouldStartDrag(Vector2 pressPos, Vector2 currentPos, float threshold, bool useDragThreshold)
@@ -136,14 +130,6 @@ namespace TouchScript.Layers.UI
             }
         }
 
-        public override bool IsPointerOverGameObject(int pointerId)
-        {
-            var lastPointer = GetLastPointerEventData(pointerId);
-            if (lastPointer != null)
-                return lastPointer.pointerEnter != null;
-            return false;
-        }
-
         void DeselectIfSelectionChanged(GameObject currentOverGo, BaseEventData pointerEvent)
         {
             // Selection tracking
@@ -178,7 +164,7 @@ namespace TouchScript.Layers.UI
 
             ProcessTouchPress(pointer, change.Pressed, change.Released);
 
-            if (!change.Released)
+            if (change is {Removed: false, Cancelled: false})
             {
                 ProcessMove(pointer);
                 ProcessDrag(pointer);
