@@ -12,8 +12,8 @@ namespace TouchScript.Behaviors.Cursors.UI
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_Behaviors_Cursors_UI_TextureSwitch.htm")]
     public class TextureSwitch : MonoBehaviour
     {
-
-        private CanvasRenderer r;
+        [SerializeField]
+        CanvasRenderer r;
 
         /// <summary>
         /// Shows this instance.
@@ -30,11 +30,5 @@ namespace TouchScript.Behaviors.Cursors.UI
         {
             r.SetAlpha(0);
         }
-
-        private void Awake()
-        {
-            r = GetComponent<CanvasRenderer>();
-        }
-
     }
 }

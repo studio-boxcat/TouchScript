@@ -2,10 +2,7 @@
  * @author Valentin Simonov / http://va.lent.in/
  */
 
-using System.Text;
 using TouchScript.Behaviors.Cursors.UI;
-using TouchScript.Pointers;
-using TouchScript.Utils;
 using UnityEngine;
 
 namespace TouchScript.Behaviors.Cursors
@@ -14,7 +11,7 @@ namespace TouchScript.Behaviors.Cursors
     /// Cursor for mouse pointers.
     /// </summary>
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_Behaviors_Cursors_MouseCursor.htm")]
-    public class MouseCursor : TextPointerCursor
+    public class MouseCursor : PointerCursor
     {
         #region Public properties
 
@@ -28,61 +25,28 @@ namespace TouchScript.Behaviors.Cursors
         /// </summary>
         public TextureSwitch PressedCursor;
 
-        /// <summary>
-        /// Should the value of <see cref="Pointer.Buttons"/> be shown on the cursor.
-        /// </summary>
-        public bool ShowButtons = false;
-
         #endregion
 
         #region Protected methods
 
         /// <inheritdoc />
-        protected override void updateOnce(Pointer pointer)
+        protected override void UpdateOnce()
         {
-            switch (state)
+            switch (_state)
             {
                 case CursorState.Released:
                 case CursorState.Over:
-                    if (DefaultCursor != null) DefaultCursor.Show();
-                    if (PressedCursor != null) PressedCursor.Hide();
+                    DefaultCursor.Show();
+                    PressedCursor.Hide();
                     break;
                 case CursorState.Pressed:
                 case CursorState.OverPressed:
-                    if (DefaultCursor != null) DefaultCursor.Hide();
-                    if (PressedCursor != null) PressedCursor.Show();
+                    DefaultCursor.Hide();
+                    PressedCursor.Show();
                     break;
             }
 
-            base.updateOnce(pointer);
-        }
-
-        /// <inheritdoc />
-        protected override void generateText(Pointer pointer, StringBuilder str)
-        {
-            base.generateText(pointer, str);
-
-            if (ShowButtons)
-            {
-                if (str.Length > 0) str.Append("\n");
-                str.Append("Pressing: ").Append(pointer.Pressing);
-            }
-        }
-
-        /// <inheritdoc />
-        protected override bool textIsVisible()
-        {
-            return base.textIsVisible() || ShowButtons;
-        }
-
-        /// <inheritdoc />
-        protected override uint gethash(Pointer pointer)
-        {
-            var hash = base.gethash(pointer);
-
-            if (ShowButtons) hash += (pointer.Pressing ? 1u : 0u);
-
-            return hash;
+            base.UpdateOnce();
         }
 
         #endregion

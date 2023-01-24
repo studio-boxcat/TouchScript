@@ -2,9 +2,9 @@
  * @author Valentin Simonov / http://va.lent.in/
  */
 
+using System.Collections;
 using System.Collections.Generic;
 using TouchScript.Core;
-using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
 
@@ -17,110 +17,97 @@ namespace TouchScript.Behaviors.Cursors
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_Behaviors_Cursors_CursorManager.htm")]
     public class CursorManager : MonoBehaviour
     {
-        #region Private variables
+        [SerializeField] PointerCursor _cursorPrefab;
+        [SerializeField] uint _cursorPixelSize = 128;
 
-        [SerializeField]
-        private PointerCursor mouseCursor;
+        readonly Stack<PointerCursor> _cursorPool = new();
+        readonly Dictionary<PointerId, PointerCursor> _cursors = new(10);
 
-        [SerializeField]
-        private uint cursorPixelSize = 64;
+        TouchManager _touchManager;
 
-        private RectTransform rect;
-        private ObjectPool<PointerCursor> mousePool;
-        private Dictionary<PointerId, PointerCursor> cursors = new(10);
-
-        #endregion
-
-        #region Unity methods
-
-        private void Awake()
+        void OnEnable()
         {
-            mousePool = new ObjectPool<PointerCursor>(2, instantiateMouseProxy, null, clearProxy);
+            _touchManager = TouchManager.Instance;
 
-            rect = transform as RectTransform;
-            if (rect == null)
-            {
-                Debug.LogError("CursorManager must be on an UI element!");
-                enabled = false;
-            }
+            _touchManager.PointerAdded += PointerAddedHandler;
+            _touchManager.PointerRemoved += PointerRemovedHandler;
+            _touchManager.PointerPressed += PointerPressedHandler;
+            _touchManager.PointerReleased += PointersReleasedHandler;
+            _touchManager.PointerUpdated += PointerUpdatedHandler;
+            _touchManager.PointerCancelled += PointerRemovedHandler;
         }
 
-        private void OnEnable()
+        void OnDisable()
         {
-            var touchManager = TouchManager.Instance;
-            if (touchManager == null) return;
-
-            touchManager.PointerAdded += PointerAddedHandler;
-            touchManager.PointerRemoved += PointerRemovedHandler;
-            touchManager.PointerPressed += PointerPressedHandler;
-            touchManager.PointerReleased += PointersReleasedHandler;
-            touchManager.PointerUpdated += PointerUpdatedHandler;
-            touchManager.PointerCancelled += PointerRemovedHandler;
+            _touchManager.PointerAdded -= PointerAddedHandler;
+            _touchManager.PointerRemoved -= PointerRemovedHandler;
+            _touchManager.PointerPressed -= PointerPressedHandler;
+            _touchManager.PointerReleased -= PointersReleasedHandler;
+            _touchManager.PointerUpdated -= PointerUpdatedHandler;
+            _touchManager.PointerCancelled -= PointerRemovedHandler;
         }
-
-        private void OnDisable()
-        {
-            var touchManager = TouchManager.Instance;
-            if (touchManager == null) return;
-
-            touchManager.PointerAdded -= PointerAddedHandler;
-            touchManager.PointerRemoved -= PointerRemovedHandler;
-            touchManager.PointerPressed -= PointerPressedHandler;
-            touchManager.PointerReleased -= PointersReleasedHandler;
-            touchManager.PointerUpdated -= PointerUpdatedHandler;
-            touchManager.PointerCancelled -= PointerRemovedHandler;
-        }
-
-        #endregion
-
-        #region Private functions
-
-        private PointerCursor instantiateMouseProxy()
-        {
-            return Instantiate(mouseCursor);
-        }
-
-        private void clearProxy(PointerCursor cursor)
-        {
-            cursor.Hide();
-        }
-
-        #endregion
 
         #region Event handlers
 
-        private void PointerAddedHandler(Pointer pointer)
+        void PointerAddedHandler(Pointer pointer)
         {
-            var cursor = mousePool.Get();
-            cursor.Size = cursorPixelSize;
-            cursor.Init(rect, pointer);
-            cursors.Add(pointer.Id, cursor);
+            if (_cursorPool.TryPop(out var cursor) == false)
+            {
+                cursor = Instantiate(_cursorPrefab, transform, false);
+                var cursorTrans = (RectTransform) cursor.transform;
+                cursorTrans.anchorMin = cursorTrans.anchorMax = Vector2.zero;
+                cursorTrans.sizeDelta = new Vector2(_cursorPixelSize, _cursorPixelSize);
+            }
+
+            cursor.Init(pointer.Position);
+            cursor.name = ((int) pointer.Id).ToString();
+            cursor.gameObject.SetActive(true);
+            _cursors.Add(pointer.Id, cursor);
         }
 
-        private void PointerRemovedHandler(Pointer pointer)
+        void PointerRemovedHandler(Pointer pointer)
         {
-            if (!cursors.TryGetValue(pointer.Id, out var cursor)) return;
-            cursors.Remove(pointer.Id);
+            var pointerId = pointer.Id;
+            if (_cursors.TryGetValue(pointerId, out var cursor) == false)
+                return;
 
-            mousePool.Release(cursor);
+            _cursors.Remove(pointerId);
+            StartCoroutine(CoRemove(cursor));
+
+            IEnumerator CoRemove(PointerCursor cursor)
+            {
+                yield return null;
+                cursor.gameObject.SetActive(false);
+                _cursorPool.Push(cursor);
+            }
         }
 
-        private void PointerPressedHandler(Pointer pointer)
+        void PointerPressedHandler(Pointer pointer)
         {
-            if (!cursors.TryGetValue(pointer.Id, out var cursor)) return;
-            cursor.SetState(pointer, PointerCursor.CursorState.Pressed);
+            var pointerId = pointer.Id;
+            if (_cursors.TryGetValue(pointerId, out var cursor) == false)
+                return;
+
+            cursor.SetState(PointerCursor.CursorState.Pressed);
         }
 
-        private void PointerUpdatedHandler(Pointer pointer)
+        void PointerUpdatedHandler(Pointer pointer)
         {
-            if (!cursors.TryGetValue(pointer.Id, out var cursor)) return;
-            cursor.UpdatePointer(pointer);
+            var pointerId = pointer.Id;
+            if (_cursors.TryGetValue(pointerId, out var cursor) == false)
+                return;
+
+            var cursorTrans = (RectTransform) cursor.transform;
+            cursorTrans.anchoredPosition = pointer.Position;
         }
 
-        private void PointersReleasedHandler(Pointer pointer)
+        void PointersReleasedHandler(Pointer pointer)
         {
-            if (!cursors.TryGetValue(pointer.Id, out var cursor)) return;
-            cursor.SetState(pointer, PointerCursor.CursorState.Released);
+            var pointerId = pointer.Id;
+            if (_cursors.TryGetValue(pointerId, out var cursor) == false)
+                return;
+
+            cursor.SetState(PointerCursor.CursorState.Released);
         }
 
         #endregion
