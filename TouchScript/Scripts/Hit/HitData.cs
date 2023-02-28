@@ -4,7 +4,7 @@
 
 using TouchScript.Layers;
 using UnityEngine;
-using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 namespace TouchScript.Hit
 {
@@ -15,17 +15,26 @@ namespace TouchScript.Hit
     {
         public readonly Transform Target;
         public readonly TouchLayer Layer;
-        public readonly Graphic Graphic;
-        public readonly GraphicRaycaster GraphicRaycaster;
+        public readonly Component Collider;
+        public readonly BaseRaycaster Raycaster;
         public readonly Vector2 ScreenPosition;
 
-        public HitData(Transform target, TouchLayer layer, Graphic graphic, GraphicRaycaster graphicRaycaster, Vector2 screenPosition)
+        public HitData(Transform target, TouchLayer layer, Component collider, BaseRaycaster raycaster, Vector2 screenPosition)
         {
             Target = target;
             Layer = layer;
-            Graphic = graphic;
-            GraphicRaycaster = graphicRaycaster;
+            Collider = collider;
+            Raycaster = raycaster;
             ScreenPosition = screenPosition;
+        }
+
+        public HitData(TouchLayer layer, RaycastResult raycastResult)
+        {
+            Target = raycastResult.collider.transform;
+            Layer = layer;
+            Collider = raycastResult.collider;
+            Raycaster = raycastResult.module;
+            ScreenPosition = raycastResult.screenPosition;
         }
     }
 }

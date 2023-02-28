@@ -69,15 +69,13 @@ namespace TouchScript.Layers.UI
             pointerData.button = PointerEventData.InputButton.Left;
 
             var over = p.GetOverData();
-            if (change.Cancelled || over.Graphic == null)
+            if (change.Cancelled || over.Collider == null)
             {
                 pointerData.pointerCurrentRaycast = default;
             }
             else
             {
-                // TODO: displayIndex 대응이 필요함.
-                const int displayIndex = default;
-                pointerData.pointerCurrentRaycast = new RaycastResult(over.Graphic, over.GraphicRaycaster, displayIndex, over.ScreenPosition);
+                pointerData.pointerCurrentRaycast = new RaycastResult(over.Collider, over.Raycaster, over.ScreenPosition);
             }
 
             // pointerData.radius = Vector2.one * input.radius;
