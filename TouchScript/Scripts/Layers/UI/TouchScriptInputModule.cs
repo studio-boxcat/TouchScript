@@ -30,8 +30,10 @@ namespace TouchScript.Layers.UI
             _logger.Info("AddPointerData: " + id);
             var data = new PointerEventData {pointerId = id};
             m_PointerData.Add(id, data);
-            // m_PointerData 가 일정이상 쌓이면 버그로 취급.
-            Assert.IsTrue(m_PointerData.Count < 8);
+#if UNITY_EDITOR
+            if (m_PointerData.Count > 10)
+                _logger.Error("Too many tracked pointers. Might be something wrong with the input.");
+#endif
             return data;
         }
 
