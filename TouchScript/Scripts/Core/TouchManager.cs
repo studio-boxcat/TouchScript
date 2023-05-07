@@ -140,7 +140,7 @@ namespace TouchScript.Core
 
                 if (change.Added)
                 {
-                    _logger.Info("Added: " + pointer.Id);
+                    // _logger.Info("Added: " + pointer.Id);
                     PointerAdded?.InvokeHandleExceptions(pointer);
                 }
 
@@ -150,7 +150,7 @@ namespace TouchScript.Core
                 if (change.Pressed)
                 {
                     Assert.IsFalse(pointer.Pressing);
-                    _logger.Info("Pressed: " + pointer.Id);
+                    // _logger.Info("Pressed: " + pointer.Id);
                     pointer.Pressing = true;
                     var hit = pointer.GetOverData();
                     pointer.INTERNAL_SetPressData(hit);
@@ -160,7 +160,7 @@ namespace TouchScript.Core
                 if (change.Released)
                 {
                     Assert.IsTrue(pointer.Pressing);
-                    _logger.Info("Released: " + pointer.Id);
+                    // _logger.Info("Released: " + pointer.Id);
                     pointer.Pressing = false;
                     PointerReleased?.InvokeHandleExceptions(pointer);
                     pointer.INTERNAL_ClearPressData();
@@ -169,7 +169,7 @@ namespace TouchScript.Core
                 if (change.Removed)
                 {
                     Assert.IsTrue(pointer.Id.IsValid());
-                    _logger.Info("Removed: " + pointer.Id);
+                    // _logger.Info("Removed: " + pointer.Id);
                     PointerRemoved?.InvokeHandleExceptions(pointer);
                     pointer.InputSource.INTERNAL_DiscardPointer(pointer, false);
                 }
@@ -177,7 +177,7 @@ namespace TouchScript.Core
                 if (change.Cancelled)
                 {
                     Assert.IsTrue(pointer.Id.IsValid());
-                    _logger.Info("Cancelled: " + pointer.Id);
+                    // _logger.Info("Cancelled: " + pointer.Id);
                     PointerCancelled?.InvokeHandleExceptions(pointer);
                     pointer.InputSource.INTERNAL_DiscardPointer(pointer, true);
                 }
