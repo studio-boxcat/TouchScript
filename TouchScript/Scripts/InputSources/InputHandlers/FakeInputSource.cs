@@ -10,7 +10,7 @@ namespace TouchScript.InputSources.InputHandlers
     public class FakeInputSource : IInputSource
     {
         readonly PointerContainer _pointerContainer;
-        static readonly Logger _logger = new(nameof(FakeInputSource));
+        // static readonly Logger _logger = new(nameof(FakeInputSource));
 
         readonly Dictionary<PointerId, Pointer> _pointers = new();
         readonly Dictionary<PointerId, PointerChange> _upComingChanges = new();
@@ -22,7 +22,7 @@ namespace TouchScript.InputSources.InputHandlers
 
         public void Deactivate(PointerChanges changes)
         {
-            _logger.Info(nameof(Deactivate));
+            // _logger.Info(nameof(Deactivate));
 
             // XXX: _pointers 로 관리되는 포인터는 모두 Removed 도 Cancelled 도 아닌 살아있는 포인터들.
             // 모두 Cancel 처리한다.
@@ -75,7 +75,7 @@ namespace TouchScript.InputSources.InputHandlers
 
         public void INTERNAL_DiscardPointer(Pointer pointer, bool cancelled)
         {
-            _logger.Info("Discard: " + pointer.Id);
+            // _logger.Info("Discard: " + pointer.Id);
             Assert.IsTrue(pointer.Id.IsValid());
             Assert.IsFalse(_pointers.ContainsKey(pointer.Id));
             Assert.IsFalse(_upComingChanges.ContainsKey(pointer.Id));
@@ -93,7 +93,7 @@ namespace TouchScript.InputSources.InputHandlers
                 return;
 
             var pointer = _pointerContainer.Create(pos, this);
-            _logger.Info(nameof(Click) + ": " + pointer.Id);
+            // _logger.Info(nameof(Click) + ": " + pointer.Id);
             var change = new PointerChange {Added = true, Pressed = true, Released = true, Removed = true};
             _upComingChanges.Add(pointer.Id, change);
         }
@@ -105,7 +105,7 @@ namespace TouchScript.InputSources.InputHandlers
 
             var pointer = _pointerContainer.Create(pos, this);
             var pointerId = pointer.Id;
-            _logger.Info(nameof(Press) + ": " + pointerId);
+            // _logger.Info(nameof(Press) + ": " + pointerId);
             _pointers.Add(pointerId, pointer);
             _upComingChanges.Add(pointerId, new PointerChange {Added = true, Pressed = true});
             return pointer.Id;
@@ -113,7 +113,7 @@ namespace TouchScript.InputSources.InputHandlers
 
         public void Point(PointerId pointerId, Vector2 pos)
         {
-            _logger.Info(nameof(Point) + ": " + pointerId);
+            // _logger.Info(nameof(Point) + ": " + pointerId);
             Assert.IsTrue(TouchManager.Instance.enabled);
 
             var pointer = _pointers[pointerId];
@@ -125,7 +125,7 @@ namespace TouchScript.InputSources.InputHandlers
 
         public void Release(PointerId pointerId)
         {
-            _logger.Info(nameof(Release) + ": " + pointerId);
+            // _logger.Info(nameof(Release) + ": " + pointerId);
             Assert.IsTrue(TouchManager.Instance.enabled);
             Assert.IsTrue(_pointers.ContainsKey(pointerId));
 

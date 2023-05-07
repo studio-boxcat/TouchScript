@@ -4,7 +4,6 @@ using TouchScript.Core;
 using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
-using Logger = TouchScript.Utils.Logger;
 
 namespace TouchScript.InputSources
 {
@@ -13,7 +12,7 @@ namespace TouchScript.InputSources
         static PointerId _nextPointerId = (PointerId) 1;
         static PointerId IssuePointerId() => _nextPointerId++;
 
-        static readonly Logger _logger = new(nameof(PointerContainer));
+        // static readonly Logger _logger = new(nameof(PointerContainer));
 
         public readonly Dictionary<PointerId, Pointer> Pointers;
 
@@ -39,11 +38,11 @@ namespace TouchScript.InputSources
             var pointerId = IssuePointerId();
             if (_pool.TryPop(out var pointer))
             {
-                _logger.Info($"{nameof(Create)}: {pointerId} ({inputSource.GetType().Name}) (From Pool)");
+                // _logger.Info($"{nameof(Create)}: {pointerId} ({inputSource.GetType().Name}) (From Pool)");
             }
             else
             {
-                _logger.Info($"{nameof(Create)}: {pointerId} ({inputSource.GetType().Name})");
+                // _logger.Info($"{nameof(Create)}: {pointerId} ({inputSource.GetType().Name})");
                 pointer = new Pointer();
             }
 
@@ -60,7 +59,7 @@ namespace TouchScript.InputSources
         public void Destroy(Pointer pointer)
         {
             var pointerId = pointer.Id;
-            _logger.Info($"{nameof(Destroy)}: {pointerId}");
+            // _logger.Info($"{nameof(Destroy)}: {pointerId}");
 
             Assert.AreNotEqual(PointerId.Invalid, pointerId);
             Assert.IsTrue(_pool.All(p => !ReferenceEquals(p, pointer)));

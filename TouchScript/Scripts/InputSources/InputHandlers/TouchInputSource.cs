@@ -127,7 +127,7 @@ namespace TouchScript.InputSources.InputHandlers
 
         Pointer CreatePointer(int fingerId, Vector2 pos)
         {
-            _logger.Info($"CreatePointer: {fingerId}");
+            // _logger.Info($"CreatePointer: {fingerId}");
             return _pointerContainer.Create(pos, this);
         }
 
@@ -171,8 +171,7 @@ namespace TouchScript.InputSources.InputHandlers
 
         void IInputSource.INTERNAL_DiscardPointer(Pointer pointer, bool cancelled)
         {
-            var pointerId = pointer.Id;
-            _logger.Info("Discard: " + pointerId);
+            // _logger.Info("Discard: " + pointer.Id);
             Assert.IsFalse(_pointers.ContainsValue(pointer));
             _pointerContainer.Destroy(pointer);
         }
