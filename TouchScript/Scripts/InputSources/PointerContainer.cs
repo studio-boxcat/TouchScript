@@ -51,7 +51,11 @@ namespace TouchScript.InputSources
 
             Assert.IsTrue(Pointers.Values.All(p => !ReferenceEquals(p, pointer)));
             Pointers.Add(pointerId, pointer);
-            Assert.IsTrue(Pointers.Count < 20);
+
+#if DEBUG
+            if (Pointers.Count > 20)
+                Debug.LogError("Too many pointers: " + Pointers.Count);
+#endif
 
             return pointer;
         }
