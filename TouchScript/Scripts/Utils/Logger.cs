@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using UnityEngine;
 using Debug = UnityEngine.Debug;
 
 namespace TouchScript.Utils
@@ -13,15 +14,15 @@ namespace TouchScript.Utils
         }
 
         [Conditional("DEBUG")]
-        public void Info(string message)
+        public void Info(string message, Object context = null)
         {
-            Debug.Log($"[TS:{_tag}] {message}");
+            Debug.Log($"[TS:{_tag}] {message}", context);
         }
 
         [Conditional("DEBUG")]
-        public void Warning(string message)
+        public void Warning(string message, Object context = null)
         {
-            Debug.LogWarning($"[TS:{_tag}] {message}");
+            Debug.LogWarning($"[TS:{_tag}] {message}", context);
         }
 
         public void Error(string message)

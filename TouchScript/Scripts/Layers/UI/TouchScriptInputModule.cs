@@ -23,12 +23,12 @@ namespace TouchScript.Layers.UI
 
         #region From PointerInputModule
 
-        Dictionary<int, PointerEventData> m_PointerData = new Dictionary<int, PointerEventData>();
+        readonly Dictionary<int, PointerEventData> m_PointerData = new();
 
         PointerEventData AddPointerData(int id)
         {
             // _logger.Info("AddPointerData: " + id);
-            var data = new PointerEventData {pointerId = id};
+            var data = new PointerEventData { pointerId = id };
             m_PointerData.Add(id, data);
 #if UNITY_EDITOR
             if (m_PointerData.Count > 10)
@@ -164,7 +164,7 @@ namespace TouchScript.Layers.UI
 
             ProcessTouchPress(pointer, change.Pressed, change.Released);
 
-            if (change is {Removed: false, Cancelled: false})
+            if (change is { Removed: false, Cancelled: false })
             {
                 ProcessMove(pointer);
                 ProcessDrag(pointer);
@@ -233,9 +233,21 @@ namespace TouchScript.Layers.UI
                 var pointerClickHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
 
                 // PointerClick and Drop events
-                if (pointerEvent.pointerClick == pointerClickHandler && pointerEvent.eligibleForClick)
+                if (pointerEvent.pointerClick == pointerClickHandler)
                 {
-                    ExecuteEvents.Execute(pointerEvent.pointerClick, pointerEvent, ExecuteEvents.pointerClickHandler);
+                    if (pointerEvent.eligibleForClick)
+                    {
+                        _logger.Info("Execute click on: " + pointerClickHandler, pointerClickHandler);
+                        ExecuteEvents.Execute(pointerEvent.pointerClick, pointerEvent, ExecuteEvents.pointerClickHandler);
+                    }
+                    else
+                    {
+                        _logger.Warning("Pointer ineligible for click: " + pointerClickHandler, pointerClickHandler);
+                    }
+                }
+                else
+                {
+                    _logger.Warning("Pointer click handler mismatch: " + pointerClickHandler, pointerClickHandler);
                 }
 
                 if (pointerEvent.pointerDrag != null && pointerEvent.dragging)
