@@ -16,15 +16,15 @@ namespace TouchScript.Hit
         public readonly Transform Target;
         public readonly TouchLayer Layer;
         public readonly Component Collider;
-        public readonly BaseRaycaster Raycaster;
+        public readonly Camera Camera;
         public readonly Vector2 ScreenPosition;
 
-        public HitData(Transform target, TouchLayer layer, Component collider, BaseRaycaster raycaster, Vector2 screenPosition)
+        public HitData(Transform target, TouchLayer layer, Component collider, Camera camera, Vector2 screenPosition)
         {
             Target = target;
             Layer = layer;
             Collider = collider;
-            Raycaster = raycaster;
+            Camera = camera;
             ScreenPosition = screenPosition;
         }
 
@@ -33,7 +33,7 @@ namespace TouchScript.Hit
             Target = raycastResult.collider.transform;
             Layer = layer;
             Collider = raycastResult.collider;
-            Raycaster = raycastResult.module;
+            Camera = raycastResult.camera;
             ScreenPosition = raycastResult.screenPosition;
         }
     }

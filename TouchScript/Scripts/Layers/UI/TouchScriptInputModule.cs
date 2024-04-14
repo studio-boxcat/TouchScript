@@ -77,7 +77,7 @@ namespace TouchScript.Layers.UI
             }
             else
             {
-                pointerData.pointerCurrentRaycast = new RaycastResult(over.Collider, over.Raycaster, over.ScreenPosition);
+                pointerData.pointerCurrentRaycast = new RaycastResult(over.Collider, over.Camera, over.ScreenPosition);
             }
 
             // pointerData.radius = Vector2.one * input.radius;
