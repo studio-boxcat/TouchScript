@@ -4,7 +4,7 @@ using Debug = UnityEngine.Debug;
 
 namespace TouchScript.Utils
 {
-    public readonly struct Logger
+    readonly struct Logger
     {
         readonly string _tag;
 
@@ -13,18 +13,19 @@ namespace TouchScript.Utils
             _tag = tag;
         }
 
-        [Conditional("DEBUG")]
+        [Conditional("DEBUG"), HideInCallstack]
         public void Info(string message, Object context = null)
         {
             Debug.Log($"[TS:{_tag}] {message}", context);
         }
 
-        [Conditional("DEBUG")]
+        [Conditional("DEBUG"), HideInCallstack]
         public void Warning(string message, Object context = null)
         {
             Debug.LogWarning($"[TS:{_tag}] {message}", context);
         }
 
+        [HideInCallstack]
         public void Error(string message)
         {
             Debug.LogError($"[TS:{_tag}] {message}");
