@@ -19,8 +19,6 @@ namespace TouchScript.Layers.UI
     {
         readonly Logger _logger = new(nameof(TouchScriptInputModule));
 
-        public override bool ShouldActivateModule() => true;
-
         #region From PointerInputModule
 
         readonly Dictionary<int, PointerEventData> m_PointerData = new();
