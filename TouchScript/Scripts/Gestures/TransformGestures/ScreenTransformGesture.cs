@@ -3,8 +3,7 @@
  */
 
 using TouchScript.Gestures.TransformGestures.Base;
-using TouchScript.Layers;
-using TouchScript.Utils.Geom;
+using TouchScript.Utils;
 using UnityEngine;
 
 namespace TouchScript.Gestures.TransformGestures
@@ -20,8 +19,7 @@ namespace TouchScript.Gestures.TransformGestures
         #region Protected methods
 
         /// <inheritdoc />
-        protected override float doRotation(Vector2 oldScreenPos1, Vector2 oldScreenPos2, Vector2 newScreenPos1,
-                                            Vector2 newScreenPos2, ProjectionParams projectionParams)
+        protected override float doRotation(Vector2 oldScreenPos1, Vector2 oldScreenPos2, Vector2 newScreenPos1, Vector2 newScreenPos2, Camera camera)
         {
             var oldScreenDelta = oldScreenPos2 - oldScreenPos1;
             var newScreenDelta = newScreenPos2 - newScreenPos1;
@@ -30,15 +28,13 @@ namespace TouchScript.Gestures.TransformGestures
         }
 
         /// <inheritdoc />
-        protected override float doScaling(Vector2 oldScreenPos1, Vector2 oldScreenPos2, Vector2 newScreenPos1,
-                                           Vector2 newScreenPos2, ProjectionParams projectionParams)
+        protected override float doScaling(Vector2 oldScreenPos1, Vector2 oldScreenPos2, Vector2 newScreenPos1, Vector2 newScreenPos2, Camera camera)
         {
             return (newScreenPos2 - newScreenPos1).magnitude / (oldScreenPos2 - oldScreenPos1).magnitude;
         }
 
         /// <inheritdoc />
-        protected override Vector3 doOnePointTranslation(Vector2 oldScreenPos, Vector2 newScreenPos,
-                                                         ProjectionParams projectionParams)
+        protected override Vector3 doOnePointTranslation(Vector2 oldScreenPos, Vector2 newScreenPos, Camera projectionParams)
         {
             if (isTransforming)
             {
@@ -57,7 +53,7 @@ namespace TouchScript.Gestures.TransformGestures
 
         /// <inheritdoc />
         protected override Vector3 doTwoPointTranslation(Vector2 oldScreenPos1, Vector2 oldScreenPos2,
-                                                         Vector2 newScreenPos1, Vector2 newScreenPos2, float dR, float dS, ProjectionParams projectionParams)
+                                                         Vector2 newScreenPos1, Vector2 newScreenPos2, float dR, float dS, Camera camera)
         {
             if (isTransforming)
             {

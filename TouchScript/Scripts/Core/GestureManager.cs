@@ -14,10 +14,7 @@ using Logger = TouchScript.Utils.Logger;
 
 namespace TouchScript.Core
 {
-    /// <summary>
-    /// Internal implementation of <see cref="IGestureManager"/>.
-    /// </summary>
-    internal sealed class GestureManager : MonoBehaviour
+    sealed class GestureManager : MonoBehaviour
     {
         #region Public properties
 
@@ -53,10 +50,8 @@ namespace TouchScript.Core
 
         #region Pools
 
-        static readonly ObjectPool<List<Gesture>> _gestureListPool = new(4,
-            () => new List<Gesture>(), null, (l) => l.Clear());
-        static readonly ObjectPool<List<Pointer>> _pointerListPool = new(4,
-            () => new List<Pointer>(), null, (l) => l.Clear());
+        static readonly ListPool<Gesture> _gestureListPool = new(4);
+        static readonly ListPool<Pointer> _pointerListPool = new(4);
 
         #endregion
 
@@ -100,7 +95,7 @@ namespace TouchScript.Core
                             break;
                         default:
                             print(string.Format("Gesture {0} erroneously tried to enter state {1} from state {2}",
-                                new object[] {gesture, state, gesture.State}));
+                                new object[] { gesture, state, gesture.State }));
                             break;
                     }
                     recognized = recognizeGestureIfNotPrevented(gesture);
@@ -118,7 +113,7 @@ namespace TouchScript.Core
                             break;
                         default:
                             print(string.Format("Gesture {0} erroneously tried to enter state {1} from state {2}",
-                                new object[] {gesture, state, gesture.State}));
+                                new object[] { gesture, state, gesture.State }));
                             break;
                     }
                     break;
@@ -139,7 +134,7 @@ namespace TouchScript.Core
                             break;
                         default:
                             print(string.Format("Gesture {0} erroneously tried to enter state {1} from state {2}",
-                                new object[] {gesture, state, gesture.State}));
+                                new object[] { gesture, state, gesture.State }));
                             break;
                     }
                     break;

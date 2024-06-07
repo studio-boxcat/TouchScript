@@ -11,7 +11,7 @@ namespace TouchScript.Utils
     /// <summary>
     /// Utility methods to work with Pointers.
     /// </summary>
-    public static class PointerUtils
+    static class PointerUtils
     {
         /// <summary>
         /// Determines whether the pointer is over a specific GameObject.

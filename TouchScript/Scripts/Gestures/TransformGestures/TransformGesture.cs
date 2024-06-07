@@ -144,12 +144,11 @@ namespace TouchScript.Gestures.TransformGestures
         /// <param name="point">The point.</param>
         /// <param name="dR">Delta rotation.</param>
         /// <param name="dS">Delta scale.</param>
-        /// <param name="projectionParams">The projection parameters.</param>
         /// <returns></returns>
-        protected Vector3 projectScaledRotated(Vector2 point, float dR, float dS, ProjectionParams projectionParams)
+        protected Vector3 projectScaledRotated(Vector2 point, float dR, float dS, Camera camera)
         {
             var center = targetPositionOverridden ? targetPosition : cachedTransform.position;
-            var delta = projectionParams.ProjectTo(point, transformPlane) - center;
+            var delta = camera.ProjectTo(point, transformPlane) - center;
             if (dR != 0) delta = Quaternion.AngleAxis(dR, RotationAxis) * delta;
             if (dS != 0) delta = delta * dS;
             return center + delta;
@@ -157,12 +156,12 @@ namespace TouchScript.Gestures.TransformGestures
 
         /// <inheritdoc />
         protected override float doRotation(Vector2 oldScreenPos1, Vector2 oldScreenPos2, Vector2 newScreenPos1,
-                                            Vector2 newScreenPos2, ProjectionParams projectionParams)
+                                            Vector2 newScreenPos2, Camera camera)
         {
-            var newVector = projectionParams.ProjectTo(newScreenPos2, TransformPlane) -
-                            projectionParams.ProjectTo(newScreenPos1, TransformPlane);
-            var oldVector = projectionParams.ProjectTo(oldScreenPos2, TransformPlane) -
-                            projectionParams.ProjectTo(oldScreenPos1, TransformPlane);
+            var newVector = camera.ProjectTo(newScreenPos2, TransformPlane) -
+                            camera.ProjectTo(newScreenPos1, TransformPlane);
+            var oldVector = camera.ProjectTo(oldScreenPos2, TransformPlane) -
+                            camera.ProjectTo(oldScreenPos1, TransformPlane);
             var angle = Vector3.Angle(oldVector, newVector);
             if (Vector3.Dot(Vector3.Cross(oldVector, newVector), TransformPlane.normal) < 0)
                 angle = -angle;
@@ -170,32 +169,30 @@ namespace TouchScript.Gestures.TransformGestures
         }
 
         /// <inheritdoc />
-        protected override float doScaling(Vector2 oldScreenPos1, Vector2 oldScreenPos2, Vector2 newScreenPos1,
-                                           Vector2 newScreenPos2, ProjectionParams projectionParams)
+        protected override float doScaling(Vector2 oldScreenPos1, Vector2 oldScreenPos2, Vector2 newScreenPos1, Vector2 newScreenPos2, Camera camera)
         {
-            var newVector = projectionParams.ProjectTo(newScreenPos2, TransformPlane) -
-                            projectionParams.ProjectTo(newScreenPos1, TransformPlane);
-            var oldVector = projectionParams.ProjectTo(oldScreenPos2, TransformPlane) -
-                            projectionParams.ProjectTo(oldScreenPos1, TransformPlane);
+            var newVector = camera.ProjectTo(newScreenPos2, TransformPlane) -
+                            camera.ProjectTo(newScreenPos1, TransformPlane);
+            var oldVector = camera.ProjectTo(oldScreenPos2, TransformPlane) -
+                            camera.ProjectTo(oldScreenPos1, TransformPlane);
             return newVector.magnitude / oldVector.magnitude;
         }
 
         /// <inheritdoc />
-        protected override Vector3 doOnePointTranslation(Vector2 oldScreenPos, Vector2 newScreenPos,
-                                                         ProjectionParams projectionParams)
+        protected override Vector3 doOnePointTranslation(Vector2 oldScreenPos, Vector2 newScreenPos, Camera camera)
         {
             if (isTransforming)
             {
-                return projectionParams.ProjectTo(newScreenPos, TransformPlane) -
-                       projectionParams.ProjectTo(oldScreenPos, TransformPlane);
+                return camera.ProjectTo(newScreenPos, TransformPlane) -
+                       camera.ProjectTo(oldScreenPos, TransformPlane);
             }
 
             screenPixelTranslationBuffer += newScreenPos - oldScreenPos;
             if (screenPixelTranslationBuffer.sqrMagnitude > screenTransformPixelThresholdSquared)
             {
                 isTransforming = true;
-                return projectionParams.ProjectTo(newScreenPos, TransformPlane) -
-                       projectionParams.ProjectTo(newScreenPos - screenPixelTranslationBuffer, TransformPlane);
+                return camera.ProjectTo(newScreenPos, TransformPlane) -
+                       camera.ProjectTo(newScreenPos - screenPixelTranslationBuffer, TransformPlane);
             }
 
             return Vector3.zero;
@@ -203,19 +200,19 @@ namespace TouchScript.Gestures.TransformGestures
 
         /// <inheritdoc />
         protected override Vector3 doTwoPointTranslation(Vector2 oldScreenPos1, Vector2 oldScreenPos2,
-                                                         Vector2 newScreenPos1, Vector2 newScreenPos2, float dR, float dS, ProjectionParams projectionParams)
+                                                         Vector2 newScreenPos1, Vector2 newScreenPos2, float dR, float dS, Camera camera)
         {
             if (isTransforming)
             {
-                return projectionParams.ProjectTo(newScreenPos1, TransformPlane) - projectScaledRotated(oldScreenPos1, dR, dS, projectionParams);
+                return camera.ProjectTo(newScreenPos1, TransformPlane) - projectScaledRotated(oldScreenPos1, dR, dS, camera);
             }
 
             screenPixelTranslationBuffer += newScreenPos1 - oldScreenPos1;
             if (screenPixelTranslationBuffer.sqrMagnitude > screenTransformPixelThresholdSquared)
             {
                 isTransforming = true;
-                return projectionParams.ProjectTo(newScreenPos1, TransformPlane) -
-                       projectScaledRotated(newScreenPos1 - screenPixelTranslationBuffer, dR, dS, projectionParams);
+                return camera.ProjectTo(newScreenPos1, TransformPlane) -
+                       projectScaledRotated(newScreenPos1 - screenPixelTranslationBuffer, dR, dS, camera);
             }
 
             return Vector3.zero;

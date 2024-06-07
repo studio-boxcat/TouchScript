@@ -1,7 +1,3 @@
-/*
- * @author Valentin Simonov / http://va.lent.in/
- */
-
 using TouchScript.Hit;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -9,24 +5,13 @@ using Sirenix.OdinInspector;
 
 namespace TouchScript.Layers
 {
-    /// <summary>
-    /// A layer which combines all types of hit recognition into one: UI (Screen Space and World), 3D and 2D.
-    /// </summary>
-    /// <seealso cref="TouchScript.Layers.TouchLayer" />
-    [AddComponentMenu("TouchScript/Layers/Standard Layer")]
-    [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_Layers_StandardLayer.htm")]
     public class StandardLayer : TouchLayer
     {
-        #region Private variables
-
         [SerializeField, Required, ChildGameObjectsOnly]
         Camera _camera;
 
-        #endregion
+        public override Camera GetTargetCamera() => _camera;
 
-        #region Public methods
-
-        /// <inheritdoc />
         public override HitResult Hit(Vector2 screenPosition, out HitData hit)
         {
             if (QuickRaycast.Raycast(screenPosition, _camera, out var raycastResult))
@@ -40,10 +25,5 @@ namespace TouchScript.Layers
                 return HitResult.Miss;
             }
         }
-
-        /// <inheritdoc />
-        public override ProjectionParams GetProjectionParams() => new(_camera);
-
-        #endregion
     }
 }

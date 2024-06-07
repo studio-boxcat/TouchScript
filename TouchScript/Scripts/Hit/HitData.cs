@@ -1,7 +1,3 @@
-/*
- * @author Valentin Simonov / http://va.lent.in/
- */
-
 using TouchScript.Layers;
 using UnityEngine;
 using UnityEngine.EventSystems;

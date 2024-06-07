@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using TouchScript.Gestures.TransformGestures.Base;
 using TouchScript.Layers;
 using TouchScript.Pointers;
+using TouchScript.Utils;
 using UnityEngine;
 
 namespace TouchScript.Gestures.TransformGestures
@@ -82,11 +83,10 @@ namespace TouchScript.Gestures.TransformGestures
         #region Protected methods
 
         /// <inheritdoc />
-        protected override float doRotation(Vector3 center, Vector2 oldScreenPos, Vector2 newScreenPos,
-                                 ProjectionParams projectionParams)
+        protected override float doRotation(Vector3 center, Vector2 oldScreenPos, Vector2 newScreenPos, Camera camera)
         {
-            var newVector = projectionParams.ProjectTo(newScreenPos, TransformPlane) - center;
-            var oldVector = projectionParams.ProjectTo(oldScreenPos, TransformPlane) - center;
+            var newVector = camera.ProjectTo(newScreenPos, TransformPlane) - center;
+            var oldVector = camera.ProjectTo(oldScreenPos, TransformPlane) - center;
             var angle = Vector3.Angle(oldVector, newVector);
             if (Vector3.Dot(Vector3.Cross(oldVector, newVector), TransformPlane.normal) < 0)
                 angle = -angle;
@@ -94,11 +94,10 @@ namespace TouchScript.Gestures.TransformGestures
         }
 
         /// <inheritdoc />
-        protected override float doScaling(Vector3 center, Vector2 oldScreenPos, Vector2 newScreenPos,
-                                ProjectionParams projectionParams)
+        protected override float doScaling(Vector3 center, Vector2 oldScreenPos, Vector2 newScreenPos, Camera camera)
         {
-            var newVector = projectionParams.ProjectTo(newScreenPos, TransformPlane) - center;
-            var oldVector = projectionParams.ProjectTo(oldScreenPos, TransformPlane) - center;
+            var newVector = camera.ProjectTo(newScreenPos, TransformPlane) - center;
+            var oldVector = camera.ProjectTo(oldScreenPos, TransformPlane) - center;
             return newVector.magnitude / oldVector.magnitude;
         }
 

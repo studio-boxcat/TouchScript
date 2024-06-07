@@ -7,7 +7,6 @@ namespace TouchScript.Pointers
 
     public static class PointerIdUtils
     {
-        public static bool IsInvalid(this PointerId value) => value == PointerId.Invalid;
         public static bool IsValid(this PointerId value) => value != PointerId.Invalid;
     }
 }

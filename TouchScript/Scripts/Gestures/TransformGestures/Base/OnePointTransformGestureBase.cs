@@ -3,10 +3,8 @@
  */
 
 using System.Collections.Generic;
-using TouchScript.Layers;
 using TouchScript.Pointers;
 using TouchScript.Utils;
-using TouchScript.Utils.Geom;
 using UnityEngine;
 
 namespace TouchScript.Gestures.TransformGestures.Base
@@ -19,24 +17,10 @@ namespace TouchScript.Gestures.TransformGestures.Base
         #region Public properties
 
         /// <inheritdoc />
-        public override Vector2 ScreenPosition
-        {
-            get
-            {
-                if (NumPointers == 0) return InvalidPosition.Value;
-                return activePointers[0].Position;
-            }
-        }
+        public override Vector2 ScreenPosition => NumPointers is not 0 ? activePointers[0].Position : InvalidPosition.Value;
 
         /// <inheritdoc />
-        public override Vector2 PreviousScreenPosition
-        {
-            get
-            {
-                if (NumPointers == 0) return InvalidPosition.Value;
-                return activePointers[0].PreviousPosition;
-            }
-        }
+        public override Vector2 PreviousScreenPosition => NumPointers is not 0 ? activePointers[0].PreviousPosition : InvalidPosition.Value;
 
         #endregion
 
@@ -72,7 +56,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
             base.pointersUpdated(pointers);
 
             var thePointer = activePointers[0];
-            var projectionParams = thePointer.GetPressData().Layer.GetProjectionParams();
+            var targetCamera = thePointer.GetPressData().Layer.GetTargetCamera();
             var dR = deltaRotation = 0;
             var dS = deltaScale = 1f;
 
@@ -84,7 +68,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
             if (!relevantPointers(pointers)) return;
 
             var worldCenter = cachedTransform.position;
-            var screenCenter = projectionParams.ProjectFrom(worldCenter);
+            var screenCenter = (Vector2) targetCamera.WorldToScreenPoint(worldCenter);
             var newScreenPos = thePointer.Position;
 
             // Here we can't reuse last frame screen positions because points 0 and 1 can change.
@@ -95,13 +79,13 @@ namespace TouchScript.Gestures.TransformGestures.Base
             {
                 if (isTransforming)
                 {
-                    dR = doRotation(worldCenter, oldScreenPos, newScreenPos, projectionParams);
+                    dR = doRotation(worldCenter, oldScreenPos, newScreenPos, targetCamera);
                 }
                 else
                 {
                     // Find how much we moved perpendicular to the line (center, oldScreenPos)
                     screenPixelRotationBuffer += TwoD.PointToLineDistance(screenCenter, oldScreenPos, newScreenPos);
-                    angleBuffer += doRotation(worldCenter, oldScreenPos, newScreenPos, projectionParams);
+                    angleBuffer += doRotation(worldCenter, oldScreenPos, newScreenPos, targetCamera);
 
                     if (screenPixelRotationBuffer * screenPixelRotationBuffer >=
                         screenTransformPixelThresholdSquared)
@@ -116,13 +100,13 @@ namespace TouchScript.Gestures.TransformGestures.Base
             {
                 if (isTransforming)
                 {
-                    dS *= doScaling(worldCenter, oldScreenPos, newScreenPos, projectionParams);
+                    dS *= doScaling(worldCenter, oldScreenPos, newScreenPos, targetCamera);
                 }
                 else
                 {
                     screenPixelScalingBuffer += (newScreenPos - screenCenter).magnitude -
                                                 (oldScreenPos - screenCenter).magnitude;
-                    scaleBuffer *= doScaling(worldCenter, oldScreenPos, newScreenPos, projectionParams);
+                    scaleBuffer *= doScaling(worldCenter, oldScreenPos, newScreenPos, targetCamera);
 
                     if (screenPixelScalingBuffer * screenPixelScalingBuffer >=
                         screenTransformPixelThresholdSquared)
@@ -173,10 +157,8 @@ namespace TouchScript.Gestures.TransformGestures.Base
         /// <param name="center"> Center screen position. </param>
         /// <param name="oldScreenPos"> Pointer old screen position. </param>
         /// <param name="newScreenPos"> Pointer new screen position. </param>
-        /// <param name="projectionParams"> Layer projection parameters. </param>
         /// <returns> Angle in degrees. </returns>
-        protected virtual float doRotation(Vector3 center, Vector2 oldScreenPos, Vector2 newScreenPos,
-            ProjectionParams projectionParams)
+        protected virtual float doRotation(Vector3 center, Vector2 oldScreenPos, Vector2 newScreenPos, Camera camera)
         {
             return 0;
         }
@@ -187,10 +169,8 @@ namespace TouchScript.Gestures.TransformGestures.Base
         /// <param name="center"> Center screen position. </param>
         /// <param name="oldScreenPos"> Pointer old screen position. </param>
         /// <param name="newScreenPos"> Pointer new screen position. </param>
-        /// <param name="projectionParams"> Layer projection parameters. </param>
         /// <returns> Multiplicative delta scaling. </returns>
-        protected virtual float doScaling(Vector3 center, Vector2 oldScreenPos, Vector2 newScreenPos,
-            ProjectionParams projectionParams)
+        protected virtual float doScaling(Vector3 center, Vector2 oldScreenPos, Vector2 newScreenPos, Camera camera)
         {
             return 1;
         }
@@ -200,7 +180,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         /// </summary>
         /// <param name="pointers"> List of pointers </param>
         /// <returns> <c>true</c> if there are relevant pointers; <c>false</c> otherwise.</returns>
-        protected virtual bool relevantPointers(IList<Pointer> pointers)
+        protected bool relevantPointers(IList<Pointer> pointers)
         {
             // We care only about the first pointer
             var count = pointers.Count;
@@ -214,7 +194,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         /// <summary>
         /// Returns previous screen position of a point with index 0.
         /// </summary>
-        protected virtual Vector2 getPointPreviousScreenPosition()
+        protected Vector2 getPointPreviousScreenPosition()
         {
             return activePointers[0].PreviousPosition;
         }
@@ -222,12 +202,8 @@ namespace TouchScript.Gestures.TransformGestures.Base
         /// <inheritdoc />
         protected override void updateType()
         {
-            type = type & ~TransformGesture.TransformType.Translation;
+            type &= ~TransformGesture.TransformType.Translation;
         }
-
-        #endregion
-
-        #region Private functions
 
         #endregion
     }

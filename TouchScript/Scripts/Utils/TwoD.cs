@@ -4,12 +4,12 @@
 
 using UnityEngine;
 
-namespace TouchScript.Utils.Geom
+namespace TouchScript.Utils
 {
     /// <summary>
     /// A class with 2D helper functions.
     /// </summary>
-    public static class TwoD
+    static class TwoD
     {
         /// <summary>
         /// Calculates distance from line to point.
