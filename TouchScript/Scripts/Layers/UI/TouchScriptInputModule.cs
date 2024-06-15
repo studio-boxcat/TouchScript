@@ -175,7 +175,16 @@ namespace TouchScript.Layers.UI
 
         void ProcessTouchPress(PointerEventData pointerEvent, bool pressed, bool released)
         {
+            // Skip if both pressed and released are false.
+            if (pressed is false && released is false)
+                return;
+
             var currentOverGo = pointerEvent.pointerCurrentRaycast.gameObject;
+
+            // XXX: Get IPointerClickHandler before executing pointerDownHandler or pointerUpHandler.
+            // For some cases, event handler will deactivate self by invoking, which will cause pointerClickHandler to be null.
+            // e.g. ClickGameObjectSwap
+            var pointerClickHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
 
             // PointerDown notification
             if (pressed)
@@ -201,16 +210,14 @@ namespace TouchScript.Layers.UI
                 // handler to be what would receive a click.
                 var newPressed = ExecuteEvents.ExecuteHierarchy(currentOverGo, pointerEvent, ExecuteEvents.pointerDownHandler);
 
-                var newClick = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
-
                 // didnt find a press handler... search for a click handler
                 if (newPressed == null)
-                    newPressed = newClick;
+                    newPressed = pointerClickHandler;
 
                 // Debug.Log("Pressed: " + newPressed);
 
                 pointerEvent.pointerPress = newPressed;
-                pointerEvent.pointerClick = newClick;
+                pointerEvent.pointerClick = pointerClickHandler;
 
                 // Save the drag handler as well
                 pointerEvent.pointerDrag = ExecuteEvents.GetEventHandler<IDragHandler>(currentOverGo);
@@ -224,11 +231,6 @@ namespace TouchScript.Layers.UI
             {
                 // Debug.Log("Executing pressup on: " + pointer.pointerPress);
                 ExecuteEvents.Execute(pointerEvent.pointerPress, pointerEvent, ExecuteEvents.pointerUpHandler);
-
-                // Debug.Log("KeyCode: " + pointer.eventData.keyCode);
-
-                // see if we mouse up on the same element that we clicked on...
-                var pointerClickHandler = ExecuteEvents.GetEventHandler<IPointerClickHandler>(currentOverGo);
 
                 // PointerClick and Drop events
                 if (pointerEvent.pointerClick == pointerClickHandler)
