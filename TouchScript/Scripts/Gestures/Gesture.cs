@@ -57,12 +57,6 @@ namespace TouchScript.Gestures
 
                 switch (value)
                 {
-                    case GestureState.Idle:
-                        onIdle();
-                        break;
-                    case GestureState.Possible:
-                        onPossible();
-                        break;
                     case GestureState.Began:
                         retainPointers();
                         onBegan();
@@ -76,13 +70,9 @@ namespace TouchScript.Gestures
                             releasePointers(true);
                         onRecognized();
                         break;
-                    case GestureState.Failed:
-                        onFailed();
-                        break;
                     case GestureState.Cancelled:
                         if (PreviousState is GestureState.Changed or GestureState.Began)
                             releasePointers(false);
-                        onCancelled();
                         break;
                 }
 
@@ -394,16 +384,6 @@ namespace TouchScript.Gestures
         }
 
         /// <summary>
-        /// Called when state is changed to Idle.
-        /// </summary>
-        protected virtual void onIdle() {}
-
-        /// <summary>
-        /// Called when state is changed to Possible.
-        /// </summary>
-        protected virtual void onPossible() {}
-
-        /// <summary>
         /// Called when state is changed to Began.
         /// </summary>
         protected virtual void onBegan() {}
@@ -417,16 +397,6 @@ namespace TouchScript.Gestures
         /// Called when state is changed to Recognized.
         /// </summary>
         protected virtual void onRecognized() {}
-
-        /// <summary>
-        /// Called when state is changed to Failed.
-        /// </summary>
-        protected virtual void onFailed() {}
-
-        /// <summary>
-        /// Called when state is changed to Cancelled.
-        /// </summary>
-        protected virtual void onCancelled() {}
 
         #endregion
 
