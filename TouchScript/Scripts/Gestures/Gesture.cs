@@ -43,42 +43,13 @@ namespace TouchScript.Gestures
 
         #region Public properties
 
+        private GestureState state = GestureState.Idle;
+
         /// <summary>
         /// Gets current gesture state.
         /// </summary>
         /// <value> Current state of the gesture. </value>
-        public GestureState State
-        {
-            get => state;
-            private set
-            {
-                PreviousState = state;
-                state = value;
-
-                switch (value)
-                {
-                    case GestureState.Began:
-                        retainPointers();
-                        onBegan();
-                        break;
-                    case GestureState.Changed:
-                        onChanged();
-                        break;
-                    case GestureState.Ended:
-                        // Only retain/release pointers for continuos gestures
-                        if (PreviousState.IsBeganOrChanged())
-                            releasePointers(true);
-                        onRecognized();
-                        break;
-                    case GestureState.Cancelled:
-                        if (PreviousState.IsBeganOrChanged())
-                            releasePointers(false);
-                        break;
-                }
-
-                StateChanged?.InvokeHandleExceptions(PreviousState, state);
-            }
-        }
+        public GestureState State => state;
 
         /// <summary>
         /// Gets previous gesture state.
@@ -128,22 +99,18 @@ namespace TouchScript.Gestures
         [NonSerialized] private GestureManager gestureManager;
 
         /// <summary>
-        /// The state of min/max number of pointers.
-        /// </summary>
-        protected PointersNumState pointersNumState { get; private set; } = PointersNumState.Reset;
-
-        /// <summary>
         /// Pointers the gesture currently owns and works with.
         /// </summary>
         public readonly List<Pointer> activePointers = new(10);
+
+        private int numPointers;
+
+        protected PointersNumState pointersNumState = PointersNumState.Reset;
 
         /// <summary>
         /// Cached transform of the parent object.
         /// </summary>
         protected Transform cachedTransform;
-
-        private int numPointers;
-        private GestureState state = GestureState.Idle;
 
         /// <summary>
         /// Cached screen position. 
@@ -178,10 +145,7 @@ namespace TouchScript.Gestures
 
         #region Unity methods
 
-        void Awake()
-        {
-            cachedTransform = transform;
-        }
+        void Awake() => cachedTransform = transform;
 
         /// <summary>
         /// Unity Start handler.
@@ -198,19 +162,13 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Unity OnDisable handler.
         /// </summary>
-        protected void OnDisable()
-        {
-            setState(GestureState.Cancelled);
-        }
+        protected void OnDisable() => setState(GestureState.Cancelled);
 
         #endregion
 
         #region Internal functions
 
-        internal void INTERNAL_SetState(GestureState value)
-        {
-            setState(value);
-        }
+        internal void INTERNAL_SetState(GestureState value) => setState(value);
 
         internal void INTERNAL_Reset()
         {
@@ -315,20 +273,62 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Tries to change gesture state.
         /// </summary>
-        /// <param name="value"> New state. </param>
+        /// <param name="newState"> New state. </param>
         /// <returns> <c>true</c> if state was changed; otherwise, <c>false</c>. </returns>
-        protected bool setState(GestureState value)
+        protected bool setState(GestureState newState)
         {
+            // Check if the gesture is destroyed.
             if (gestureManager == null)
             {
                 L.W("[Gesture] GestureManager is not set or destroyed.");
                 return false;
             }
 
-            var changedOrFailed = gestureManager.INTERNAL_GestureChangeState(this, value);
-            var newState = changedOrFailed ? value : GestureState.Failed;
-            State = newState;
-            return value == newState;
+
+            // Resolve newState.
+            var canChangeOrPrevented = gestureManager.INTERNAL_GesturePrepareStateChange(this, newState);
+            var resolvedState = canChangeOrPrevented ? newState : GestureState.Failed;
+#if UNITY_EDITOR
+            if (State != resolvedState) // Log only if the state is changed.
+                L.I($"[Gesture] {GetType().Name} state: {State} → {newState}, {canChangeOrPrevented}", this);
+#endif
+
+
+            // Set state value.
+            PreviousState = state;
+            state = resolvedState;
+
+
+            // Enter & exit state.
+            switch (resolvedState)
+            {
+                case GestureState.Began:
+                    retainPointers();
+                    onBegan();
+                    break;
+                case GestureState.Changed:
+                    onChanged();
+                    break;
+                case GestureState.Ended:
+                    // Only retain/release pointers for continuos gestures
+                    if (PreviousState.IsBeganOrChanged())
+                        releasePointers(true);
+                    onRecognized();
+                    break;
+                case GestureState.Cancelled:
+                    if (PreviousState.IsBeganOrChanged())
+                        releasePointers(false);
+                    break;
+            }
+
+
+            // Notify state change.
+            // Even if the state is not changed, we should notify the state change.
+            StateChanged?.InvokeHandleExceptions(PreviousState, state);
+
+
+            // Return if the state is changed.
+            return newState == resolvedState;
         }
 
         #endregion
@@ -339,19 +339,19 @@ namespace TouchScript.Gestures
         /// Called when new pointers appear.
         /// </summary>
         /// <param name="pointers"> The pointers. </param>
-        protected virtual void pointersPressed(IList<Pointer> pointers) {}
+        protected virtual void pointersPressed(IList<Pointer> pointers) { }
 
         /// <summary>
         /// Called for moved pointers.
         /// </summary>
         /// <param name="pointers"> The pointers. </param>
-        protected virtual void pointersUpdated(IList<Pointer> pointers) {}
+        protected virtual void pointersUpdated(IList<Pointer> pointers) { }
 
         /// <summary>
         /// Called if pointers are removed.
         /// </summary>
         /// <param name="pointers"> The pointers. </param>
-        protected virtual void pointersReleased(IList<Pointer> pointers) {}
+        protected virtual void pointersReleased(IList<Pointer> pointers) { }
 
         /// <summary>
         /// Called to reset gesture state after it fails or recognizes.
@@ -365,17 +365,17 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Called when state is changed to Began.
         /// </summary>
-        protected virtual void onBegan() {}
+        protected virtual void onBegan() { }
 
         /// <summary>
         /// Called when state is changed to Changed.
         /// </summary>
-        protected virtual void onChanged() {}
+        protected virtual void onChanged() { }
 
         /// <summary>
         /// Called when state is changed to Recognized.
         /// </summary>
-        protected virtual void onRecognized() {}
+        protected virtual void onRecognized() { }
 
         #endregion
 

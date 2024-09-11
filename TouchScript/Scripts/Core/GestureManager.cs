@@ -77,7 +77,7 @@ namespace TouchScript.Core
 
         #region Internal methods
 
-        internal bool INTERNAL_GestureChangeState(Gesture gesture, GestureState newState)
+        internal bool INTERNAL_GesturePrepareStateChange(Gesture gesture, GestureState newState)
         {
             // Transition to Idle or Possible is always allowed.
             if (newState.IsIdleOrPossible())
@@ -99,7 +99,7 @@ namespace TouchScript.Core
             }
 
 
-            var changeOrFail = true;
+            var canChangeOrPrevented = true;
 
             if (newState is GestureState.Began)
             {
@@ -109,7 +109,7 @@ namespace TouchScript.Core
                 var recognized = recognizeGestureIfNotPrevented();
                 if (!recognized)
                 {
-                    changeOrFail = false;
+                    canChangeOrPrevented = false;
                     ReserveResetGesture(gesture);
                 }
             }
@@ -122,7 +122,7 @@ namespace TouchScript.Core
                 if (gesture.State.IsIdleOrPossible())
                 {
                     var recognized = recognizeGestureIfNotPrevented();
-                    if (!recognized) changeOrFail = false;
+                    if (!recognized) canChangeOrPrevented = false;
                 }
                 else if (gesture.State.IsBeganOrChanged())
                 {
@@ -134,7 +134,7 @@ namespace TouchScript.Core
                 }
             }
 
-            return changeOrFail;
+            return canChangeOrPrevented;
 
 
             bool recognizeGestureIfNotPrevented()
