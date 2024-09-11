@@ -458,9 +458,8 @@ namespace TouchScript.Core
             {
                 Assert.IsTrue(pointer.Id.IsValid());
 
-                if (_dict.TryGetValue(pointer.Id, out var list))
+                if (_dict.Remove(pointer.Id, out var list))
                 {
-                    _dict.Remove(pointer.Id);
                     _gestureListPool.Release(list);
                 }
             }

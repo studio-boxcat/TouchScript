@@ -4,11 +4,10 @@
 
 namespace TouchScript.Hit
 {
-
     /// <summary>
     /// Result of a check to find if a hit object should recieve this pointer or not.
     /// </summary>
-    public enum HitResult
+    public enum HitResult : byte
     {
         /// <summary>
         /// This is a hit, object should recieve pointer.

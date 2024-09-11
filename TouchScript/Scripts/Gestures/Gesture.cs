@@ -294,7 +294,7 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Unity OnDisable handler.
         /// </summary>
-        protected virtual void OnDisable()
+        protected void OnDisable()
         {
             setState(GestureState.Cancelled);
         }
