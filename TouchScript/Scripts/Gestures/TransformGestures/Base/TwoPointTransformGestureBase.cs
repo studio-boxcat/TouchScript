@@ -88,7 +88,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
             var scalingEnabled = (Type & TransformGesture.TransformType.Scaling) == TransformGesture.TransformType.Scaling;
 
             // one pointer or one cluster (points might be too close to each other for 2 clusters)
-            if (getNumPoints() == 1 || (!rotationEnabled && !scalingEnabled))
+            if (NumPointers == 1 || (!rotationEnabled && !scalingEnabled))
             {
                 if (!translationEnabled) return; // don't look for translates
                 if (!relevantPointers1(pointers)) return;
@@ -266,20 +266,11 @@ namespace TouchScript.Gestures.TransformGestures.Base
         }
 
         /// <summary>
-        /// Gets the number of points.
-        /// </summary>
-        /// <returns> Number of points. </returns>
-        protected virtual int getNumPoints()
-        {
-            return NumPointers;
-        }
-
-        /// <summary>
         /// Checks if there are pointers in the list which matter for the gesture.
         /// </summary>
         /// <param name="pointers"> List of pointers. </param>
         /// <returns> <c>true</c> if there are relevant pointers; <c>false</c> otherwise.</returns>
-        protected virtual bool relevantPointers1(IList<Pointer> pointers)
+        protected bool relevantPointers1(IList<Pointer> pointers)
         {
             // We care only about the first pointer
             var count = pointers.Count;
@@ -295,7 +286,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         /// </summary>
         /// <param name="pointers"> List of pointers. </param>
         /// <returns> <c>true</c> if there are relevant pointers; <c>false</c> otherwise.</returns>
-        protected virtual bool relevantPointers2(IList<Pointer> pointers)
+        protected bool relevantPointers2(IList<Pointer> pointers)
         {
             // We care only about the first and the second pointers
             var count = pointers.Count;
@@ -311,7 +302,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         /// Returns screen position of a point with index 0 or 1
         /// </summary>
         /// <param name="index"> The index. </param>
-        protected virtual Vector2 getPointScreenPosition(int index)
+        protected Vector2 getPointScreenPosition(int index)
         {
             return activePointers[index].Position;
         }
@@ -320,7 +311,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         /// Returns previous screen position of a point with index 0 or 1
         /// </summary>
         /// <param name="index"> The index. </param>
-        protected virtual Vector2 getPointPreviousScreenPosition(int index)
+        protected Vector2 getPointPreviousScreenPosition(int index)
         {
             return activePointers[index].PreviousPosition;
         }

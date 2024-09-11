@@ -160,7 +160,7 @@ namespace TouchScript.Gestures
         /// Gets the number of active pointerss.
         /// </summary>
         /// <value> The number of pointers owned by this gesture. </value>
-        public int NumPointers => numPointers;
+        public int NumPointers => activePointers.Count;
 
         #endregion
 
