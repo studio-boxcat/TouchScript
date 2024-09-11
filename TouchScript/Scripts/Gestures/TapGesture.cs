@@ -58,7 +58,7 @@ namespace TouchScript.Gestures
         {
             base.pointersPressed(pointers);
 
-            if (NumPointers == pointers.Count)
+            if (activePointers.Count == pointers.Count)
             {
                 if (tapsDone >= numberOfTapsRequired) // Might be delayed and retapped while waiting
                     reset();
@@ -81,7 +81,7 @@ namespace TouchScript.Gestures
             base.pointersReleased(pointers);
 
             {
-                if (NumPointers == 0)
+                if (activePointers.Count == 0)
                 {
                     if (!isActive)
                     {

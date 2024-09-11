@@ -177,7 +177,7 @@ namespace TouchScript.Gestures
         {
             base.pointersReleased(pointers);
 
-            if (NumPointers == 0)
+            if (activePointers.Count == 0)
             {
                 if (!isActive || !moving)
                 {

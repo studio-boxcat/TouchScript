@@ -33,59 +33,22 @@ namespace TouchScript.Gestures.TransformGestures.Base
         /// Gets or sets types of transformation this gesture supports.
         /// </summary>
         /// <value> Type flags. </value>
-        public TransformGesture.TransformType Type
-        {
-            get { return type; }
-            set
-            {
-                type = value;
-                updateType();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets minimum distance in cm for pointers to move for gesture to begin. 
-        /// </summary>
-        /// <value> Minimum value in cm user must move their fingers to start this gesture. </value>
-        public float ScreenTransformThreshold
-        {
-            get { return screenTransformThreshold; }
-            set
-            {
-                screenTransformThreshold = value;
-                updateScreenTransformThreshold();
-            }
-        }
+        public TransformGesture.TransformType Type => type;
 
         /// <inheritdoc />
-        public TransformGesture.TransformType TransformMask
-        {
-            get { return transformMask; }
-        }
+        public TransformGesture.TransformType TransformMask => transformMask;
 
         /// <inheritdoc />
-        public Vector3 DeltaPosition
-        {
-            get { return deltaPosition; }
-        }
+        public Vector3 DeltaPosition => deltaPosition;
 
         /// <inheritdoc />
-        public float DeltaRotation
-        {
-            get { return deltaRotation; }
-        }
+        public float DeltaRotation => deltaRotation;
 
         /// <inheritdoc />
-        public float DeltaScale
-        {
-            get { return deltaScale; }
-        }
+        public float DeltaScale => deltaScale;
 
         /// <inheritdoc />
-        public Vector3 RotationAxis
-        {
-            get { return rotationAxis; }
-        }
+        public Vector3 RotationAxis => rotationAxis;
 
         #endregion
 

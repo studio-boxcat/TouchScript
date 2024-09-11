@@ -15,7 +15,6 @@ namespace TouchScript.Gestures.TransformGestures
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_Gestures_TransformGestures_ScreenTransformGesture.htm")]
     public class ScreenTransformGesture : TwoPointTransformGestureBase
     {
-
         #region Protected methods
 
         /// <inheritdoc />

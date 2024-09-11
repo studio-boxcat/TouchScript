@@ -17,10 +17,10 @@ namespace TouchScript.Gestures.TransformGestures.Base
         #region Public properties
 
         /// <inheritdoc />
-        public override Vector2 ScreenPosition => NumPointers is not 0 ? activePointers[0].Position : InvalidPosition.Value;
+        public override Vector2 ScreenPosition => activePointers.Count is not 0 ? activePointers[0].Position : InvalidPosition.Value;
 
         /// <inheritdoc />
-        public override Vector2 PreviousScreenPosition => NumPointers is not 0 ? activePointers[0].PreviousPosition : InvalidPosition.Value;
+        public override Vector2 PreviousScreenPosition => activePointers.Count is not 0 ? activePointers[0].PreviousPosition : InvalidPosition.Value;
 
         #endregion
 

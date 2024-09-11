@@ -88,26 +88,27 @@ namespace TouchScript.Gestures.TransformGestures.Base
             var scalingEnabled = (Type & TransformGesture.TransformType.Scaling) == TransformGesture.TransformType.Scaling;
 
             // one pointer or one cluster (points might be too close to each other for 2 clusters)
-            if (NumPointers == 1 || (!rotationEnabled && !scalingEnabled))
+            if (activePointers.Count == 1 || (!rotationEnabled && !scalingEnabled))
             {
                 if (!translationEnabled) return; // don't look for translates
-                if (!relevantPointers1(pointers)) return;
+                if (!relevantPointers1(pointers, thePointer)) return;
 
                 // translate using one point
-                dP = doOnePointTranslation(getPointPreviousScreenPosition(0), getPointScreenPosition(0), targetCamera);
+                dP = doOnePointTranslation(thePointer.PreviousPosition, thePointer.Position, targetCamera);
             }
             else
             {
                 // Make sure that we actually care about the pointers moved.
-                if (!relevantPointers2(pointers)) return;
+                var thePointer2 = activePointers[1];
+                if (!relevantPointers2(pointers, thePointer, thePointer2)) return;
 
-                var newScreenPos1 = getPointScreenPosition(0);
-                var newScreenPos2 = getPointScreenPosition(1);
+                var newScreenPos1 = thePointer.Position;
+                var newScreenPos2 = thePointer2.Position;
 
                 // Here we can't reuse last frame screen positions because points 0 and 1 can change.
                 // For example if the first of 3 fingers is lifted off.
-                var oldScreenPos1 = getPointPreviousScreenPosition(0);
-                var oldScreenPos2 = getPointPreviousScreenPosition(1);
+                var oldScreenPos1 = thePointer.PreviousPosition;
+                var oldScreenPos2 = thePointer2.PreviousPosition;
 
                 var newScreenDelta = newScreenPos2 - newScreenPos1;
                 if (newScreenDelta.sqrMagnitude > minScreenPointsPixelDistanceSquared)
@@ -192,6 +193,31 @@ namespace TouchScript.Gestures.TransformGestures.Base
                         break;
                 }
             }
+            return;
+
+
+            static bool relevantPointers1(IList<Pointer> pointers, Pointer activePointer)
+            {
+                // We care only about the first pointer
+                var count = pointers.Count;
+                for (var i = 0; i < count; i++)
+                {
+                    if (pointers[i] == activePointer) return true;
+                }
+                return false;
+            }
+
+            static bool relevantPointers2(IList<Pointer> pointers, Pointer activePointer1, Pointer activePointer2)
+            {
+                // We care only about the first and the second pointers
+                var count = pointers.Count;
+                for (var i = 0; i < count; i++)
+                {
+                    var pointer = pointers[i];
+                    if (pointer == activePointer1 || pointer == activePointer2) return true;
+                }
+                return false;
+            }
         }
 
         /// <inheritdoc />
@@ -263,57 +289,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
             Vector2 newScreenPos1, Vector2 newScreenPos2, float dR, float dS, Camera camera)
         {
             return Vector3.zero;
-        }
-
-        /// <summary>
-        /// Checks if there are pointers in the list which matter for the gesture.
-        /// </summary>
-        /// <param name="pointers"> List of pointers. </param>
-        /// <returns> <c>true</c> if there are relevant pointers; <c>false</c> otherwise.</returns>
-        protected bool relevantPointers1(IList<Pointer> pointers)
-        {
-            // We care only about the first pointer
-            var count = pointers.Count;
-            for (var i = 0; i < count; i++)
-            {
-                if (pointers[i] == activePointers[0]) return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Checks if there are pointers in the list which matter for the gesture.
-        /// </summary>
-        /// <param name="pointers"> List of pointers. </param>
-        /// <returns> <c>true</c> if there are relevant pointers; <c>false</c> otherwise.</returns>
-        protected bool relevantPointers2(IList<Pointer> pointers)
-        {
-            // We care only about the first and the second pointers
-            var count = pointers.Count;
-            for (var i = 0; i < count; i++)
-            {
-                var pointer = pointers[i];
-                if (pointer == activePointers[0] || pointer == activePointers[1]) return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Returns screen position of a point with index 0 or 1
-        /// </summary>
-        /// <param name="index"> The index. </param>
-        protected Vector2 getPointScreenPosition(int index)
-        {
-            return activePointers[index].Position;
-        }
-
-        /// <summary>
-        /// Returns previous screen position of a point with index 0 or 1
-        /// </summary>
-        /// <param name="index"> The index. </param>
-        protected Vector2 getPointPreviousScreenPosition(int index)
-        {
-            return activePointers[index].PreviousPosition;
         }
 
         #endregion

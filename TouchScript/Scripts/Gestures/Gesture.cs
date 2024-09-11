@@ -104,7 +104,7 @@ namespace TouchScript.Gestures
         {
             get
             {
-                if (NumPointers == 0)
+                if (activePointers.Count == 0)
                 {
                     return cachedScreenPosition.IsValid()
                         ? cachedScreenPosition : InvalidPosition.Value;
@@ -121,7 +121,7 @@ namespace TouchScript.Gestures
         {
             get
             {
-                if (NumPointers == 0)
+                if (activePointers.Count == 0)
                 {
                     return cachedPreviousScreenPosition.IsValid()
                         ? cachedPreviousScreenPosition : InvalidPosition.Value;
@@ -129,12 +129,6 @@ namespace TouchScript.Gestures
                 return activePointers[0].PreviousPosition;
             }
         }
-
-        /// <summary>
-        /// Gets the number of active pointerss.
-        /// </summary>
-        /// <value> The number of pointers owned by this gesture. </value>
-        public int NumPointers => activePointers.Count;
 
         #endregion
 
@@ -148,7 +142,7 @@ namespace TouchScript.Gestures
         /// <summary>
         /// The state of min/max number of pointers.
         /// </summary>
-        protected PointersNumState pointersNumState { get; private set; }
+        protected PointersNumState pointersNumState { get; private set; } = PointersNumState.Reset;
 
         /// <summary>
         /// Pointers the gesture currently owns and works with.
@@ -288,7 +282,7 @@ namespace TouchScript.Gestures
             for (var i = 0; i < count; i++) activePointers.Remove(pointers[i]);
             numPointers = total;
 
-            if (NumPointers == 0)
+            if (activePointers.Count == 0)
             {
                 var lastPoint = pointers[count - 1];
                 if (shouldCachePointerPosition(lastPoint))
@@ -440,13 +434,13 @@ namespace TouchScript.Gestures
 
         private void retainPointers()
         {
-            var total = NumPointers;
+            var total = activePointers.Count;
             for (var i = 0; i < total; i++) activePointers[i].INTERNAL_Retain();
         }
 
         private void releasePointers(bool cancel)
         {
-            var total = NumPointers;
+            var total = activePointers.Count;
             for (var i = 0; i < total; i++)
             {
                 var pointer = activePointers[i];
