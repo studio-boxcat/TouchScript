@@ -65,7 +65,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
             var rotationEnabled = (Type & TransformGesture.TransformType.Rotation) == TransformGesture.TransformType.Rotation;
             var scalingEnabled = (Type & TransformGesture.TransformType.Scaling) == TransformGesture.TransformType.Scaling;
             if (!rotationEnabled && !scalingEnabled) return;
-            if (!relevantPointers(pointers)) return;
+            if (!relevantPointers(pointers, thePointer)) return;
 
             var worldCenter = cachedTransform.position;
             var screenCenter = (Vector2) targetCamera.WorldToScreenPoint(worldCenter);
@@ -134,6 +134,19 @@ namespace TouchScript.Gestures.TransformGestures.Base
                         break;
                 }
             }
+
+            return;
+
+            static bool relevantPointers(IList<Pointer> pointers, Pointer activePointer)
+            {
+                // We care only about the first pointer
+                var count = pointers.Count;
+                for (var i = 0; i < count; i++)
+                {
+                    if (pointers[i] == activePointer) return true;
+                }
+                return false;
+            }
         }
 
         /// <inheritdoc />
@@ -173,22 +186,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
         protected virtual float doScaling(Vector3 center, Vector2 oldScreenPos, Vector2 newScreenPos, Camera camera)
         {
             return 1;
-        }
-
-        /// <summary>
-        /// Checks if there are pointers in the list which matter for the gesture.
-        /// </summary>
-        /// <param name="pointers"> List of pointers </param>
-        /// <returns> <c>true</c> if there are relevant pointers; <c>false</c> otherwise.</returns>
-        protected bool relevantPointers(IList<Pointer> pointers)
-        {
-            // We care only about the first pointer
-            var count = pointers.Count;
-            for (var i = 0; i < count; i++)
-            {
-                if (pointers[i] == activePointers[0]) return true;
-            }
-            return false;
         }
 
         /// <summary>
