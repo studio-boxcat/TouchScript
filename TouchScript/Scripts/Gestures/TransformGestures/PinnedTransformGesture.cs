@@ -2,6 +2,7 @@
  * @author Valentin Simonov / http://va.lent.in/
  */
 
+using System;
 using System.Collections.Generic;
 using TouchScript.Gestures.TransformGestures.Base;
 using TouchScript.Layers;
@@ -21,33 +22,12 @@ namespace TouchScript.Gestures.TransformGestures
         #region Private variables
 
         [SerializeField]
-        private TransformGesture.ProjectionType projection = TransformGesture.ProjectionType.Layer;
+        private ProjectionType projection = ProjectionType.Layer;
 
-        [SerializeField]
-        private Vector3 projectionPlaneNormal = Vector3.forward;
-
+        [NonSerialized]
         private TouchLayer projectionLayer;
+
         private Plane transformPlane;
-
-        #endregion
-
-        #region Unity methods
-
-        /// <inheritdoc />
-        protected override void Awake()
-        {
-            base.Awake();
-
-            transformPlane = new Plane();
-        }
-
-        /// <inheritdoc />
-        protected override void OnEnable()
-        {
-            base.OnEnable();
-
-            updateProjectionPlane();
-        }
 
         #endregion
 
@@ -61,7 +41,9 @@ namespace TouchScript.Gestures.TransformGestures
             if (activePointers.Count == pointers.Count)
             {
                 projectionLayer = activePointers[0].GetPressData().Layer;
-                updateProjectionPlane();
+                var normal = projection.GetNormal(projectionLayer, cachedTransform);
+                transformPlane = new Plane(normal, cachedTransform.position);
+                rotationAxis = transformPlane.normal;
             }
         }
 
@@ -72,6 +54,12 @@ namespace TouchScript.Gestures.TransformGestures
         /// <inheritdoc />
         protected override float doRotation(Vector3 center, Vector2 oldScreenPos, Vector2 newScreenPos, Camera camera)
         {
+            if (projectionLayer is null)
+            {
+                L.W("[PinnedTransformGesture] Can't rotate: no projection layer.", this);
+                return 0;
+            }
+
             var newVector = camera.ProjectTo(newScreenPos, transformPlane) - center;
             var oldVector = camera.ProjectTo(oldScreenPos, transformPlane) - center;
             var angle = Vector3.Angle(oldVector, newVector);
@@ -83,29 +71,15 @@ namespace TouchScript.Gestures.TransformGestures
         /// <inheritdoc />
         protected override float doScaling(Vector3 center, Vector2 oldScreenPos, Vector2 newScreenPos, Camera camera)
         {
+            if (projectionLayer is null)
+            {
+                L.W("[PinnedTransformGesture] Can't scale: no projection layer.", this);
+                return 1;
+            }
+
             var newVector = camera.ProjectTo(newScreenPos, transformPlane) - center;
             var oldVector = camera.ProjectTo(oldScreenPos, transformPlane) - center;
             return newVector.magnitude / oldVector.magnitude;
-        }
-
-        #endregion
-
-        #region Private functions
-
-        private void updateProjectionPlane()
-        {
-            var normal = projection switch
-            {
-                TransformGesture.ProjectionType.Layer => projectionLayer == null
-                    ? cachedTransform.TransformDirection(Vector3.forward)
-                    : projectionLayer.transform.forward,
-                TransformGesture.ProjectionType.Object => cachedTransform.TransformDirection(projectionPlaneNormal),
-                TransformGesture.ProjectionType.Global => projectionPlaneNormal,
-                _ => throw new System.ArgumentOutOfRangeException()
-            };
-            transformPlane = new Plane(normal, cachedTransform.position);
-
-            rotationAxis = transformPlane.normal;
         }
 
         #endregion

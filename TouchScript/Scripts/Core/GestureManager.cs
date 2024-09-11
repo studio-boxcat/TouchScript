@@ -2,6 +2,7 @@
  * @author Valentin Simonov / http://va.lent.in/
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Sirenix.OdinInspector;
@@ -57,11 +58,8 @@ namespace TouchScript.Core
 
         #region Unity
 
-        private void Awake()
+        void Awake()
         {
-            // gameObject.hideFlags = HideFlags.HideInHierarchy;
-            // DontDestroyOnLoad(gameObject);
-
             _touchManager.FrameStarted += ResetGestures;
             _touchManager.FrameFinished += () =>
             {
@@ -79,71 +77,108 @@ namespace TouchScript.Core
 
         #region Internal methods
 
-        internal GestureState INTERNAL_GestureChangeState(Gesture gesture, GestureState state)
+        internal bool INTERNAL_GestureChangeState(Gesture gesture, GestureState newState)
         {
-            bool recognized = false;
-            switch (state)
+            // Transition to Idle or Possible is always allowed.
+            if (newState.IsIdleOrPossible())
+                return true;
+
+            // Transition to Changed also always allowed, but if the previous state was not Began or Changed, it could lead to misbehavior.
+            if (newState is GestureState.Changed)
             {
-                case GestureState.Idle:
-                case GestureState.Possible:
-                    break;
-                case GestureState.Began:
-                    switch (gesture.State)
-                    {
-                        case GestureState.Idle:
-                        case GestureState.Possible:
-                            break;
-                        default:
-                            print(string.Format("Gesture {0} erroneously tried to enter state {1} from state {2}",
-                                new object[] { gesture, state, gesture.State }));
-                            break;
-                    }
-                    recognized = recognizeGestureIfNotPrevented(gesture);
-                    if (!recognized)
-                    {
-                        if (!_gesturesToReset.Contains(gesture)) _gesturesToReset.Add(gesture);
-                        return GestureState.Failed;
-                    }
-                    break;
-                case GestureState.Changed:
-                    switch (gesture.State)
-                    {
-                        case GestureState.Began:
-                        case GestureState.Changed:
-                            break;
-                        default:
-                            print(string.Format("Gesture {0} erroneously tried to enter state {1} from state {2}",
-                                new object[] { gesture, state, gesture.State }));
-                            break;
-                    }
-                    break;
-                case GestureState.Failed:
-                    if (!_gesturesToReset.Contains(gesture)) _gesturesToReset.Add(gesture);
-                    break;
-                case GestureState.Ended: // Ended
-                    if (!_gesturesToReset.Contains(gesture)) _gesturesToReset.Add(gesture);
-                    switch (gesture.State)
-                    {
-                        case GestureState.Idle:
-                        case GestureState.Possible:
-                            recognized = recognizeGestureIfNotPrevented(gesture);
-                            if (!recognized) return GestureState.Failed;
-                            break;
-                        case GestureState.Began:
-                        case GestureState.Changed:
-                            break;
-                        default:
-                            print(string.Format("Gesture {0} erroneously tried to enter state {1} from state {2}",
-                                new object[] { gesture, state, gesture.State }));
-                            break;
-                    }
-                    break;
-                case GestureState.Cancelled:
-                    if (!_gesturesToReset.Contains(gesture)) _gesturesToReset.Add(gesture);
-                    break;
+                if (!gesture.State.IsBeganOrChanged())
+                    _logger.Warning($"Gesture {gesture} erroneously tried to enter state {newState} from state {gesture.State}");
+                return true;
             }
 
-            return state;
+            // Transition to Failed or Cancelled is requiring to reset the gesture.
+            if (newState is GestureState.Failed or GestureState.Cancelled)
+            {
+                ReserveResetGesture(gesture);
+                return true;
+            }
+
+
+            var changeOrFail = true;
+
+            if (newState is GestureState.Began)
+            {
+                if (gesture.State is not (GestureState.Idle or GestureState.Possible))
+                    _logger.Warning($"Gesture {gesture} erroneously tried to enter state {newState} from state {gesture.State}");
+
+                var recognized = recognizeGestureIfNotPrevented();
+                if (!recognized)
+                {
+                    changeOrFail = false;
+                    ReserveResetGesture(gesture);
+                }
+            }
+            else // Ended
+            {
+                Assert.AreEqual(GestureState.Ended, newState);
+
+                ReserveResetGesture(gesture);
+
+                if (gesture.State.IsIdleOrPossible())
+                {
+                    var recognized = recognizeGestureIfNotPrevented();
+                    if (!recognized) changeOrFail = false;
+                }
+                else if (gesture.State.IsBeganOrChanged())
+                {
+                    // Began, Changed -> Ended
+                }
+                else
+                {
+                    _logger.Warning($"Gesture {gesture} erroneously tried to enter state {newState} from state {gesture.State}");
+                }
+            }
+
+            return changeOrFail;
+
+
+            bool recognizeGestureIfNotPrevented()
+            {
+                var otherGestures = _gestureCache.GetGesturesOfTarget(gesture.transform);
+                var preventedGestures = _gestureListPool.Get();
+                var recognized = recognizeGestureIfNotPreventedStateless(gesture, otherGestures, preventedGestures);
+                if (recognized)
+                {
+                    foreach (var preventedGesture in preventedGestures)
+                        preventedGesture.INTERNAL_SetState(GestureState.Failed);
+                }
+                _gestureListPool.Release(preventedGestures);
+                return recognized;
+            }
+
+            static bool recognizeGestureIfNotPreventedStateless(
+                Gesture gesture, List<Gesture> otherGestures, List<Gesture> preventedGestures)
+            {
+                var canRecognize = true;
+
+                foreach (var otherGesture in otherGestures)
+                {
+                    if (ReferenceEquals(gesture, otherGesture)) continue;
+                    if (!gestureIsActive(otherGesture)) continue;
+
+                    if (otherGesture.State.IsBeganOrChanged())
+                    {
+                        if (otherGesture.CanPreventGesture())
+                        {
+                            canRecognize = false;
+                            // XXX: Do not break here, we need to collect all gestures which prevented by this gesture.
+                            // break;
+                        }
+                    }
+                    else if (otherGesture.State is GestureState.Possible)
+                    {
+                        if (gesture.CanPreventGesture())
+                            preventedGestures.Add(otherGesture);
+                    }
+                }
+
+                return canRecognize;
+            }
         }
 
         #endregion
@@ -190,7 +225,7 @@ namespace TouchScript.Core
                         if (ReferenceEquals(possibleGesture, startedGesture)) continue;
 
                         // This gesture has started. Is gestureOnParentOrMe allowed to work in parallel?
-                        if (startedGesture.CanPreventGesture(possibleGesture))
+                        if (startedGesture.CanPreventGesture())
                         {
                             // activeGesture has already began and prevents gestureOnParentOrMe from getting pointers.
                             canReceivePointers = false;
@@ -263,6 +298,12 @@ namespace TouchScript.Core
             _gestureToPointers.Clear();
         }
 
+        private void ReserveResetGesture(Gesture gesture)
+        {
+            if (!_gesturesToReset.Contains(gesture))
+                _gesturesToReset.Add(gesture);
+        }
+
         private void ResetGestures()
         {
             if (_gesturesToReset.Count == 0) return;
@@ -284,58 +325,9 @@ namespace TouchScript.Core
 
         static bool gestureIsActive(Gesture gesture)
         {
-            if (gesture.gameObject.activeInHierarchy == false) return false;
-            if (gesture.enabled == false) return false;
-            switch (gesture.State)
-            {
-                case GestureState.Failed:
-                case GestureState.Ended:
-                case GestureState.Cancelled:
-                    return false;
-                default:
-                    return true;
-            }
-        }
-
-        private bool recognizeGestureIfNotPrevented(Gesture gesture)
-        {
-            var gesturesToFail = _gestureListPool.Get();
-            bool canRecognize = true;
-            var target = gesture.transform;
-
-            var otherGestures = _gestureCache.GetGesturesOfTarget(target);
-
-            foreach (var otherGesture in otherGestures)
-            {
-                if (ReferenceEquals(gesture, otherGesture)) continue;
-                if (!gestureIsActive(otherGesture)) continue;
-
-                if (otherGesture.State.IsBeganOrChanged())
-                {
-                    if (otherGesture.CanPreventGesture(gesture))
-                    {
-                        canRecognize = false;
-                        break;
-                    }
-                }
-                else if (otherGesture.State == GestureState.Possible)
-                {
-                    if (gesture.CanPreventGesture(otherGesture))
-                    {
-                        gesturesToFail.Add(otherGesture);
-                    }
-                }
-            }
-
-            if (canRecognize)
-            {
-                foreach (var gestureToFail in gesturesToFail)
-                    gestureToFail.INTERNAL_SetState(GestureState.Failed);
-            }
-
-            _gestureListPool.Release(gesturesToFail);
-
-            return canRecognize;
+            if (gesture.gameObject.activeInHierarchy is false) return false;
+            if (gesture.enabled is false) return false;
+            return gesture.State is not (GestureState.Failed or GestureState.Ended or GestureState.Cancelled);
         }
 
         #endregion

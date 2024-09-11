@@ -41,7 +41,7 @@ namespace TouchScript.Gestures.TransformGestures
             }
 
             screenPixelTranslationBuffer += newScreenPos - oldScreenPos;
-            if (screenPixelTranslationBuffer.sqrMagnitude > screenTransformPixelThresholdSquared)
+            if (DisplayDevice.CheckScreenTransformPixelThreshold(screenPixelTranslationBuffer))
             {
                 isTransforming = true;
                 return screenPixelTranslationBuffer;
@@ -61,7 +61,7 @@ namespace TouchScript.Gestures.TransformGestures
             }
 
             screenPixelTranslationBuffer += newScreenPos1 - oldScreenPos1;
-            if (screenPixelTranslationBuffer.sqrMagnitude > screenTransformPixelThresholdSquared)
+            if (DisplayDevice.CheckScreenTransformPixelThreshold(screenPixelTranslationBuffer))
             {
                 isTransforming = true;
                 oldScreenPos1 = newScreenPos1 - screenPixelTranslationBuffer;

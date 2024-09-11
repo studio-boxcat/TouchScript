@@ -3,7 +3,7 @@ namespace TouchScript.Gestures
     /// <summary>
     /// Possible states of a gesture.
     /// </summary>
-    public enum GestureState
+    public enum GestureState : byte
     {
         /// <summary>
         /// Gesture is idle.
@@ -42,7 +42,7 @@ namespace TouchScript.Gestures
         Failed,
     }
 
-    public static class GestureStateUtils
+    static class GestureStateUtils
     {
         public static bool IsIdleOrPossible(this GestureState state)
         {

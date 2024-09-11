@@ -4,11 +4,9 @@
 
 using System;
 using System.Collections.Generic;
-using TouchScript.Devices.Display;
 using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 namespace TouchScript.Gestures
 {

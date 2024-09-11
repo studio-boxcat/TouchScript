@@ -3,7 +3,6 @@ using TouchScript.Core;
 using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
-using Logger = TouchScript.Utils.Logger;
 
 namespace TouchScript.InputSources.InputHandlers
 {
@@ -49,7 +48,7 @@ namespace TouchScript.InputSources.InputHandlers
             return _pointers.Count > 0;
         }
 
-        public void CancelPointer(Pointer pointer, bool shouldReturn, PointerChanges changes)
+        public void CancelPointer(Pointer pointer, PointerChanges changes)
         {
             var pointerId = pointer.Id;
             Assert.AreNotEqual(PointerId.Invalid, pointerId);
@@ -59,7 +58,7 @@ namespace TouchScript.InputSources.InputHandlers
             _upComingChanges.Remove(pointerId);
             changes.Put_Cancel(pointerId);
 
-            if (shouldReturn)
+            // Return pointer
             {
                 var newPointer = _pointerContainer.Create(pointer.Position, this);
                 newPointer.CopyPositions(pointer);

@@ -131,7 +131,7 @@ namespace TouchScript.InputSources.InputHandlers
             return _pointerContainer.Create(pos, this);
         }
 
-        public void CancelPointer(Pointer pointer, bool shouldReturn, PointerChanges changes)
+        public void CancelPointer(Pointer pointer, PointerChanges changes)
         {
             var pointerId = pointer.Id;
             Assert.IsTrue(pointerId.IsValid());
@@ -155,17 +155,13 @@ namespace TouchScript.InputSources.InputHandlers
 
             changes.Put_Cancel(pointerId);
 
-            if (shouldReturn)
+            // Return pointer
             {
                 var newPointer = CreatePointer(fingerId, default);
                 newPointer.CopyPositions(pointer);
                 newPointer.IsReturned = true;
                 changes.Put_AddAndPress(newPointer.Id);
                 _pointers[fingerId] = newPointer;
-            }
-            else
-            {
-                _pointers[fingerId] = null;
             }
         }
 

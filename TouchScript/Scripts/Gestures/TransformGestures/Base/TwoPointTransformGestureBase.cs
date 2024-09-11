@@ -3,7 +3,6 @@
  */
 
 using System.Collections.Generic;
-using TouchScript.Devices.Display;
 using TouchScript.Pointers;
 using TouchScript.Utils;
 using UnityEngine;
@@ -16,16 +15,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
     public abstract class TwoPointTransformGestureBase : TransformGestureBase
     {
         #region Private variables
-
-        /// <summary>
-        /// <see cref="MinScreenPointsDistance"/> in pixels for internal use.
-        /// </summary>
-        protected float minScreenPointsPixelDistance;
-
-        /// <summary>
-        /// <see cref="MinScreenPointsDistance"/> squared in pixels for internal use.
-        /// </summary>
-        protected float minScreenPointsPixelDistanceSquared;
 
         /// <summary>
         /// Translation buffer.
@@ -51,20 +40,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
         /// Scaling buffer.
         /// </summary>
         protected float scaleBuffer;
-
-        [SerializeField]
-        private float minScreenPointsDistance = 0.5f;
-
-        #endregion
-
-        #region Unity methods
-
-        /// <inheritdoc />
-        protected override void OnEnable()
-        {
-            base.OnEnable();
-            updateMinScreenPointsDistance();
-        }
 
         #endregion
 
@@ -111,7 +86,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
                 var oldScreenPos2 = thePointer2.PreviousPosition;
 
                 var newScreenDelta = newScreenPos2 - newScreenPos1;
-                if (newScreenDelta.sqrMagnitude > minScreenPointsPixelDistanceSquared)
+                if (DisplayDevice.CheckScreenPointsDistance(newScreenDelta))
                 {
                     if (rotationEnabled)
                     {
@@ -128,8 +103,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
                             screenPixelRotationBuffer += (d1 - d2);
                             angleBuffer += doRotation(oldScreenPos1, oldScreenPos2, newScreenPos1, newScreenPos2, targetCamera);
 
-                            if (screenPixelRotationBuffer * screenPixelRotationBuffer >=
-                                screenTransformPixelThresholdSquared)
+                            if (DisplayDevice.CheckScreenTransformPixelThreshold(screenPixelRotationBuffer))
                             {
                                 isTransforming = true;
                                 dR = angleBuffer;
@@ -151,8 +125,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
                             screenPixelScalingBuffer += newDistance - oldDistance;
                             scaleBuffer *= doScaling(oldScreenPos1, oldScreenPos2, newScreenPos1, newScreenPos2, targetCamera);
 
-                            if (screenPixelScalingBuffer * screenPixelScalingBuffer >=
-                                screenTransformPixelThresholdSquared)
+                            if (DisplayDevice.CheckScreenTransformPixelThreshold(screenPixelScalingBuffer))
                             {
                                 isTransforming = true;
                                 dS = scaleBuffer;
@@ -289,16 +262,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
             Vector2 newScreenPos1, Vector2 newScreenPos2, float dR, float dS, Camera camera)
         {
             return Vector3.zero;
-        }
-
-        #endregion
-
-        #region Private functions
-
-        private void updateMinScreenPointsDistance()
-        {
-            minScreenPointsPixelDistance = minScreenPointsDistance * DisplayDevice.DotsPerCentimeter;
-            minScreenPointsPixelDistanceSquared = minScreenPointsPixelDistance * minScreenPointsPixelDistance;
         }
 
         #endregion

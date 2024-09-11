@@ -12,7 +12,6 @@ namespace TouchScript.Gestures.TransformGestures
     /// </summary>
     public interface ITransformGesture
     {
-
         /// <summary>
         /// Occurs when gesture starts.
         /// </summary>

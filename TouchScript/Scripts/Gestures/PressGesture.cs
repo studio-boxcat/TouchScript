@@ -35,10 +35,7 @@ namespace TouchScript.Gestures
         #region Gesture callbacks
 
         /// <inheritdoc />
-        public override bool CanPreventGesture(Gesture gesture) => false;
-
-        /// <inheritdoc />
-        public override bool CanBePreventedByGesture(Gesture gesture) => false;
+        public override bool CanPreventGesture() => false;
 
         /// <inheritdoc />
         protected override void pointersPressed(IList<Pointer> pointers)

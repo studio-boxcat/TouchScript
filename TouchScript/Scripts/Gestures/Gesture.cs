@@ -66,12 +66,12 @@ namespace TouchScript.Gestures
                         break;
                     case GestureState.Ended:
                         // Only retain/release pointers for continuos gestures
-                        if (PreviousState is GestureState.Changed or GestureState.Began)
+                        if (PreviousState.IsBeganOrChanged())
                             releasePointers(true);
                         onRecognized();
                         break;
                     case GestureState.Cancelled:
-                        if (PreviousState is GestureState.Changed or GestureState.Began)
+                        if (PreviousState.IsBeganOrChanged())
                             releasePointers(false);
                         break;
                 }
@@ -124,10 +124,8 @@ namespace TouchScript.Gestures
 
         #region Private variables
 
-        /// <summary>
-        /// Reference to global TouchManager.
-        /// </summary>
-        protected TouchManager touchManager { get; private set; }
+        [NonSerialized] private TouchManager touchManager;
+        [NonSerialized] private GestureManager gestureManager;
 
         /// <summary>
         /// The state of min/max number of pointers.
@@ -145,20 +143,19 @@ namespace TouchScript.Gestures
         protected Transform cachedTransform;
 
         private int numPointers;
-        private GestureManager gestureManager;
         private GestureState state = GestureState.Idle;
 
         /// <summary>
         /// Cached screen position. 
         /// Used to keep tap's position which can't be calculated from pointers when the gesture is recognized since all pointers are gone.
         /// </summary>
-        protected Vector2 cachedScreenPosition;
+        private Vector2 cachedScreenPosition;
 
         /// <summary>
         /// Cached previous screen position.
         /// Used to keep tap's position which can't be calculated from pointers when the gesture is recognized since all pointers are gone.
         /// </summary>
-        protected Vector2 cachedPreviousScreenPosition;
+        private Vector2 cachedPreviousScreenPosition;
 
         #endregion
 
@@ -167,16 +164,8 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Determines whether this instance can prevent the specified gesture.
         /// </summary>
-        /// <param name="gesture"> The gesture. </param>
         /// <returns> <c>true</c> if this instance can prevent the specified gesture; <c>false</c> otherwise. </returns>
-        public virtual bool CanPreventGesture(Gesture gesture) => gesture.CanBePreventedByGesture(this);
-
-        /// <summary>
-        /// Determines whether this instance can be prevented by specified gesture.
-        /// </summary>
-        /// <param name="gesture"> The gesture. </param>
-        /// <returns> <c>true</c> if this instance can be prevented by specified gesture; <c>false</c> otherwise. </returns>
-        public virtual bool CanBePreventedByGesture(Gesture gesture) => true;
+        public virtual bool CanPreventGesture() => true;
 
         /// <summary>
         /// Specifies if gesture can receive this specific pointer point.
@@ -189,7 +178,7 @@ namespace TouchScript.Gestures
 
         #region Unity methods
 
-        protected virtual void Awake()
+        void Awake()
         {
             cachedTransform = transform;
         }
@@ -197,11 +186,11 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Unity Start handler.
         /// </summary>
-        protected virtual void OnEnable()
+        void OnEnable()
         {
             // TouchManager might be different in another scene
-            touchManager = TouchManager.Instance;
-            gestureManager = GestureManager.Instance;
+            touchManager ??= TouchManager.Instance;
+            gestureManager ??= GestureManager.Instance;
 
             INTERNAL_Reset();
         }
@@ -302,7 +291,14 @@ namespace TouchScript.Gestures
 
             for (var i = 0; i < count; i++) activePointers.Remove(pointers[i]);
             numPointers = total;
-            pointersCancelled(pointers);
+
+            // moved below the threshold
+            if (total is 0)
+            {
+                // cancel started gestures
+                if (state.IsBeganOrChanged())
+                    setState(GestureState.Cancelled);
+            }
         }
 
         #endregion
@@ -314,10 +310,7 @@ namespace TouchScript.Gestures
         /// </summary>
         /// <param name="value"> Pointer to cache. </param>
         /// <returns> <c>true</c> if pointers should be cached; <c>false</c> otherwise. </returns>
-        protected virtual bool shouldCachePointerPosition(Pointer value)
-        {
-            return true;
-        }
+        protected virtual bool shouldCachePointerPosition(Pointer value) => true;
 
         /// <summary>
         /// Tries to change gesture state.
@@ -326,9 +319,15 @@ namespace TouchScript.Gestures
         /// <returns> <c>true</c> if state was changed; otherwise, <c>false</c>. </returns>
         protected bool setState(GestureState value)
         {
-            var newState = gestureManager.INTERNAL_GestureChangeState(this, value);
-            State = newState;
+            if (gestureManager == null)
+            {
+                L.W("[Gesture] GestureManager is not set or destroyed.");
+                return false;
+            }
 
+            var changedOrFailed = gestureManager.INTERNAL_GestureChangeState(this, value);
+            var newState = changedOrFailed ? value : GestureState.Failed;
+            State = newState;
             return value == newState;
         }
 
@@ -353,26 +352,6 @@ namespace TouchScript.Gestures
         /// </summary>
         /// <param name="pointers"> The pointers. </param>
         protected virtual void pointersReleased(IList<Pointer> pointers) {}
-
-        /// <summary>
-        /// Called when pointers are cancelled.
-        /// </summary>
-        /// <param name="pointers"> The pointers. </param>
-        protected virtual void pointersCancelled(IList<Pointer> pointers)
-        {
-            if (pointersNumState == PointersNumState.None)
-            {
-                // moved below the threshold
-                switch (state)
-                {
-                    case GestureState.Began:
-                    case GestureState.Changed:
-                        // cancel started gestures
-                        setState(GestureState.Cancelled);
-                        break;
-                }
-            }
-        }
 
         /// <summary>
         /// Called to reset gesture state after it fails or recognizes.
@@ -405,7 +384,8 @@ namespace TouchScript.Gestures
         private void retainPointers()
         {
             var total = activePointers.Count;
-            for (var i = 0; i < total; i++) activePointers[i].INTERNAL_Retain();
+            for (var i = 0; i < total; i++)
+                activePointers[i].INTERNAL_Retain();
         }
 
         private void releasePointers(bool cancel)
@@ -414,7 +394,8 @@ namespace TouchScript.Gestures
             for (var i = 0; i < total; i++)
             {
                 var pointer = activePointers[i];
-                if (pointer.INTERNAL_Release() == 0 && cancel) touchManager.CancelPointer(pointer, true);
+                if (pointer.INTERNAL_Release() == 0 && cancel)
+                    touchManager.CancelPointer(pointer);
             }
         }
 

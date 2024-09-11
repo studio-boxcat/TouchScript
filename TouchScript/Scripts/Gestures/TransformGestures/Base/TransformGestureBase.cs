@@ -4,7 +4,6 @@
 
 using System;
 using System.Collections.Generic;
-using TouchScript.Devices.Display;
 using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
@@ -55,16 +54,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
         #region Private variables
 
         /// <summary>
-        /// <see cref="ScreenTransformThreshold"/> in pixels.
-        /// </summary>
-        protected float screenTransformPixelThreshold;
-
-        /// <summary>
-        /// <see cref="ScreenTransformThreshold"/> in pixels squared.
-        /// </summary>
-        protected float screenTransformPixelThresholdSquared;
-
-        /// <summary>
         /// The bit mask of what transform operations happened this frame.
         /// </summary>
         protected TransformGesture.TransformType transformMask;
@@ -112,9 +101,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
         protected TransformGesture.TransformType type = TransformGesture.TransformType.Translation | TransformGesture.TransformType.Scaling |
                                                         TransformGesture.TransformType.Rotation;
 
-        [SerializeField]
-        private float screenTransformThreshold = 0.1f;
-
         #endregion
 
         #region Public methods
@@ -127,18 +113,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
         {
             targetPositionOverridden = true;
             targetPosition = position;
-        }
-
-        #endregion
-
-        #region Unity methods
-
-        /// <inheritdoc />
-        protected override void OnEnable()
-        {
-            base.OnEnable();
-            updateScreenTransformThreshold();
-            updateType();
         }
 
         #endregion
@@ -215,11 +189,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
         #region Protected methods
 
         /// <summary>
-        /// Updates the type of the gesture.
-        /// </summary>
-        protected virtual void updateType() {}
-
-        /// <summary>
         /// Resets the frame delta values.
         /// </summary>
         protected void resetValues()
@@ -229,16 +198,6 @@ namespace TouchScript.Gestures.TransformGestures.Base
 			deltaScale = 1f;
 			transformMask = 0;
 		}
-
-        #endregion
-
-        #region Private functions
-
-        private void updateScreenTransformThreshold()
-        {
-            screenTransformPixelThreshold = screenTransformThreshold * DisplayDevice.DotsPerCentimeter;
-            screenTransformPixelThresholdSquared = screenTransformPixelThreshold * screenTransformPixelThreshold;
-        }
 
         #endregion
     }

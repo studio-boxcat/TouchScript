@@ -3,6 +3,7 @@
  */
 
 using System.Collections.Generic;
+using Sirenix.OdinInspector;
 using TouchScript.Pointers;
 using TouchScript.Utils;
 using UnityEngine;
@@ -13,6 +14,9 @@ namespace TouchScript.Gestures.TransformGestures.Base
     /// Abstract base class for Pinned Transform Gestures.
     /// </summary>
     public abstract class OnePointTransformGestureBase : TransformGestureBase
+#if UNITY_EDITOR
+        , ISelfValidator
+#endif
     {
         #region Public properties
 
@@ -87,8 +91,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
                     screenPixelRotationBuffer += TwoD.PointToLineDistance(screenCenter, oldScreenPos, newScreenPos);
                     angleBuffer += doRotation(worldCenter, oldScreenPos, newScreenPos, targetCamera);
 
-                    if (screenPixelRotationBuffer * screenPixelRotationBuffer >=
-                        screenTransformPixelThresholdSquared)
+                    if (DisplayDevice.CheckScreenTransformPixelThreshold(screenPixelRotationBuffer))
                     {
                         isTransforming = true;
                         dR = angleBuffer;
@@ -108,8 +111,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
                                                 (oldScreenPos - screenCenter).magnitude;
                     scaleBuffer *= doScaling(worldCenter, oldScreenPos, newScreenPos, targetCamera);
 
-                    if (screenPixelScalingBuffer * screenPixelScalingBuffer >=
-                        screenTransformPixelThresholdSquared)
+                    if (DisplayDevice.CheckScreenTransformPixelThreshold(screenPixelScalingBuffer))
                     {
                         isTransforming = true;
                         dS = scaleBuffer;
@@ -196,12 +198,16 @@ namespace TouchScript.Gestures.TransformGestures.Base
             return activePointers[0].PreviousPosition;
         }
 
-        /// <inheritdoc />
-        protected override void updateType()
-        {
-            type &= ~TransformGesture.TransformType.Translation;
-        }
-
         #endregion
+
+#if UNITY_EDITOR
+        void ISelfValidator.Validate(SelfValidationResult result)
+        {
+            if ((type & TransformGesture.TransformType.Translation) != default)
+            {
+                result.AddError("OnePointTransformGestureBase should not have Translation type.");
+            }
+        }
+#endif
     }
 }

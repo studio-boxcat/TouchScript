@@ -6,7 +6,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TouchScript.Core;
-using TouchScript.Devices.Display;
 using TouchScript.Pointers;
 using TouchScript.Utils;
 using UnityEngine;
@@ -29,43 +28,17 @@ namespace TouchScript.Gestures
 
         #endregion
 
-        #region Public properties
-
-        /// <summary>
-        /// Gets or sets total time in seconds required to hold pointers still.
-        /// </summary>
-        /// <value> Time in seconds. </value>
-        public float TimeToPress
-        {
-            get { return timeToPress; }
-            set { timeToPress = value; }
-        }
-
-        #endregion
-
         #region Private variables
 
         [SerializeField]
         private float timeToPress = 1;
 
         [SerializeField]
-        private float distanceLimit = float.PositiveInfinity;
+        private float distanceLimit;
 
         private float distanceLimitInPixelsSquared;
 
         private Vector2 totalMovement;
-
-        #endregion
-
-        #region Unity methods
-
-        /// <inheritdoc />
-        protected override void OnEnable()
-        {
-            base.OnEnable();
-
-            distanceLimitInPixelsSquared = Mathf.Pow(distanceLimit * DisplayDevice.DotsPerCentimeter, 2);
-        }
 
         #endregion
 
@@ -88,10 +61,19 @@ namespace TouchScript.Gestures
         {
             base.pointersUpdated(pointers);
 
-            if (distanceLimit < float.PositiveInfinity)
+            if (distanceLimit is not 0)
             {
                 totalMovement += ScreenPosition - PreviousScreenPosition;
-                if (totalMovement.sqrMagnitude > distanceLimitInPixelsSquared) setState(GestureState.Failed);
+
+                // Initialize distanceLimitInPixelsSquared
+                if (distanceLimitInPixelsSquared is 0)
+                {
+                    var limitInPixels = distanceLimit * DisplayDevice.DotsPerCentimeter;
+                    distanceLimitInPixelsSquared = limitInPixels * limitInPixels;
+                }
+
+                if (totalMovement.sqrMagnitude > distanceLimitInPixelsSquared)
+                    setState(GestureState.Failed);
             }
         }
 
@@ -128,14 +110,14 @@ namespace TouchScript.Gestures
         private IEnumerator wait()
         {
             // WaitForSeconds is affected by time scale!
-            var targetTime = Time.unscaledTime + TimeToPress;
+            var targetTime = Time.unscaledTime + timeToPress;
             while (targetTime > Time.unscaledTime) yield return null;
 
             if (State is not GestureState.Possible)
                 yield break;
 
             var isHit = LayerManager.GetHitTarget(ScreenPosition, out var hit)
-                && hit.Target.IsChildOf(cachedTransform);
+                        && hit.Target.IsChildOf(cachedTransform);
             setState(isHit ? GestureState.Ended : GestureState.Failed);
         }
 

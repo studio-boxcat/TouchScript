@@ -184,9 +184,9 @@ namespace TouchScript.Core
             }
         }
 
-        public void CancelPointer(Pointer pointer, bool shouldReturn)
+        public void CancelPointer(Pointer pointer)
         {
-            pointer.InputSource.CancelPointer(pointer, shouldReturn, _changes);
+            pointer.InputSource.CancelPointer(pointer, _changes);
         }
 
         public FakeInputSource GetFakeInputSource() => _input.FakeInputSource;

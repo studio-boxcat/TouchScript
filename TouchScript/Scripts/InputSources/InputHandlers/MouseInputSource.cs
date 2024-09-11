@@ -75,7 +75,7 @@ namespace TouchScript.InputSources.InputHandlers
             return true;
         }
 
-        public void CancelPointer([NotNull] Pointer pointer, bool shouldReturn, PointerChanges changes)
+        public void CancelPointer([NotNull] Pointer pointer, PointerChanges changes)
         {
             var pointerId = pointer.Id;
             Assert.IsTrue(pointerId.IsValid());
@@ -91,21 +91,21 @@ namespace TouchScript.InputSources.InputHandlers
             changes.Put_Cancel(pointerId);
             _mousePointer = null;
 
-            if (shouldReturn == false)
-                return;
+            // Return pointer
+            {
+                // 새로운 포인터를 생성.
+                var newPointer = _pointerContainer.Create(pointer.Position, this);
+                newPointer.CopyPositions(pointer);
+                var change = new PointerChange {Added = true};
+                if (pointer.Pressing) change.Pressed = true;
+                changes.Put(newPointer.Id, change);
 
-            // 새로운 포인터를 생성.
-            var newPointer = _pointerContainer.Create(pointer.Position, this);
-            newPointer.CopyPositions(pointer);
-            var change = new PointerChange {Added = true};
-            if (pointer.Pressing) change.Pressed = true;
-            changes.Put(newPointer.Id, change);
-
-            // 새로운 포인터로 스왑.
-            _mousePointer = newPointer;
-            // 누르고 있었을 경우에만 IsReturned 로 처리함.
-            if (_mousePointer.Pressing)
-                _mousePointer.IsReturned = true;
+                // 새로운 포인터로 스왑.
+                _mousePointer = newPointer;
+                // 누르고 있었을 경우에만 IsReturned 로 처리함.
+                if (_mousePointer.Pressing)
+                    _mousePointer.IsReturned = true;
+            }
         }
 
         /// <summary>
