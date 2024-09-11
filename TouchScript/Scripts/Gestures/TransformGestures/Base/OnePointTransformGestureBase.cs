@@ -60,7 +60,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
             var dR = deltaRotation = 0;
             var dS = deltaScale = 1f;
 
-            if (pointersNumState != PointersNumState.InRange) return;
+            if (pointersNumState != PointersNumState.Exists) return;
 
             var rotationEnabled = (Type & TransformGesture.TransformType.Rotation) == TransformGesture.TransformType.Rotation;
             var scalingEnabled = (Type & TransformGesture.TransformType.Scaling) == TransformGesture.TransformType.Scaling;

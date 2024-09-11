@@ -76,12 +76,7 @@ namespace TouchScript.Gestures
         {
             base.pointersPressed(pointers);
 
-            if (pointersNumState == PointersNumState.PassedMaxThreshold ||
-                pointersNumState == PointersNumState.PassedMinMaxThreshold)
-            {
-                setState(GestureState.Failed);
-            }
-            else if (pointersNumState == PointersNumState.PassedMinThreshold)
+            if (pointersNumState == PointersNumState.None)
             {
                 setState(GestureState.Possible);
                 StartCoroutine(wait());
@@ -105,7 +100,7 @@ namespace TouchScript.Gestures
         {
             base.pointersReleased(pointers);
 
-            if (pointersNumState == PointersNumState.PassedMinThreshold)
+            if (pointersNumState == PointersNumState.None)
             {
                 setState(GestureState.Failed);
             }

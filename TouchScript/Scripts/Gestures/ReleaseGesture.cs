@@ -40,15 +40,9 @@ namespace TouchScript.Gestures
         {
             base.pointersPressed(pointers);
 
-            if (pointersNumState == PointersNumState.PassedMinThreshold)
+            if (pointersNumState == PointersNumState.None && State == GestureState.Idle)
             {
-                if (State == GestureState.Idle) setState(GestureState.Possible);
-                return;
-            }
-            if (pointersNumState == PointersNumState.PassedMinMaxThreshold)
-            {
-                setState(GestureState.Failed);
-                return;
+                setState(GestureState.Possible);
             }
         }
 
@@ -57,7 +51,7 @@ namespace TouchScript.Gestures
         {
             base.pointersReleased(pointers);
 
-            if (pointersNumState == PointersNumState.PassedMinThreshold) setState(GestureState.Ended);
+            if (pointersNumState == PointersNumState.None) setState(GestureState.Ended);
         }
 
         /// <inheritdoc />

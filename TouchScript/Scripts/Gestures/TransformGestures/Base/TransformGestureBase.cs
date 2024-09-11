@@ -187,17 +187,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         {
             base.pointersPressed(pointers);
 
-            if (pointersNumState == PointersNumState.PassedMaxThreshold ||
-                pointersNumState == PointersNumState.PassedMinMaxThreshold)
-            {
-                switch (State)
-                {
-                    case GestureState.Began:
-                    case GestureState.Changed:
-                        setState(GestureState.Ended);
-                        break;
-                }
-            } else if (pointersNumState == PointersNumState.PassedMinThreshold)
+            if (pointersNumState == PointersNumState.None)
             {
                 setState(GestureState.Possible);
             }
@@ -208,7 +198,7 @@ namespace TouchScript.Gestures.TransformGestures.Base
         {
             base.pointersReleased(pointers);
 
-            if (pointersNumState == PointersNumState.PassedMinThreshold)
+            if (pointersNumState == PointersNumState.None)
             {
                 switch (State)
                 {

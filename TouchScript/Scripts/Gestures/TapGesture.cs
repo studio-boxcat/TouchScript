@@ -58,19 +58,12 @@ namespace TouchScript.Gestures
         {
             base.pointersPressed(pointers);
 
-            if (pointersNumState is PointersNumState.PassedMaxThreshold
-                or PointersNumState.PassedMinMaxThreshold)
-            {
-                setState(GestureState.Failed);
-                return;
-            }
-
             if (NumPointers == pointers.Count)
             {
                 if (tapsDone >= numberOfTapsRequired) // Might be delayed and retapped while waiting
                     reset();
             }
-            if (pointersNumState == PointersNumState.PassedMinThreshold)
+            if (pointersNumState == PointersNumState.None)
             {
                 // Starting the gesture when it is already active? => we released one finger and pressed again
                 if (isActive) setState(GestureState.Failed);

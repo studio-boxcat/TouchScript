@@ -25,35 +25,9 @@ namespace TouchScript.Gestures
         /// </summary>
         protected enum PointersNumState
         {
-            /// <summary>
-            /// The number of pointers is between min and max thresholds.
-            /// </summary>
-            InRange,
-
-            /// <summary>
-            /// The number of pointers is less than min threshold.
-            /// </summary>
-            TooFew,
-
-            /// <summary>
-            /// The number of pointers is greater than max threshold.
-            /// </summary>
-            TooMany,
-
-            /// <summary>
-            /// The number of pointers passed min threshold this frame and is now in range.
-            /// </summary>
-            PassedMinThreshold,
-
-            /// <summary>
-            /// The number of pointers passed max threshold this frame and is now in range.
-            /// </summary>
-            PassedMaxThreshold,
-
-            /// <summary>
-            /// The number of pointers passed both min and max thresholds.
-            /// </summary>
-            PassedMinMaxThreshold
+            Reset, // Not valuated yet
+            None,
+            Exists,
         }
 
         #endregion
@@ -186,12 +160,6 @@ namespace TouchScript.Gestures
         /// </summary>
         protected Transform cachedTransform;
 
-        [SerializeField]
-        private int minPointers = 0;
-
-        [SerializeField]
-        private int maxPointers = 0;
-
         private int numPointers;
         private GestureManager gestureManager;
         private GestureState state = GestureState.Idle;
@@ -275,48 +243,21 @@ namespace TouchScript.Gestures
         {
             activePointers.Clear();
             numPointers = 0;
-            pointersNumState = PointersNumState.TooFew;
+            pointersNumState = PointersNumState.Reset;
             reset();
         }
 
-        internal void INTERNAL_PointersPressed(IList<Pointer> pointers)
+        internal void INTERNAL_PointersPressed(List<Pointer> pointers)
         {
             Assert.IsTrue(pointers.All(p => activePointers.Contains(p) == false));
 
             var count = pointers.Count;
             var total = numPointers + count;
-            pointersNumState = PointersNumState.InRange;
 
-            if (minPointers <= 0)
-            {
-                // MinPointers is not set and we got our first pointers
-                if (numPointers == 0) pointersNumState = PointersNumState.PassedMinThreshold;
-            }
-            else
-            {
-                if (numPointers < minPointers)
-                {
-                    // had < MinPointers, got >= MinPointers
-                    if (total >= minPointers) pointersNumState = PointersNumState.PassedMinThreshold;
-                    else pointersNumState = PointersNumState.TooFew;
-                }
-            }
-
-            if (maxPointers > 0)
-            {
-                if (numPointers <= maxPointers)
-                {
-                    if (total > maxPointers)
-                    {
-                        // this event we crossed both MinPointers and MaxPointers
-                        if (pointersNumState == PointersNumState.PassedMinThreshold) pointersNumState = PointersNumState.PassedMinMaxThreshold;
-                        // this event we crossed MaxPointers
-                        else pointersNumState = PointersNumState.PassedMaxThreshold;
-                    }
-                }
-                // last event we already were over MaxPointers
-                else pointersNumState = PointersNumState.TooMany;
-            }
+            // MinPointers is not set and we got our first pointers
+            // XXX: On other methods, we use condition `total is 0`, but here we use numPointers instead.
+            // This is because gestures determine to whether they can transition to Possible state with PointerNumState.None.
+            pointersNumState = numPointers is 0 ? PointersNumState.None : PointersNumState.Exists;
 
             if (state.IsBeganOrChanged())
             {
@@ -328,53 +269,21 @@ namespace TouchScript.Gestures
             pointersPressed(pointers);
         }
 
-        internal void INTERNAL_PointersUpdated(IList<Pointer> pointers)
+        internal void INTERNAL_PointersUpdated(List<Pointer> pointers)
         {
-            pointersNumState = PointersNumState.InRange;
-            if (minPointers > 0 && numPointers < minPointers) pointersNumState = PointersNumState.TooFew;
-            if (maxPointers > 0 && pointersNumState == PointersNumState.InRange && numPointers > maxPointers) pointersNumState = PointersNumState.TooMany;
+            pointersNumState = PointersNumState.Exists;
             pointersUpdated(pointers);
         }
 
-        internal void INTERNAL_PointersReleased(IList<Pointer> pointers)
+        internal void INTERNAL_PointersReleased(List<Pointer> pointers)
         {
             Assert.IsTrue(pointers.All(p => activePointers.Contains(p)));
 
             var count = pointers.Count;
             var total = numPointers - count;
-            pointersNumState = PointersNumState.InRange;
 
-            if (minPointers <= 0)
-            {
-                // have no pointers
-                if (total == 0) pointersNumState = PointersNumState.PassedMinThreshold;
-            }
-            else
-            {
-                if (numPointers >= minPointers)
-                {
-                    // had >= MinPointers, got < MinPointers
-                    if (total < minPointers) pointersNumState = PointersNumState.PassedMinThreshold;
-                }
-                // last event we already were under MinPointers
-                else pointersNumState = PointersNumState.TooFew;
-            }
-
-            if (maxPointers > 0)
-            {
-                if (numPointers > maxPointers)
-                {
-                    if (total <= maxPointers)
-                    {
-                        // this event we crossed both MinPointers and MaxPointers
-                        if (pointersNumState == PointersNumState.PassedMinThreshold) pointersNumState = PointersNumState.PassedMinMaxThreshold;
-                        // this event we crossed MaxPointers
-                        else pointersNumState = PointersNumState.PassedMaxThreshold;
-                    }
-                    // last event we already were over MaxPointers
-                    else pointersNumState = PointersNumState.TooMany;
-                }
-            }
+            // have no pointers
+            pointersNumState = total is 0 ? PointersNumState.None : PointersNumState.Exists;
 
             for (var i = 0; i < count; i++) activePointers.Remove(pointers[i]);
             numPointers = total;
@@ -397,45 +306,15 @@ namespace TouchScript.Gestures
             pointersReleased(pointers);
         }
 
-        internal void INTERNAL_PointersCancelled(IList<Pointer> pointers)
+        internal void INTERNAL_PointersCancelled(List<Pointer> pointers)
         {
             Assert.IsTrue(pointers.All(p => activePointers.Contains(p)));
 
             var count = pointers.Count;
             var total = numPointers - count;
-            pointersNumState = PointersNumState.InRange;
 
-            if (minPointers <= 0)
-            {
-                // have no pointers
-                if (total == 0) pointersNumState = PointersNumState.PassedMinThreshold;
-            }
-            else
-            {
-                if (numPointers >= minPointers)
-                {
-                    // had >= MinPointers, got < MinPointers
-                    if (total < minPointers) pointersNumState = PointersNumState.PassedMinThreshold;
-                }
-                // last event we already were under MinPointers
-                else pointersNumState = PointersNumState.TooFew;
-            }
-
-            if (maxPointers > 0)
-            {
-                if (numPointers > maxPointers)
-                {
-                    if (total <= maxPointers)
-                    {
-                        // this event we crossed both MinPointers and MaxPointers
-                        if (pointersNumState == PointersNumState.PassedMinThreshold) pointersNumState = PointersNumState.PassedMinMaxThreshold;
-                        // this event we crossed MaxPointers
-                        else pointersNumState = PointersNumState.PassedMaxThreshold;
-                    }
-                    // last event we already were over MaxPointers
-                    else pointersNumState = PointersNumState.TooMany;
-                }
-            }
+            // have no pointers
+            pointersNumState = total is 0 ? PointersNumState.None : PointersNumState.Exists;
 
             for (var i = 0; i < count; i++) activePointers.Remove(pointers[i]);
             numPointers = total;
@@ -497,7 +376,7 @@ namespace TouchScript.Gestures
         /// <param name="pointers"> The pointers. </param>
         protected virtual void pointersCancelled(IList<Pointer> pointers)
         {
-            if (pointersNumState == PointersNumState.PassedMinThreshold)
+            if (pointersNumState == PointersNumState.None)
             {
                 // moved below the threshold
                 switch (state)

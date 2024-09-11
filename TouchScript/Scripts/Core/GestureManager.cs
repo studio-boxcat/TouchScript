@@ -222,10 +222,10 @@ namespace TouchScript.Core
             _gestureToPointers.Clear();
         }
 
-        private void updateUpdated(Pointer pointers)
+        private void updateUpdated(Pointer pointer)
         {
             _gestureToPointers.EnsureCleared();
-            _gestureToPointers.Add(pointers, _pointerToGestures);
+            _gestureToPointers.Add(pointer, _pointerToGestures);
             foreach (var (gesture, list) in _gestureToPointers)
             {
                 if (gestureIsActive(gesture))
