@@ -5,6 +5,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TouchScript.Core;
 using TouchScript.Devices.Display;
 using TouchScript.Pointers;
 using TouchScript.Utils;
@@ -135,14 +136,12 @@ namespace TouchScript.Gestures
             var targetTime = Time.unscaledTime + TimeToPress;
             while (targetTime > Time.unscaledTime) yield return null;
 
-            if (State == GestureState.Possible)
-            {
-                var data = GetScreenPositionHitData();
-                if (data.Target == null || !data.Target.IsChildOf(cachedTransform))
-                    setState(GestureState.Failed);
-                else
-                    setState(GestureState.Ended);
-            }
+            if (State is not GestureState.Possible)
+                yield break;
+
+            var isHit = LayerManager.GetHitTarget(ScreenPosition, out var hit)
+                && hit.Target.IsChildOf(cachedTransform);
+            setState(isHit ? GestureState.Ended : GestureState.Failed);
         }
 
         #endregion

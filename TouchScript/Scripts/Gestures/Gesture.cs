@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TouchScript.Hit;
 using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
@@ -65,11 +64,6 @@ namespace TouchScript.Gestures
         /// Occurs when gesture changes state.
         /// </summary>
         public event Action<GestureState, GestureState> StateChanged;
-
-        /// <summary>
-        /// Occurs when gesture is cancelled.
-        /// </summary>
-        public event Action Cancelled;
 
         #endregion
 
@@ -163,12 +157,6 @@ namespace TouchScript.Gestures
         }
 
         /// <summary>
-        /// Gets list of gesture's active pointers.
-        /// </summary>
-        /// <value> The list of pointers owned by this gesture. </value>
-        public List<Pointer> ActivePointers => activePointers;
-
-        /// <summary>
         /// Gets the number of active pointerss.
         /// </summary>
         /// <value> The number of pointers owned by this gesture. </value>
@@ -191,7 +179,7 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Pointers the gesture currently owns and works with.
         /// </summary>
-        protected List<Pointer> activePointers = new List<Pointer>(10);
+        public readonly List<Pointer> activePointers = new(10);
 
         /// <summary>
         /// Cached transform of the parent object.
@@ -225,16 +213,6 @@ namespace TouchScript.Gestures
         #region Public methods
 
         /// <summary>
-        /// Determines whether gesture controls a pointer.
-        /// </summary>
-        /// <param name="pointer"> The pointer. </param>
-        /// <returns> <c>true</c> if gesture controls the pointer point; <c>false</c> otherwise. </returns>
-        public bool HasPointer(Pointer pointer)
-        {
-            return activePointers.Contains(pointer);
-        }
-
-        /// <summary>
         /// Determines whether this instance can prevent the specified gesture.
         /// </summary>
         /// <param name="gesture"> The gesture. </param>
@@ -254,21 +232,6 @@ namespace TouchScript.Gestures
         /// <param name="pointer"> The pointer. </param>
         /// <returns> <c>true</c> if this pointer should be received by the gesture; <c>false</c> otherwise. </returns>
         public virtual bool ShouldReceivePointer(Pointer pointer) => true;
-
-        /// <summary>
-        /// Specifies if gesture can begin or recognize.
-        /// </summary>
-        /// <returns> <c>true</c> if gesture should begin; <c>false</c> otherwise. </returns>
-        public virtual bool ShouldBegin() => true;
-
-        /// <summary>
-        /// Returns <see cref="HitData"/> for gesture's <see cref="ScreenPosition"/>, i.e. what is right beneath it.
-        /// </summary>
-        public HitData GetScreenPositionHitData()
-        {
-            LayerManager.GetHitTarget(ScreenPosition, out var hit);
-            return hit;
-        }
 
         #endregion
 
@@ -590,10 +553,7 @@ namespace TouchScript.Gestures
         /// <summary>
         /// Called when state is changed to Cancelled.
         /// </summary>
-        protected virtual void onCancelled()
-        {
-            Cancelled?.InvokeHandleExceptions();
-        }
+        protected virtual void onCancelled() {}
 
         #endregion
 

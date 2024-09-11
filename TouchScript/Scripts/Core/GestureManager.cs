@@ -269,7 +269,7 @@ namespace TouchScript.Core
 
             foreach (var gesture in _gesturesToReset)
             {
-                _pointerToGestures.RemoveGestureFromPointers(gesture.ActivePointers, gesture);
+                _pointerToGestures.RemoveGestureFromPointers(gesture.activePointers, gesture);
 
                 // Unity "null" comparison
                 if (gesture != null)
@@ -299,8 +299,6 @@ namespace TouchScript.Core
 
         private bool recognizeGestureIfNotPrevented(Gesture gesture)
         {
-            if (!gesture.ShouldBegin()) return false;
-
             var gesturesToFail = _gestureListPool.Get();
             bool canRecognize = true;
             var target = gesture.transform;
