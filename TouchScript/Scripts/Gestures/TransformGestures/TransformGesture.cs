@@ -87,7 +87,7 @@ namespace TouchScript.Gestures.TransformGestures
         /// <param name="dR">Delta rotation.</param>
         /// <param name="dS">Delta scale.</param>
         /// <returns></returns>
-        Vector3 projectScaledRotated(Vector2 point, float dR, float dS, Camera camera)
+        private Vector3 projectScaledRotated(Vector2 point, float dR, float dS, Camera camera)
         {
             var center = targetPositionOverridden ? targetPosition : cachedTransform.position;
             var delta = camera.ProjectTo(point, transformPlane) - center;

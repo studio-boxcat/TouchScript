@@ -8,7 +8,7 @@ namespace TouchScript.Layers
     public class StandardLayer : TouchLayer
     {
         [SerializeField, Required, ChildGameObjectsOnly]
-        Camera _camera;
+        private Camera _camera;
 
         public override Camera GetTargetCamera() => _camera;
 

@@ -9,14 +9,14 @@ namespace TouchScript.InputSources
 {
     public readonly struct PointerContainer
     {
-        static PointerId _nextPointerId = (PointerId) 1;
-        static PointerId IssuePointerId() => _nextPointerId++;
+        private static PointerId _nextPointerId = (PointerId) 1;
+        private static PointerId IssuePointerId() => _nextPointerId++;
 
         // static readonly Logger _logger = new(nameof(PointerContainer));
 
         public readonly Dictionary<PointerId, Pointer> Pointers;
 
-        readonly Stack<Pointer> _pool;
+        private readonly Stack<Pointer> _pool;
 
         public PointerContainer(int capacity)
         {

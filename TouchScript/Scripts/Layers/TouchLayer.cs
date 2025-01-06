@@ -7,11 +7,11 @@ namespace TouchScript.Layers
     public abstract class TouchLayer : MonoBehaviour
     {
         [SerializeField]
-        int _priority;
+        private int _priority;
         public int Priority => _priority;
 
-        void OnEnable() => LayerManager.AddLayer(this);
-        void OnDisable() => LayerManager.RemoveLayer(this);
+        private void OnEnable() => LayerManager.AddLayer(this);
+        private void OnDisable() => LayerManager.RemoveLayer(this);
 
         public abstract Camera GetTargetCamera();
         public abstract HitResult Hit(Vector2 screenPosition, out HitData hit);

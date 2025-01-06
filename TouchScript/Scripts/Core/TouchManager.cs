@@ -21,13 +21,13 @@ namespace TouchScript.Core
         public static TouchManager Instance;
 
         [SerializeField, Required, ChildGameObjectsOnly]
-        TouchScriptInputModule _uiInputModule;
+        private TouchScriptInputModule _uiInputModule;
 
-        readonly PointerContainer _pointerContainer = new(4);
-        readonly PointerChanges _changes = new(10);
-        StandardInput _input;
+        private readonly PointerContainer _pointerContainer = new(4);
+        private readonly PointerChanges _changes = new(10);
+        private StandardInput _input;
 
-        readonly Logger _logger = new(nameof(TouchManager));
+        private readonly Logger _logger = new(nameof(TouchManager));
 
         public event Action FrameStarted;
         public event Action FrameFinished;
@@ -38,14 +38,14 @@ namespace TouchScript.Core
         public event Action<Pointer> PointerRemoved;
         public event Action<Pointer> PointerCancelled;
 
-        void Awake()
+        private void Awake()
         {
             _input = new StandardInput(_pointerContainer);
         }
 
-        bool _isUpdating = false;
+        private bool _isUpdating = false;
 
-        void Update()
+        private void Update()
         {
             Assert.IsFalse(_isUpdating);
             _isUpdating = true;
@@ -102,9 +102,9 @@ namespace TouchScript.Core
             enabled = false;
         }
 
-        readonly List<(Pointer, PointerChange)> _tmpChanges = new();
+        private readonly List<(Pointer, PointerChange)> _tmpChanges = new();
 
-        void CommitChanges()
+        private void CommitChanges()
         {
             // 변경사항 모으기.
             _tmpChanges.Clear();

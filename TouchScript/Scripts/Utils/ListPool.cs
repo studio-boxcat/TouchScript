@@ -2,9 +2,9 @@ using System.Collections.Generic;
 
 namespace TouchScript.Utils
 {
-    class ListPool<T>
+    internal class ListPool<T>
     {
-        readonly List<List<T>> _stack;
+        private readonly List<List<T>> _stack;
 
         public ListPool(int capacity)
         {

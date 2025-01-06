@@ -14,12 +14,12 @@ namespace TouchScript.Core
 {
     public static class LayerManager
     {
-        static readonly List<TouchLayer> _layers = new(10);
-        static readonly Dictionary<TouchLayer, int> _layerInternalOrder = new();
-        static readonly Logger _logger = new(nameof(LayerManager));
+        private static readonly List<TouchLayer> _layers = new(10);
+        private static readonly Dictionary<TouchLayer, int> _layerInternalOrder = new();
+        private static readonly Logger _logger = new(nameof(LayerManager));
 
-        static int _nextOrder;
-        static bool _sorted = true;
+        private static int _nextOrder;
+        private static bool _sorted = true;
 
         public static void AddLayer(TouchLayer layer)
         {
@@ -65,7 +65,7 @@ namespace TouchScript.Core
             return false;
         }
 
-        static void EnsureSorted()
+        private static void EnsureSorted()
         {
             if (_sorted) return;
 

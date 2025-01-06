@@ -17,15 +17,17 @@ namespace TouchScript.Behaviors.Cursors
     [HelpURL("http://touchscript.github.io/docs/html/T_TouchScript_Behaviors_Cursors_CursorManager.htm")]
     public class CursorManager : MonoBehaviour
     {
-        [SerializeField] PointerCursor _cursorPrefab;
-        [SerializeField] uint _cursorPixelSize = 128;
+        [SerializeField]
+        private PointerCursor _cursorPrefab;
+        [SerializeField]
+        private uint _cursorPixelSize = 128;
 
-        readonly Stack<PointerCursor> _cursorPool = new();
-        readonly Dictionary<PointerId, PointerCursor> _cursors = new(10);
+        private readonly Stack<PointerCursor> _cursorPool = new();
+        private readonly Dictionary<PointerId, PointerCursor> _cursors = new(10);
 
-        TouchManager _touchManager;
+        private TouchManager _touchManager;
 
-        void OnEnable()
+        private void OnEnable()
         {
             _touchManager = TouchManager.Instance;
 
@@ -37,7 +39,7 @@ namespace TouchScript.Behaviors.Cursors
             _touchManager.PointerCancelled += PointerRemovedHandler;
         }
 
-        void OnDisable()
+        private void OnDisable()
         {
             _touchManager.PointerAdded -= PointerAddedHandler;
             _touchManager.PointerRemoved -= PointerRemovedHandler;
@@ -49,7 +51,7 @@ namespace TouchScript.Behaviors.Cursors
 
         #region Event handlers
 
-        void PointerAddedHandler(Pointer pointer)
+        private void PointerAddedHandler(Pointer pointer)
         {
             if (_cursorPool.TryPop(out var cursor) == false)
             {
@@ -65,7 +67,7 @@ namespace TouchScript.Behaviors.Cursors
             _cursors.Add(pointer.Id, cursor);
         }
 
-        void PointerRemovedHandler(Pointer pointer)
+        private void PointerRemovedHandler(Pointer pointer)
         {
             var pointerId = pointer.Id;
             if (_cursors.TryGetValue(pointerId, out var cursor) == false)
@@ -82,7 +84,7 @@ namespace TouchScript.Behaviors.Cursors
             }
         }
 
-        void PointerPressedHandler(Pointer pointer)
+        private void PointerPressedHandler(Pointer pointer)
         {
             var pointerId = pointer.Id;
             if (_cursors.TryGetValue(pointerId, out var cursor) == false)
@@ -91,7 +93,7 @@ namespace TouchScript.Behaviors.Cursors
             cursor.SetState(PointerCursor.CursorState.Pressed);
         }
 
-        void PointerUpdatedHandler(Pointer pointer)
+        private void PointerUpdatedHandler(Pointer pointer)
         {
             var pointerId = pointer.Id;
             if (_cursors.TryGetValue(pointerId, out var cursor) == false)
@@ -101,7 +103,7 @@ namespace TouchScript.Behaviors.Cursors
             cursorTrans.anchoredPosition = pointer.Position;
         }
 
-        void PointersReleasedHandler(Pointer pointer)
+        private void PointersReleasedHandler(Pointer pointer)
         {
             var pointerId = pointer.Id;
             if (_cursors.TryGetValue(pointerId, out var cursor) == false)

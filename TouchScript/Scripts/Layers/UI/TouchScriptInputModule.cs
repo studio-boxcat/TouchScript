@@ -15,15 +15,15 @@ namespace TouchScript.Layers.UI
     /// <summary>
     /// An implementation of a Unity UI Input Module which lets TouchScript interact with the UI and EventSystem.
     /// </summary>
-    sealed class TouchScriptInputModule : BaseInputModule
+    internal sealed class TouchScriptInputModule : BaseInputModule
     {
-        readonly Logger _logger = new(nameof(TouchScriptInputModule));
+        private readonly Logger _logger = new(nameof(TouchScriptInputModule));
 
         #region From PointerInputModule
 
-        readonly Dictionary<int, PointerEventData> m_PointerData = new();
+        private readonly Dictionary<int, PointerEventData> m_PointerData = new();
 
-        PointerEventData AddPointerData(int id)
+        private PointerEventData AddPointerData(int id)
         {
             // _logger.Info("AddPointerData: " + id);
             var data = new PointerEventData { pointerId = id };
@@ -35,18 +35,18 @@ namespace TouchScript.Layers.UI
             return data;
         }
 
-        PointerEventData GetPointerData(int id)
+        private PointerEventData GetPointerData(int id)
         {
             return m_PointerData[id];
         }
 
-        void RemovePointerData(PointerEventData data)
+        private void RemovePointerData(PointerEventData data)
         {
             // _logger.Info("RemovePointerData: " + data.pointerId);
             m_PointerData.Remove(data.pointerId);
         }
 
-        PointerEventData GetTouchPointerEventData(Pointer p, PointerChange change)
+        private PointerEventData GetTouchPointerEventData(Pointer p, PointerChange change)
         {
             // XXX: CancelledOnly 면서 포인터가 없어서 생성해야하는 상황은 호출되어서는 안 됨.
             Assert.IsFalse(change.CancelledOnly() && !m_PointerData.ContainsKey((int) p.Id));
@@ -84,7 +84,7 @@ namespace TouchScript.Layers.UI
             return pointerData;
         }
 
-        static bool ShouldStartDrag(Vector2 pressPos, Vector2 currentPos, float threshold, bool useDragThreshold)
+        private static bool ShouldStartDrag(Vector2 pressPos, Vector2 currentPos, float threshold, bool useDragThreshold)
         {
             if (!useDragThreshold)
                 return true;
@@ -92,13 +92,13 @@ namespace TouchScript.Layers.UI
             return (pressPos - currentPos).sqrMagnitude >= threshold * threshold;
         }
 
-        void ProcessMove(PointerEventData pointerEvent)
+        private void ProcessMove(PointerEventData pointerEvent)
         {
             var targetGO = (Cursor.lockState == CursorLockMode.Locked ? null : pointerEvent.pointerCurrentRaycast.gameObject);
             HandlePointerExitAndEnter(pointerEvent, targetGO);
         }
 
-        void ProcessDrag(PointerEventData pointerEvent)
+        private void ProcessDrag(PointerEventData pointerEvent)
         {
             if (!pointerEvent.IsPointerMoving() ||
                 Cursor.lockState == CursorLockMode.Locked ||
@@ -128,7 +128,7 @@ namespace TouchScript.Layers.UI
             }
         }
 
-        void DeselectIfSelectionChanged(GameObject currentOverGo, BaseEventData pointerEvent)
+        private void DeselectIfSelectionChanged(GameObject currentOverGo, BaseEventData pointerEvent)
         {
             // Selection tracking
             var selectHandlerGO = ExecuteEvents.GetEventHandler<ISelectHandler>(currentOverGo);
@@ -173,7 +173,7 @@ namespace TouchScript.Layers.UI
             Assert.IsTrue(p.Id.IsValid());
         }
 
-        void ProcessTouchPress(PointerEventData pointerEvent, bool pressed, bool released)
+        private void ProcessTouchPress(PointerEventData pointerEvent, bool pressed, bool released)
         {
             // Skip if both pressed and released are false.
             if (pressed is false && released is false)
@@ -271,7 +271,7 @@ namespace TouchScript.Layers.UI
             }
         }
 
-        bool SendUpdateEventToSelectedObject()
+        private bool SendUpdateEventToSelectedObject()
         {
             if (eventSystem.currentSelectedGameObject == null)
                 return false;

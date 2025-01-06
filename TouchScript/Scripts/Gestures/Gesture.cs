@@ -145,12 +145,12 @@ namespace TouchScript.Gestures
 
         #region Unity methods
 
-        void Awake() => cachedTransform = transform;
+        private void Awake() => cachedTransform = transform;
 
         /// <summary>
         /// Unity Start handler.
         /// </summary>
-        void OnEnable()
+        private void OnEnable()
         {
             // TouchManager might be different in another scene
             touchManager ??= TouchManager.Instance;

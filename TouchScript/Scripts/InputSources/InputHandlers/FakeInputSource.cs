@@ -8,11 +8,11 @@ namespace TouchScript.InputSources.InputHandlers
 {
     public class FakeInputSource : IInputSource
     {
-        readonly PointerContainer _pointerContainer;
+        private readonly PointerContainer _pointerContainer;
         // static readonly Logger _logger = new(nameof(FakeInputSource));
 
-        readonly Dictionary<PointerId, Pointer> _pointers = new();
-        readonly Dictionary<PointerId, PointerChange> _upComingChanges = new();
+        private readonly Dictionary<PointerId, Pointer> _pointers = new();
+        private readonly Dictionary<PointerId, PointerChange> _upComingChanges = new();
 
         public FakeInputSource(PointerContainer pointerContainer)
         {

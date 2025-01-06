@@ -9,7 +9,7 @@ namespace TouchScript.Utils
     /// <summary>
     /// A class with 2D helper functions.
     /// </summary>
-    static class TwoD
+    internal static class TwoD
     {
         /// <summary>
         /// Calculates distance from line to point.

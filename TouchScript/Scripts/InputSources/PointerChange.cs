@@ -46,7 +46,7 @@ namespace TouchScript.InputSources
         }
 
         [Conditional("DEBUG")]
-        static void AssertCollision(PointerChange a, PointerChange b)
+        private static void AssertCollision(PointerChange a, PointerChange b)
         {
             Assert.IsFalse(a.Added && b.Added);
             Assert.IsFalse(a.Updated && b.Updated);

@@ -17,16 +17,16 @@ namespace TouchScript.InputSources.InputHandlers
     /// </summary>
     public class TouchInputSource : IInputSource
     {
-        readonly PointerContainer _pointerContainer;
-        readonly Dictionary<int, Pointer> _pointers = new(10);
-        static readonly Logger _logger = new(nameof(TouchInputSource));
+        private readonly PointerContainer _pointerContainer;
+        private readonly Dictionary<int, Pointer> _pointers = new(10);
+        private static readonly Logger _logger = new(nameof(TouchInputSource));
 
         public TouchInputSource(PointerContainer pointerContainer)
         {
             _pointerContainer = pointerContainer;
         }
 
-        static readonly List<int> _fingerIdBuf = new();
+        private static readonly List<int> _fingerIdBuf = new();
 
         public void Deactivate(PointerChanges changes)
         {
@@ -125,7 +125,7 @@ namespace TouchScript.InputSources.InputHandlers
             return Input.touchCount > 0;
         }
 
-        Pointer CreatePointer(int fingerId, Vector2 pos)
+        private Pointer CreatePointer(int fingerId, Vector2 pos)
         {
             // _logger.Info($"CreatePointer: {fingerId}");
             return _pointerContainer.Create(pos, this);

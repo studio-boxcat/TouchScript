@@ -31,9 +31,9 @@ namespace TouchScript.Pointers
 
         #region Private variables
 
-        int _refCount = 0;
-        HitData _pressData, _overData;
-        bool _overDataIsDirty = true;
+        private int _refCount = 0;
+        private HitData _pressData, _overData;
+        private bool _overDataIsDirty = true;
 
         #endregion
 

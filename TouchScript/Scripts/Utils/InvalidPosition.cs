@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace TouchScript.Utils
 {
-    static class InvalidPosition
+    internal static class InvalidPosition
     {
         public static readonly Vector2 Value = new(float.NaN, float.NaN);
 

@@ -15,7 +15,7 @@ using Logger = TouchScript.Utils.Logger;
 
 namespace TouchScript.Core
 {
-    sealed class GestureManager : MonoBehaviour
+    internal sealed class GestureManager : MonoBehaviour
     {
         #region Public properties
 
@@ -29,13 +29,13 @@ namespace TouchScript.Core
         #region Private variables
 
         [SerializeField, Required, ChildGameObjectsOnly]
-        TouchManager _touchManager;
+        private TouchManager _touchManager;
 
-        static readonly Logger _logger = new(nameof(GestureManager));
+        private static readonly Logger _logger = new(nameof(GestureManager));
 
         // Upcoming changes
-        readonly List<Gesture> _gesturesToReset = new(4);
-        readonly PointerToGestures _pointerToGestures = new(4);
+        private readonly List<Gesture> _gesturesToReset = new(4);
+        private readonly PointerToGestures _pointerToGestures = new(4);
 
         #endregion
 
@@ -43,22 +43,22 @@ namespace TouchScript.Core
 
         // Temporary collections for update methods.
         // Dictionary<Transform, List<Pointer>> - pointers sorted by targets
-        readonly TransformToPointers _pointersOnTarget = new(4);
-        readonly GestureToPointers _gestureToPointers = new(4);
-        readonly GestureCache _gestureCache = new(4);
+        private readonly TransformToPointers _pointersOnTarget = new(4);
+        private readonly GestureToPointers _gestureToPointers = new(4);
+        private readonly GestureCache _gestureCache = new(4);
 
         #endregion
 
         #region Pools
 
-        static readonly ListPool<Gesture> _gestureListPool = new(4);
-        static readonly ListPool<Pointer> _pointerListPool = new(4);
+        private static readonly ListPool<Gesture> _gestureListPool = new(4);
+        private static readonly ListPool<Pointer> _pointerListPool = new(4);
 
         #endregion
 
         #region Unity
 
-        void Awake()
+        private void Awake()
         {
             _touchManager.FrameStarted += ResetGestures;
             _touchManager.FrameFinished += () =>
@@ -323,7 +323,7 @@ namespace TouchScript.Core
             _gesturesToReset.Clear();
         }
 
-        static bool gestureIsActive(Gesture gesture)
+        private static bool gestureIsActive(Gesture gesture)
         {
             if (gesture.gameObject.activeInHierarchy is false) return false;
             if (gesture.enabled is false) return false;
@@ -332,10 +332,10 @@ namespace TouchScript.Core
 
         #endregion
 
-        readonly struct GestureToPointers
+        private readonly struct GestureToPointers
         {
-            readonly List<(Gesture, List<Pointer>)> _list;
-            readonly Dictionary<Gesture, List<Pointer>> _dict;
+            private readonly List<(Gesture, List<Pointer>)> _list;
+            private readonly Dictionary<Gesture, List<Pointer>> _dict;
 
             public GestureToPointers(int capacity)
             {
@@ -343,7 +343,7 @@ namespace TouchScript.Core
                 _dict = new Dictionary<Gesture, List<Pointer>>(capacity);
             }
 
-            static readonly List<Pointer> _pointerBuffer = new();
+            private static readonly List<Pointer> _pointerBuffer = new();
 
             public void AddReceivablePointersToGesture(Gesture gesture, List<Pointer> pointers)
             {
@@ -414,9 +414,9 @@ namespace TouchScript.Core
             public List<(Gesture, List<Pointer>)>.Enumerator GetEnumerator() => _list.GetEnumerator();
         }
 
-        readonly struct PointerToGestures
+        private readonly struct PointerToGestures
         {
-            readonly Dictionary<PointerId, List<Gesture>> _dict;
+            private readonly Dictionary<PointerId, List<Gesture>> _dict;
 
 
             public PointerToGestures(int capacity)
@@ -464,10 +464,10 @@ namespace TouchScript.Core
             }
         }
 
-        readonly struct TransformToPointers
+        private readonly struct TransformToPointers
         {
-            readonly Dictionary<Transform, List<Pointer>> _dict;
-            readonly List<(Transform, List<Pointer>)> _list;
+            private readonly Dictionary<Transform, List<Pointer>> _dict;
+            private readonly List<(Transform, List<Pointer>)> _list;
 
             public TransformToPointers(int capacity)
             {
@@ -512,9 +512,9 @@ namespace TouchScript.Core
             public List<(Transform, List<Pointer>)>.Enumerator GetEnumerator() => _list.GetEnumerator();
         }
 
-        readonly struct GestureCache
+        private readonly struct GestureCache
         {
-            readonly Dictionary<Transform, List<Gesture>> _dict;
+            private readonly Dictionary<Transform, List<Gesture>> _dict;
 
             public GestureCache(int capacity)
             {

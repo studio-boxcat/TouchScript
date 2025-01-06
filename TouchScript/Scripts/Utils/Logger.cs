@@ -4,9 +4,9 @@ using Debug = UnityEngine.Debug;
 
 namespace TouchScript.Utils
 {
-    readonly struct Logger
+    internal readonly struct Logger
     {
-        readonly string _tag;
+        private readonly string _tag;
 
         public Logger(string tag)
         {

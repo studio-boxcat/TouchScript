@@ -2,11 +2,11 @@ using UnityEngine;
 
 namespace TouchScript.Utils
 {
-    static class DisplayDevice
+    internal static class DisplayDevice
     {
         public static readonly float DotsPerCentimeter;
-        static readonly float screenTransformPixelThresholdSquared;
-        static readonly float minScreenPointsPixelDistanceSquared;
+        private static readonly float screenTransformPixelThresholdSquared;
+        private static readonly float minScreenPointsPixelDistanceSquared;
 
         static DisplayDevice()
         {

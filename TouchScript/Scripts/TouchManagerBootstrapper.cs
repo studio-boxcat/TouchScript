@@ -8,11 +8,11 @@ namespace TouchScript
     public class TouchManagerBootstrapper : MonoBehaviour
     {
         [SerializeField, Required, ChildGameObjectsOnly]
-        TouchManager _touchManager;
+        private TouchManager _touchManager;
         [SerializeField, Required, ChildGameObjectsOnly]
-        GestureManager _gestureManager;
+        private GestureManager _gestureManager;
 
-        void Awake()
+        private void Awake()
         {
             Assert.IsNull(TouchManager.Instance);
             Assert.IsNull(GestureManager.Instance);
@@ -22,7 +22,7 @@ namespace TouchScript
             GestureManager.Instance = _gestureManager;
         }
 
-        void OnDestroy()
+        private void OnDestroy()
         {
             Assert.IsTrue(ReferenceEquals(_touchManager, TouchManager.Instance));
             Assert.IsTrue(ReferenceEquals(_gestureManager, GestureManager.Instance));

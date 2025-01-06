@@ -8,7 +8,7 @@ namespace TouchScript.Utils
     /// <summary>
     /// Transform's projection type.
     /// </summary>
-    enum ProjectionType : byte
+    internal enum ProjectionType : byte
     {
         /// <summary>
         /// Use a plane with normal vector defined by layer.
@@ -26,7 +26,7 @@ namespace TouchScript.Utils
         Global,
     }
 
-    static class ProjectionUtils
+    internal static class ProjectionUtils
     {
         public static Vector3 ProjectTo(this Camera camera, Vector2 screenPosition, Plane projectionPlane)
         {

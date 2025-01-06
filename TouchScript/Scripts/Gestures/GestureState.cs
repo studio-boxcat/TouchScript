@@ -42,7 +42,7 @@ namespace TouchScript.Gestures
         Failed,
     }
 
-    static class GestureStateUtils
+    internal static class GestureStateUtils
     {
         public static bool IsIdleOrPossible(this GestureState state)
         {

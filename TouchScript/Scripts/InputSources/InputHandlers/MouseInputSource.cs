@@ -15,10 +15,10 @@ namespace TouchScript.InputSources.InputHandlers
     /// </summary>
     public class MouseInputSource : IInputSource
     {
-        readonly PointerContainer _pointerContainer;
-        static readonly Logger _logger = new(nameof(MouseInputSource));
+        private readonly PointerContainer _pointerContainer;
+        private static readonly Logger _logger = new(nameof(MouseInputSource));
 
-        Pointer _mousePointer;
+        private Pointer _mousePointer;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MouseInputSource" /> class.
@@ -137,7 +137,7 @@ namespace TouchScript.InputSources.InputHandlers
             _pointerContainer.Destroy(pointer);
         }
 
-        static (bool MousePressing, bool MouseUp) GetMouseButtons()
+        private static (bool MousePressing, bool MouseUp) GetMouseButtons()
         {
             if (Input.GetMouseButtonUp(0))
                 return (true, true);

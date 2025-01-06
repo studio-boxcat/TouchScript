@@ -6,7 +6,7 @@ namespace TouchScript.InputSources
 {
     public readonly struct PointerChanges
     {
-        readonly Dictionary<PointerId, PointerChange> _changes;
+        private readonly Dictionary<PointerId, PointerChange> _changes;
 
         public PointerChanges(int capacity)
         {

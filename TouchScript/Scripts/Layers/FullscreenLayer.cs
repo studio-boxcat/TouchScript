@@ -6,7 +6,8 @@ namespace TouchScript.Layers
 {
     public class FullscreenLayer : TouchLayer
     {
-        [NonSerialized] Camera _camera;
+        [NonSerialized]
+        private Camera _camera;
 
         public override Camera GetTargetCamera() => _camera ??= Camera.main;
 

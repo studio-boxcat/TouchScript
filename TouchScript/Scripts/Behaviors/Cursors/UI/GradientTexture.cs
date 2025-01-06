@@ -17,9 +17,9 @@ namespace TouchScript.Behaviors.Cursors.UI
     {
         [FormerlySerializedAs("Gradient")]
         [SerializeField]
-        Gradient _gradient;
+        private Gradient _gradient;
         [NonSerialized]
-        Texture2D _texture;
+        private Texture2D _texture;
 
         public override Texture mainTexture
         {
@@ -30,9 +30,9 @@ namespace TouchScript.Behaviors.Cursors.UI
             }
         }
 
-        void Start() => Refresh();
+        private void Start() => Refresh();
 
-        void OnDestroy()
+        private void OnDestroy()
         {
             if (_texture is not null)
             {
@@ -41,7 +41,7 @@ namespace TouchScript.Behaviors.Cursors.UI
             }
         }
 
-        void Refresh()
+        private void Refresh()
         {
             _texture ??= CreateTexture();
             ApplyGradient(_texture, _gradient);
@@ -55,7 +55,7 @@ namespace TouchScript.Behaviors.Cursors.UI
             mb.SetUp_Quad_FullUV(pos1, pos2, color);
         }
 
-        static Texture2D CreateTexture()
+        private static Texture2D CreateTexture()
         {
             return new Texture2D(128, 1, TextureFormat.ARGB32, false)
             {
@@ -66,7 +66,7 @@ namespace TouchScript.Behaviors.Cursors.UI
             };
         }
 
-        static void ApplyGradient(Texture2D tex, Gradient gradient)
+        private static void ApplyGradient(Texture2D tex, Gradient gradient)
         {
             var res = tex.width;
             var colors = new Color[res];
