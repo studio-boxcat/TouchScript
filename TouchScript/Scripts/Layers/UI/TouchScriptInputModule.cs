@@ -237,7 +237,7 @@ namespace TouchScript.Layers.UI
                 {
                     if (pointerEvent.eligibleForClick)
                     {
-                        _logger.Info("Execute click on: " + pointerClickHandler, pointerClickHandler);
+                        _logger.Info("Execute click on: " + (pointerClickHandler?.name ?? "null"), pointerClickHandler);
                         ExecuteEvents.Execute(pointerEvent.pointerClick, pointerEvent, ExecuteEvents.pointerClickHandler);
                     }
                     else

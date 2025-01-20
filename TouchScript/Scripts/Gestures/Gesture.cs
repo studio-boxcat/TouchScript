@@ -290,7 +290,7 @@ namespace TouchScript.Gestures
             var resolvedState = canChangeOrPrevented ? newState : GestureState.Failed;
 #if UNITY_EDITOR
             if (State != resolvedState) // Log only if the state is changed.
-                L.I($"[Gesture] {GetType().Name} state: {State} → {newState}, {canChangeOrPrevented}", this);
+                L.I($"[Gesture] {name} ({GetType().Name}) state: {State} → {newState}, {canChangeOrPrevented}", this);
 #endif
 
 

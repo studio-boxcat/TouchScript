@@ -8,6 +8,7 @@ using TouchScript.Hit;
 using TouchScript.Layers;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.EventSystems;
 using Logger = TouchScript.Utils.Logger;
 
 namespace TouchScript.Core
@@ -58,7 +59,8 @@ namespace TouchScript.Core
             {
                 Assert.IsTrue(layer.isActiveAndEnabled);
                 var hitResult = layer.Hit(screenPosition, out hit);
-                if (hitResult == HitResult.Hit) return true;
+                if (hitResult is RaycastResultType.Hit) return true;
+                if (hitResult is RaycastResultType.Abort) break;
             }
 
             hit = new HitData(null, null, null, null, screenPosition);

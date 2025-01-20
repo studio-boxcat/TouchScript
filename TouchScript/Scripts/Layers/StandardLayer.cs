@@ -12,18 +12,11 @@ namespace TouchScript.Layers
 
         public override Camera GetTargetCamera() => _camera;
 
-        public override HitResult Hit(Vector2 screenPosition, out HitData hit)
+        public override RaycastResultType Hit(Vector2 screenPosition, out HitData hit)
         {
-            if (QuickRaycast.Raycast(screenPosition, _camera, out var raycastResult))
-            {
-                hit = new HitData(this, raycastResult);
-                return HitResult.Hit;
-            }
-            else
-            {
-                hit = default;
-                return HitResult.Miss;
-            }
+            var result = QuickRaycast.Raycast(screenPosition, _camera, out var raycastResult);
+            hit = result is RaycastResultType.Hit ? new HitData(this, raycastResult) : default;
+            return result;
         }
     }
 }

@@ -1,6 +1,7 @@
 using System;
 using TouchScript.Hit;
 using UnityEngine;
+using UnityEngine.EventSystems;
 
 namespace TouchScript.Layers
 {
@@ -11,10 +12,10 @@ namespace TouchScript.Layers
 
         public override Camera GetTargetCamera() => _camera ??= Camera.main;
 
-        public override HitResult Hit(Vector2 screenPosition, out HitData hit)
+        public override RaycastResultType Hit(Vector2 screenPosition, out HitData hit)
         {
             hit = new HitData(transform, this, default, default, screenPosition);
-            return HitResult.Hit;
+            return RaycastResultType.Hit;
         }
     }
 }

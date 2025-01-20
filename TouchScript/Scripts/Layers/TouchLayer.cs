@@ -1,6 +1,7 @@
 using TouchScript.Hit;
 using UnityEngine;
 using TouchScript.Core;
+using UnityEngine.EventSystems;
 
 namespace TouchScript.Layers
 {
@@ -14,6 +15,6 @@ namespace TouchScript.Layers
         private void OnDisable() => LayerManager.RemoveLayer(this);
 
         public abstract Camera GetTargetCamera();
-        public abstract HitResult Hit(Vector2 screenPosition, out HitData hit);
+        public abstract RaycastResultType Hit(Vector2 screenPosition, out HitData hit);
     }
 }
