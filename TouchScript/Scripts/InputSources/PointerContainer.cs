@@ -12,8 +12,6 @@ namespace TouchScript.InputSources
         private static PointerId _nextPointerId = (PointerId) 1;
         private static PointerId IssuePointerId() => _nextPointerId++;
 
-        // static readonly Logger _logger = new(nameof(PointerContainer));
-
         public readonly Dictionary<PointerId, Pointer> Pointers;
 
         private readonly Stack<Pointer> _pool;

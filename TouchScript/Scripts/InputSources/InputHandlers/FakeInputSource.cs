@@ -9,7 +9,6 @@ namespace TouchScript.InputSources.InputHandlers
     public class FakeInputSource : IInputSource
     {
         private readonly PointerContainer _pointerContainer;
-        // static readonly Logger _logger = new(nameof(FakeInputSource));
 
         private readonly Dictionary<PointerId, Pointer> _pointers = new();
         private readonly Dictionary<PointerId, PointerChange> _upComingChanges = new();

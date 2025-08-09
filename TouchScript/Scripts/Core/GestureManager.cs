@@ -2,7 +2,6 @@
  * @author Valentin Simonov / http://va.lent.in/
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Sirenix.OdinInspector;
@@ -11,7 +10,6 @@ using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
-using Logger = TouchScript.Utils.Logger;
 
 namespace TouchScript.Core
 {
@@ -30,8 +28,6 @@ namespace TouchScript.Core
 
         [SerializeField, Required, ChildGameObjectsOnly]
         private TouchManager _touchManager;
-
-        private static readonly Logger _logger = new(nameof(GestureManager));
 
         // Upcoming changes
         private readonly List<Gesture> _gesturesToReset = new(4);
@@ -87,7 +83,7 @@ namespace TouchScript.Core
             if (newState is GestureState.Changed)
             {
                 if (!gesture.State.IsBeganOrChanged())
-                    _logger.Warning($"Gesture {gesture} erroneously tried to enter state {newState} from state {gesture.State}");
+                    L.W($"Gesture {gesture} erroneously tried to enter state {newState} from state {gesture.State}");
                 return true;
             }
 
@@ -104,7 +100,7 @@ namespace TouchScript.Core
             if (newState is GestureState.Began)
             {
                 if (gesture.State is not (GestureState.Idle or GestureState.Possible))
-                    _logger.Warning($"Gesture {gesture} erroneously tried to enter state {newState} from state {gesture.State}");
+                    L.W($"Gesture {gesture} erroneously tried to enter state {newState} from state {gesture.State}");
 
                 var recognized = recognizeGestureIfNotPrevented();
                 if (!recognized)
@@ -130,7 +126,7 @@ namespace TouchScript.Core
                 }
                 else
                 {
-                    _logger.Warning($"Gesture {gesture} erroneously tried to enter state {newState} from state {gesture.State}");
+                    L.W($"Gesture {gesture} erroneously tried to enter state {newState} from state {gesture.State}");
                 }
             }
 
@@ -406,7 +402,7 @@ namespace TouchScript.Core
             {
                 if (_list.Count > 0)
                 {
-                    _logger.Error("_gesturesToPointers 가 초기화되지 않은 상태입니다.");
+                    L.E("_gesturesToPointers 가 초기화되지 않은 상태입니다.");
                     Clear();
                 }
             }
@@ -504,7 +500,7 @@ namespace TouchScript.Core
             {
                 if (_list.Count > 0)
                 {
-                    _logger.Error("_gesturesToPointers 가 초기화되지 않은 상태입니다.");
+                    L.E("_gesturesToPointers 가 초기화되지 않은 상태입니다.");
                     Clear();
                 }
             }

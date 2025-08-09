@@ -8,7 +8,6 @@ using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
-using Logger = TouchScript.Utils.Logger;
 
 namespace TouchScript.Layers.UI
 {
@@ -17,8 +16,6 @@ namespace TouchScript.Layers.UI
     /// </summary>
     internal sealed class TouchScriptInputModule : BaseInputModule
     {
-        private readonly Logger _logger = new(nameof(TouchScriptInputModule));
-
         #region From PointerInputModule
 
         private readonly Dictionary<int, PointerEventData> m_PointerData = new();
@@ -30,7 +27,7 @@ namespace TouchScript.Layers.UI
             m_PointerData.Add(id, data);
 #if UNITY_EDITOR
             if (m_PointerData.Count > 10)
-                _logger.Error("Too many tracked pointers. Might be something wrong with the input.");
+                L.E("Too many tracked pointers. Might be something wrong with the input.");
 #endif
             return data;
         }
@@ -237,17 +234,17 @@ namespace TouchScript.Layers.UI
                 {
                     if (pointerEvent.eligibleForClick)
                     {
-                        _logger.Info("Execute click on: " + (pointerClickHandler?.name ?? "null"), pointerClickHandler);
+                        L.I($"Execute click on: hover={currentOverGo.SafeName()}, handler={pointerClickHandler.SafeName()}", pointerClickHandler);
                         ExecuteEvents.Execute(pointerEvent.pointerClick, pointerEvent, ExecuteEvents.pointerClickHandler);
                     }
                     else
                     {
-                        _logger.Warning("Pointer ineligible for click: " + pointerClickHandler, pointerClickHandler);
+                        L.W("Pointer ineligible for click: " + pointerClickHandler, pointerClickHandler);
                     }
                 }
                 else
                 {
-                    _logger.Warning("Pointer click handler mismatch: " + pointerClickHandler, pointerClickHandler);
+                    L.W("Pointer click handler mismatch: " + pointerClickHandler, pointerClickHandler);
                 }
 
                 if (pointerEvent.pointerDrag != null && pointerEvent.dragging)

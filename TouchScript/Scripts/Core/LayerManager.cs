@@ -9,7 +9,6 @@ using TouchScript.Layers;
 using UnityEngine;
 using UnityEngine.Assertions;
 using UnityEngine.EventSystems;
-using Logger = TouchScript.Utils.Logger;
 
 namespace TouchScript.Core
 {
@@ -17,14 +16,13 @@ namespace TouchScript.Core
     {
         private static readonly List<TouchLayer> _layers = new(10);
         private static readonly Dictionary<TouchLayer, int> _layerInternalOrder = new();
-        private static readonly Logger _logger = new(nameof(LayerManager));
 
         private static int _nextOrder;
         private static bool _sorted = true;
 
         public static void AddLayer(TouchLayer layer)
         {
-            _logger.Info($"{nameof(AddLayer)}: {layer.name}, {layer.Priority}");
+            L.I($"{nameof(AddLayer)}: {layer.name}, {layer.Priority}");
 
             Assert.IsNotNull(layer);
             Assert.IsFalse(_layers.Contains(layer));
@@ -38,7 +36,7 @@ namespace TouchScript.Core
 
         public static void RemoveLayer(TouchLayer layer)
         {
-            _logger.Info($"{nameof(RemoveLayer)}: {layer.name}, {layer.Priority}");
+            L.I($"{nameof(RemoveLayer)}: {layer.name}, {layer.Priority}");
 
             _layers.Remove(layer);
             _layerInternalOrder.Remove(layer);
@@ -78,7 +76,7 @@ namespace TouchScript.Core
                     : _layerInternalOrder[a].CompareTo(_layerInternalOrder[b]);
             });
 
-            _logger.Info("Sorted: " + string.Join(",", _layers.Select(x => x.name)));
+            L.I("Sorted: " + string.Join(",", _layers.Select(x => x.name)));
 
             _sorted = true;
         }

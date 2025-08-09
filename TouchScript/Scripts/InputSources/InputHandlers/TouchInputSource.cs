@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
-using Logger = TouchScript.Utils.Logger;
 
 namespace TouchScript.InputSources.InputHandlers
 {
@@ -19,7 +18,6 @@ namespace TouchScript.InputSources.InputHandlers
     {
         private readonly PointerContainer _pointerContainer;
         private readonly Dictionary<int, Pointer> _pointers = new(10);
-        private static readonly Logger _logger = new(nameof(TouchInputSource));
 
         public TouchInputSource(PointerContainer pointerContainer)
         {
@@ -149,7 +147,7 @@ namespace TouchScript.InputSources.InputHandlers
 
             if (fingerId == int.MaxValue)
             {
-                _logger.Warning("포인터에 해당하는 상태를 찾을 수 없습니다. 이미 취소된 포인터일 수 있습니다.");
+                L.W("포인터에 해당하는 상태를 찾을 수 없습니다. 이미 취소된 포인터일 수 있습니다.");
                 return;
             }
 

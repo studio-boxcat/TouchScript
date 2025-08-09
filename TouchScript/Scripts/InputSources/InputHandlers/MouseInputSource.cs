@@ -6,7 +6,6 @@ using JetBrains.Annotations;
 using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
-using Logger = TouchScript.Utils.Logger;
 
 namespace TouchScript.InputSources.InputHandlers
 {
@@ -16,7 +15,6 @@ namespace TouchScript.InputSources.InputHandlers
     public class MouseInputSource : IInputSource
     {
         private readonly PointerContainer _pointerContainer;
-        private static readonly Logger _logger = new(nameof(MouseInputSource));
 
         private Pointer _mousePointer;
 
@@ -82,7 +80,7 @@ namespace TouchScript.InputSources.InputHandlers
 
             if (ReferenceEquals(_mousePointer, pointer) == false)
             {
-                _logger.Warning("알 수 없는 포인터입니다. 이전에 취소한 포인터일 수 있습니다: " + pointerId);
+                L.W("알 수 없는 포인터입니다. 이전에 취소한 포인터일 수 있습니다: " + pointerId);
                 changes.Put_Cancel(pointerId);
                 return;
             }

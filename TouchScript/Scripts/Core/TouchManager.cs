@@ -12,7 +12,6 @@ using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;
-using Logger = TouchScript.Utils.Logger;
 
 namespace TouchScript.Core
 {
@@ -26,8 +25,6 @@ namespace TouchScript.Core
         private readonly PointerContainer _pointerContainer = new(4);
         private readonly PointerChanges _changes = new(10);
         private StandardInput _input;
-
-        private readonly Logger _logger = new(nameof(TouchManager));
 
         public event Action FrameStarted;
         public event Action FrameFinished;
@@ -68,7 +65,7 @@ namespace TouchScript.Core
             // 만약 업데이트 도중에 TouchManager 가 비활성화되었다면, 즉시 쌓인 변경사항을 반영함.
             if (enabled == false)
             {
-                _logger.Info("비활성화가 감지되었습니다. 즉시 변경사항을 반영합니다.");
+                L.I("비활성화가 감지되었습니다. 즉시 변경사항을 반영합니다.");
                 CommitChanges();
                 Assert.IsTrue(_pointerContainer.Empty());
                 Assert.IsTrue(_changes.Empty());
@@ -79,7 +76,7 @@ namespace TouchScript.Core
 
         public void Activate()
         {
-            _logger.Info(nameof(Activate));
+            L.I(nameof(Activate));
 
             // XXX: Update 에서 이벤트 전파 도중에 Deactivate 후 Activate 가 호출되는 경우.
             // 아직 Cancelled 가 commit 되지 않아, _pointerContainer 및 _changes 에 남은 원소가 생기게 됨.
@@ -90,7 +87,7 @@ namespace TouchScript.Core
 
         public void Deactivate()
         {
-            _logger.Info(nameof(Deactivate));
+            L.I(nameof(Deactivate));
 
             _input.Deactivate(_changes);
             if (_isUpdating == false)
