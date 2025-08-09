@@ -7,7 +7,6 @@ using System.Collections.Generic;
 using TouchScript.Gestures.TransformGestures.Base;
 using TouchScript.Layers;
 using TouchScript.Pointers;
-using TouchScript.Utils;
 using UnityEngine;
 
 namespace TouchScript.Gestures.TransformGestures

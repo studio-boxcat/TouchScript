@@ -5,7 +5,6 @@
 using System.Collections.Generic;
 using Sirenix.OdinInspector;
 using TouchScript.Pointers;
-using TouchScript.Utils;
 using UnityEngine;
 
 namespace TouchScript.Gestures.TransformGestures.Base

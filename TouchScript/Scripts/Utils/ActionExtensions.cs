@@ -6,7 +6,7 @@
 using System;
 using UnityEngine;
 
-namespace TouchScript.Utils
+namespace TouchScript
 {
     /// <summary>
     /// Extension methods for event handling.

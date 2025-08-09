@@ -6,7 +6,7 @@ using TouchScript.Hit;
 using TouchScript.Pointers;
 using UnityEngine;
 
-namespace TouchScript.Utils
+namespace TouchScript
 {
     /// <summary>
     /// Utility methods to work with Pointers.

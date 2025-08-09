@@ -2,7 +2,7 @@ using System.Diagnostics;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
-namespace TouchScript.Utils
+namespace TouchScript
 {
     internal static class L
     {

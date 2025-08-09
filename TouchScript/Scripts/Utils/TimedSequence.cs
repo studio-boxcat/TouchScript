@@ -5,7 +5,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace TouchScript.Utils
+namespace TouchScript
 {
     internal sealed class TimedSequence<T>
     {

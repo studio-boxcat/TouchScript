@@ -8,7 +8,6 @@ using Sirenix.OdinInspector;
 using TouchScript.InputSources;
 using TouchScript.InputSources.InputHandlers;
 using TouchScript.Layers.UI;
-using TouchScript.Utils;
 using TouchScript.Pointers;
 using UnityEngine;
 using UnityEngine.Assertions;

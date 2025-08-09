@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace TouchScript.Utils
+namespace TouchScript
 {
     internal static class InvalidPosition
     {

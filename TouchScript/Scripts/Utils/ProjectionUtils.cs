@@ -3,7 +3,7 @@ using JetBrains.Annotations;
 using TouchScript.Layers;
 using UnityEngine;
 
-namespace TouchScript.Utils
+namespace TouchScript
 {
     /// <summary>
     /// Transform's projection type.

@@ -4,7 +4,7 @@
 
 using UnityEngine;
 
-namespace TouchScript.Utils
+namespace TouchScript
 {
     /// <summary>
     /// A class with 2D helper functions.

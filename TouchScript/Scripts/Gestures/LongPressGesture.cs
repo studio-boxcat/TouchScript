@@ -7,7 +7,6 @@ using System.Collections;
 using System.Collections.Generic;
 using TouchScript.Core;
 using TouchScript.Pointers;
-using TouchScript.Utils;
 using UnityEngine;
 
 namespace TouchScript.Gestures

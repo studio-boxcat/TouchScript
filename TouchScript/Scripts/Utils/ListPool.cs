@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace TouchScript.Utils
+namespace TouchScript
 {
     internal class ListPool<T>
     {
