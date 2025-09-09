@@ -36,11 +36,11 @@ namespace TouchScript.InputSources
             var pointerId = IssuePointerId();
             if (_pool.TryPop(out var pointer))
             {
-                // _logger.Info($"{nameof(Create)}: {pointerId} ({inputSource.GetType().Name}) (From Pool)");
+                // _log.i($"{nameof(Create)}: {pointerId} ({inputSource.GetType().Name}) (From Pool)");
             }
             else
             {
-                // _logger.Info($"{nameof(Create)}: {pointerId} ({inputSource.GetType().Name})");
+                // _log.i($"{nameof(Create)}: {pointerId} ({inputSource.GetType().Name})");
                 pointer = new Pointer();
             }
 
@@ -61,7 +61,7 @@ namespace TouchScript.InputSources
         public void Destroy(Pointer pointer)
         {
             var pointerId = pointer.Id;
-            // _logger.Info($"{nameof(Destroy)}: {pointerId}");
+            // _log.i($"{nameof(Destroy)}: {pointerId}");
 
             Assert.AreNotEqual(PointerId.Invalid, pointerId);
             Assert.IsTrue(_pool.All(p => !ReferenceEquals(p, pointer)));

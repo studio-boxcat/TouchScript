@@ -28,7 +28,7 @@ namespace TouchScript.InputSources.InputHandlers
 
         public void Deactivate(PointerChanges changes)
         {
-            // _logger.Info(nameof(Deactivate));
+            // _log.i(nameof(Deactivate));
             CancelMousePointer(changes);
         }
 
@@ -118,7 +118,7 @@ namespace TouchScript.InputSources.InputHandlers
 
         void IInputSource.INTERNAL_DiscardPointer(Pointer pointer, bool cancelled)
         {
-            // _logger.Info("Discard: " + pointer.Id);
+            // _log.i("Discard: " + pointer.Id);
             Assert.IsTrue(pointer.Id.IsValid());
 
             if (cancelled)

@@ -22,7 +22,7 @@ namespace TouchScript.Layers.UI
 
         private PointerEventData AddPointerData(int id)
         {
-            // _logger.Info("AddPointerData: " + id);
+            // _log.i("AddPointerData: " + id);
             var data = new PointerEventData { pointerId = id };
             m_PointerData.Add(id, data);
 #if UNITY_EDITOR
@@ -39,7 +39,7 @@ namespace TouchScript.Layers.UI
 
         private void RemovePointerData(PointerEventData data)
         {
-            // _logger.Info("RemovePointerData: " + data.pointerId);
+            // _log.i("RemovePointerData: " + data.pointerId);
             m_PointerData.Remove(data.pointerId);
         }
 
