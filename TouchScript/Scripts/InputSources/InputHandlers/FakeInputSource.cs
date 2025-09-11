@@ -85,7 +85,7 @@ namespace TouchScript.InputSources.InputHandlers
             return _pointers.ContainsKey(pointerId);
         }
 
-        public void Click(Vector2 pos)
+        public void Tap(Vector2 pos)
         {
             if (TouchManager.Instance.enabled == false)
                 return;
