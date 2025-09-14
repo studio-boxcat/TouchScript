@@ -2,6 +2,7 @@
  * @author Valentin Simonov / http://va.lent.in/
  */
 
+#if UNITY_EDITOR
 using System;
 using UnityEngine;
 using UnityEngine.Serialization;
@@ -47,13 +48,8 @@ namespace TouchScript.Behaviors.Cursors.UI
             ApplyGradient(_texture, _gradient);
         }
 
-        protected override void OnPopulateMesh(MeshBuilder mb)
-        {
-            var r = rectTransform.rect;
-            var pos1 = r.min;
-            var pos2 = r.max;
-            mb.SetUp_Quad_FullUV(pos1, pos2, color);
-        }
+        protected override void OnPopulateMesh(MeshBuilder mb) =>
+            mb.SetUp_Quad_FullUV(rectTransform.rect, color);
 
         private static Texture2D CreateTexture()
         {
@@ -80,3 +76,4 @@ namespace TouchScript.Behaviors.Cursors.UI
         }
     }
 }
+#endif
